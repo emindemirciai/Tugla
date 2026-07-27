@@ -5,15 +5,15 @@ import {
   Delete,
   Get,
   Injectable,
+  NotFoundException,
   Param,
   Post,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import { pageSchema } from '@pulse/shared';
 import { z } from 'zod';
-import { AccessGuard, type AuthenticatedRequest, DatabaseService } from '../services/core';
+import { type AuthenticatedRequest, DatabaseService, Public } from '../services/core';
 
 const friendshipSchema = z.object({ userId: z.string().uuid() });
 
@@ -23,7 +23,7 @@ export class SocialService {
 
   async follow(userId: string, targetId: string) {
     if (userId === targetId) throw new BadRequestException('Cannot follow yourself');
-    const blocked = await this.database.userBlock.findFirst({
+    const blocked = await this.database.client.userBlock.findFirst({
       where: {
         OR: [
           { blockerId: userId, blockedId: targetId },
@@ -32,7 +32,7 @@ export class SocialService {
       },
     });
     if (blocked) throw new BadRequestException('Relationship unavailable');
-    return this.database.follow.upsert({
+    return this.database.client.follow.upsert({
       where: {
         followerId_followingId: { followerId: userId, followingId: targetId },
       },
@@ -43,7 +43,7 @@ export class SocialService {
 
   async requestFriend(userId: string, targetId: string) {
     if (userId === targetId) throw new BadRequestException('Cannot friend yourself');
-    return this.database.friendship.upsert({
+    return this.database.client.friendship.upsert({
       where: {
         requesterId_addresseeId: { requesterId: userId, addresseeId: targetId },
       },
@@ -53,14 +53,13 @@ export class SocialService {
   }
 
   async acceptFriend(userId: string, friendshipId: string) {
-    return this.database.friendship.update({
+    return this.database.client.friendship.update({
       where: { id: friendshipId, addresseeId: userId },
       data: { status: 'ACCEPTED' },
     });
   }
 }
 
-@UseGuards(AccessGuard)
 @Controller('social')
 export class SocialController {
   constructor(
@@ -72,7 +71,7 @@ export class SocialController {
   async search(@Query('q') query = '') {
     const safeQuery = query.trim().slice(0, 40);
     if (safeQuery.length < 2) return { items: [] };
-    const items = await this.database.user.findMany({
+    const items = await this.database.client.user.findMany({
       where: {
         status: 'ACTIVE',
         searchVisible: true,
@@ -95,7 +94,7 @@ export class SocialController {
 
   @Delete('follow/:userId')
   unfollow(@Req() request: AuthenticatedRequest, @Param('userId') targetId: string) {
-    return this.database.follow.deleteMany({
+    return this.database.client.follow.deleteMany({
       where: { followerId: request.user.sub, followingId: targetId },
     });
   }
@@ -113,7 +112,7 @@ export class SocialController {
 
   @Get('friends')
   async friends(@Req() request: AuthenticatedRequest) {
-    const items = await this.database.friendship.findMany({
+    const items = await this.database.client.friendship.findMany({
       where: {
         status: 'ACCEPTED',
         OR: [{ requesterId: request.user.sub }, { addresseeId: request.user.sub }],
@@ -129,7 +128,7 @@ export class SocialController {
   @Get('leaderboards/:boardKey')
   async leaderboard(@Param('boardKey') boardKey: string, @Query() query: unknown) {
     const page = pageSchema.parse(query);
-    const items = await this.database.leaderboardEntry.findMany({
+    const items = await this.database.client.leaderboardEntry.findMany({
       where: { boardKey: boardKey.slice(0, 120) },
       orderBy: { score: 'desc' },
       take: page.limit,
