@@ -1,9 +1,15 @@
-﻿import { createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
 import { worldThemes } from '@pulse/shared';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString:
+      process.env.DATABASE_URL ?? 'postgresql://pulse:pulse@localhost:5432/pulse?schema=public',
+  }),
+});
 
 const makeBlocks = (level: number) =>
   Array.from({ length: Math.min(28 + Math.floor(level / 8), 72) }, (_, index) => {

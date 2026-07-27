@@ -1,4 +1,4 @@
-﻿import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import {
   BadRequestException,
   Body,
