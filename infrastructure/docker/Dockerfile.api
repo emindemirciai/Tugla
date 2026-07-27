@@ -1,0 +1,17 @@
+FROM node:24-alpine
+RUN apk add --no-cache openssl libc6-compat && corepack enable
+WORKDIR /repo
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml tsconfig.base.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY packages/database/package.json packages/database/package.json
+COPY packages/shared/package.json packages/shared/package.json
+RUN pnpm install --frozen-lockfile
+COPY apps/api apps/api
+COPY packages/database packages/database
+COPY packages/shared packages/shared
+RUN pnpm --filter @pulse/database generate
+ENV NODE_ENV=production
+ENV PORT=4000
+EXPOSE 4000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:4000/api/health || exit 1
+CMD ["pnpm", "--filter", "@pulse/api", "exec", "tsx", "src/main.ts"]
