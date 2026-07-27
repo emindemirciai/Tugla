@@ -1,0 +1,577 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PLAYER
+  SUPPORT
+  ANALYST
+  CONTENT_EDITOR
+  GAME_ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum AuthProvider {
+  PASSWORD
+  GOOGLE
+  APPLE
+}
+
+enum LevelStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+  REJECTED
+}
+
+enum GameMode {
+  CAMPAIGN
+  DAILY
+  LEAGUE
+  COMMUNITY
+  BOSS_RUSH
+  ENDLESS
+}
+
+enum GameSessionStatus {
+  CREATED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  FAILED
+  ABANDONED
+  FLAGGED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum Currency {
+  CREDITS
+  CRYSTALS
+}
+
+enum TaskCadence {
+  DAILY
+  WEEKLY
+  SEASONAL
+  PERMANENT
+}
+
+enum TicketStatus {
+  OPEN
+  INVESTIGATING
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  ACTIONED
+  DISMISSED
+}
+
+model User {
+  id                    String               @id @default(uuid())
+  email                 String               @unique
+  username              String               @unique
+  displayName           String
+  passwordHash          String?
+  locale                String               @default("tr")
+  role                  UserRole             @default(PLAYER)
+  status                UserStatus           @default(ACTIVE)
+  emailVerifiedAt       DateTime?
+  twoFactorEnabled      Boolean              @default(false)
+  twoFactorSecret       String?
+  searchVisible         Boolean              @default(true)
+  marketingConsent      Boolean              @default(false)
+  acceptedTermsAt       DateTime
+  lastUsernameChangedAt DateTime?
+  riskScore             Int                  @default(0)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  deletedAt             DateTime?
+  accounts              AuthAccount[]
+  refreshSessions       RefreshSession[]
+  devices               Device[]
+  progress              UserProgress?
+  balances              WalletBalance[]
+  inventory             InventoryItem[]
+  gameSessions          GameSession[]
+  authoredLevels        Level[]              @relation("LevelAuthor")
+  levelRatings          LevelRating[]
+  followers             Follow[]             @relation("Following")
+  following             Follow[]             @relation("Follower")
+  sentFriendships       Friendship[]         @relation("FriendshipRequester")
+  receivedFriendships   Friendship[]         @relation("FriendshipAddressee")
+  blocksCreated         UserBlock[]           @relation("Blocker")
+  blocksReceived        UserBlock[]           @relation("Blocked")
+  leaderboardEntries    LeaderboardEntry[]
+  leagueMemberships     LeagueMembership[]
+  taskProgress          UserTaskProgress[]
+  achievementUnlocks    AchievementUnlock[]
+  notifications         Notification[]
+  purchases             Purchase[]
+  supportTickets        SupportTicket[]
+  reports               ModerationReport[]   @relation("Reporter")
+  auditLogs              AuditLog[]           @relation("AuditActor")
+
+  @@index([status, createdAt])
+  @@index([displayName])
+}
+
+model AuthAccount {
+  id                String       @id @default(uuid())
+  userId            String
+  provider          AuthProvider
+  providerAccountId String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model RefreshSession {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  deviceName String?
+  ipAddress  String?
+  userAgent  String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  userId      String
+  fingerprint String
+  name        String
+  platform    String
+  pushToken   String?
+  lastSeenAt  DateTime @default(now())
+  trustedAt   DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fingerprint])
+}
+
+model UserProgress {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  currentLevel     Int      @default(1)
+  playerLevel      Int      @default(1)
+  experience       Int      @default(0)
+  paddleLevel      Int      @default(1)
+  ballDamageLevel  Int      @default(1)
+  criticalLevel    Int      @default(1)
+  magnetLevel      Int      @default(1)
+  shieldLevel      Int      @default(1)
+  bossDamageLevel  Int      @default(1)
+  version          Int      @default(1)
+  lastSyncedAt     DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WalletBalance {
+  id        String   @id @default(uuid())
+  userId    String
+  currency  Currency
+  amount    Int      @default(0)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, currency])
+}
+
+model Level {
+  id               String       @id @default(uuid())
+  slug             String       @unique
+  name             String
+  description      String?
+  world            Int
+  index            Int
+  type             String
+  theme            String
+  status           LevelStatus  @default(DRAFT)
+  definition       Json
+  difficulty       Float        @default(1)
+  estimatedSeconds Int          @default(180)
+  authorId         String?
+  publishedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  author           User?        @relation("LevelAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  versions         LevelVersion[]
+  gameSessions     GameSession[]
+  ratings          LevelRating[]
+
+  @@unique([world, index])
+  @@index([status, type])
+  @@index([authorId, status])
+}
+
+model LevelVersion {
+  id         String   @id @default(uuid())
+  levelId    String
+  version    Int
+  definition Json
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@unique([levelId, version])
+}
+
+model LevelRating {
+  id        String   @id @default(uuid())
+  levelId   String
+  userId    String
+  liked     Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  level     Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([levelId, userId])
+}
+
+model GameSession {
+  id              String            @id @default(uuid())
+  userId          String
+  levelId         String
+  mode            GameMode
+  status          GameSessionStatus @default(CREATED)
+  seed            Int
+  signedNonce     String            @unique
+  score           Int               @default(0)
+  durationMs      Int               @default(0)
+  livesRemaining  Int               @default(5)
+  maxBalls        Int               @default(1)
+  blocksDestroyed Int               @default(0)
+  riskScore       Int               @default(0)
+  startedAt       DateTime          @default(now())
+  finishedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level           Level             @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  replay          Replay?
+
+  @@index([userId, status])
+  @@index([mode, score])
+  @@index([levelId, score])
+}
+
+model Replay {
+  id          String      @id @default(uuid())
+  sessionId   String      @unique
+  storageKey  String
+  checksum    String
+  eventCount  Int
+  shared      Boolean     @default(false)
+  favorite    Boolean     @default(false)
+  expiresAt   DateTime?
+  createdAt   DateTime    @default(now())
+  gameSession GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+}
+
+model Friendship {
+  id          String           @id @default(uuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  requester   User             @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User             @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+}
+
+model UserBlock {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  reason    String?
+  createdAt DateTime @default(now())
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+}
+
+model LeaderboardEntry {
+  id        String   @id @default(uuid())
+  boardKey  String
+  userId    String
+  score     Int
+  rank      Int?
+  metadata  Json?
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardKey, userId])
+  @@index([boardKey, score(sort: Desc)])
+}
+
+model League {
+  id        String             @id @default(uuid())
+  key       String             @unique
+  tier      String
+  startsAt  DateTime
+  endsAt    DateTime
+  seed      Int
+  rules     Json
+  createdAt DateTime           @default(now())
+  groups    LeagueGroup[]
+}
+
+model LeagueGroup {
+  id          String             @id @default(uuid())
+  leagueId    String
+  groupNumber Int
+  createdAt   DateTime           @default(now())
+  league      League             @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  members     LeagueMembership[]
+
+  @@unique([leagueId, groupNumber])
+}
+
+model LeagueMembership {
+  id        String      @id @default(uuid())
+  groupId   String
+  userId    String
+  score     Int         @default(0)
+  rank      Int?
+  promoted  Boolean?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  group     LeagueGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId, score(sort: Desc)])
+}
+
+model TaskDefinition {
+  id          String             @id @default(uuid())
+  key         String             @unique
+  name        String
+  description String
+  cadence     TaskCadence
+  target      Int
+  eventType   String
+  rewards     Json
+  active      Boolean            @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  progress    UserTaskProgress[]
+}
+
+model UserTaskProgress {
+  id          String         @id @default(uuid())
+  userId      String
+  taskId      String
+  progress    Int            @default(0)
+  completedAt DateTime?
+  claimedAt   DateTime?
+  periodKey   String
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        TaskDefinition @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId, periodKey])
+}
+
+model Achievement {
+  id          String              @id @default(uuid())
+  key         String              @unique
+  name        String
+  description String
+  category    String
+  target      Int
+  eventType   String
+  rewards     Json
+  hidden      Boolean             @default(false)
+  active      Boolean             @default(true)
+  unlocks     AchievementUnlock[]
+}
+
+model AchievementUnlock {
+  id            String      @id @default(uuid())
+  userId        String
+  achievementId String
+  progress      Int         @default(0)
+  unlockedAt    DateTime?
+  claimedAt     DateTime?
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+model CatalogItem {
+  id          String          @id @default(uuid())
+  sku         String          @unique
+  name        String
+  description String
+  category    String
+  rarity      String
+  currency    Currency?
+  price       Int?
+  platformSku Json?
+  metadata    Json
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  inventory   InventoryItem[]
+  purchases   Purchase[]
+}
+
+model InventoryItem {
+  id         String      @id @default(uuid())
+  userId     String
+  itemId     String
+  equipped   Boolean     @default(false)
+  acquiredAt DateTime    @default(now())
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item       CatalogItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+}
+
+model Purchase {
+  id            String      @id @default(uuid())
+  userId        String
+  itemId        String?
+  provider      String
+  transactionId String      @unique
+  status        String
+  amountMinor   Int
+  currencyCode  String
+  receipt       Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  user          User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  item          CatalogItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+}
+
+model SupportTicket {
+  id          String       @id @default(uuid())
+  userId      String?
+  email       String
+  category    String
+  subject     String
+  body        String
+  status      TicketStatus @default(OPEN)
+  attachment  String?
+  deviceInfo  Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model ModerationReport {
+  id           String       @id @default(uuid())
+  reporterId   String
+  targetType   String
+  targetId     String
+  reason       String
+  details      String?
+  status       ReportStatus @default(OPEN)
+  resolution   String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  reporter     User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorId     String?
+  action      String
+  targetType  String
+  targetId    String?
+  before      Json?
+  after       Json?
+  ipAddress   String?
+  userAgent   String?
+  requestId   String?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String
+  enabled     Boolean  @default(false)
+  config      Json?
+  updatedAt   DateTime @updatedAt
+}

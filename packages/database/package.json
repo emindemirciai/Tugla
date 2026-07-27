@@ -1,0 +1,26 @@
+{
+  "name": "@tugla/database",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma db push --skip-generate",
+    "migrate:dev": "prisma migrate dev",
+    "seed": "tsx prisma/seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "6.9.0",
+    "@tugla/shared": "workspace:*",
+    "bcrypt": "6.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "5.0.2",
+    "prisma": "6.9.0",
+    "tsx": "4.19.4",
+    "typescript": "5.8.3"
+  }
+}

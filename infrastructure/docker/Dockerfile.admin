@@ -1,0 +1,31 @@
+﻿FROM node:24-alpine AS base
+RUN corepack enable
+WORKDIR /repo
+
+FROM base AS dependencies
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
+COPY apps/admin/package.json apps/admin/package.json
+COPY packages/shared/package.json packages/shared/package.json
+COPY packages/game-engine/package.json packages/game-engine/package.json
+RUN pnpm install --frozen-lockfile
+
+FROM dependencies AS build
+COPY tsconfig.base.json ./
+COPY apps/admin apps/admin
+COPY packages/shared packages/shared
+COPY packages/game-engine packages/game-engine
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN pnpm --filter @tugla/admin build
+
+FROM node:24-alpine AS runtime
+ENV NODE_ENV=production
+ENV PORT=3001
+WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+COPY --from=build --chown=nextjs:nodejs /repo/apps/admin/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /repo/apps/admin/.next/static ./.next/static
+USER nextjs
+EXPOSE 3001
+CMD ["node", "server.js"]
+
