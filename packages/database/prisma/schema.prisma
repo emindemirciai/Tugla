@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters", "queryCompiler"]
 }
 
 datasource db {
@@ -89,6 +90,11 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum ActionTokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
 model User {
   id                    String               @id @default(uuid())
   email                 String               @unique
@@ -133,6 +139,7 @@ model User {
   supportTickets        SupportTicket[]
   reports               ModerationReport[]   @relation("Reporter")
   auditLogs              AuditLog[]           @relation("AuditActor")
+  actionTokens           ActionToken[]
 
   @@index([status, createdAt])
   @@index([displayName])
@@ -295,7 +302,8 @@ model GameSession {
 model Replay {
   id          String      @id @default(uuid())
   sessionId   String      @unique
-  storageKey  String
+  storageKey  String?
+  events      Json
   checksum    String
   eventCount  Int
   shared      Boolean     @default(false)
@@ -574,4 +582,48 @@ model FeatureFlag {
   enabled     Boolean  @default(false)
   config      Json?
   updatedAt   DateTime @updatedAt
+}
+
+model ActionToken {
+  id        String          @id @default(uuid())
+  userId    String
+  type      ActionTokenType
+  tokenHash String          @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime        @default(now())
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([expiresAt])
+}
+
+model Season {
+  id        String   @id @default(uuid())
+  number    Int      @unique
+  key       String   @unique
+  name      String
+  theme     String
+  startsAt  DateTime
+  endsAt    DateTime
+  active    Boolean  @default(false)
+  rewards   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, startsAt])
+}
+
+model Announcement {
+  id          String    @id @default(uuid())
+  title       String
+  body        String
+  audience    String    @default("ALL")
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt, expiresAt])
 }

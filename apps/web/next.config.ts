@@ -1,4 +1,4 @@
-﻿import type { NextConfig } from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -8,8 +8,6 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@tugla/game-engine', '@tugla/shared'],
   experimental: {
     optimizePackageImports: ['three'],
-    workerThreads: true,
-    cpus: 1,
   },
   headers: async () => [
     {
