@@ -9,8 +9,9 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "isolatedModules": false,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts", "node_modules", "dist"]
 }

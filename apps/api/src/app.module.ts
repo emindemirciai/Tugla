@@ -1,47 +1,75 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AdminController } from './modules/admin.controller';
+import { AdminContentController } from './admin/content.controller';
+import { AdminOperationsController, AdminSystemController } from './admin/operations.controller';
+import { env } from './config/env';
 import { AuthController, AuthService } from './modules/auth';
 import { GameController, GameService } from './modules/game';
 import { PlatformController, PlatformService } from './modules/platform';
+import { ProgressionController, ProgressionService } from './modules/progression';
 import { SocialController, SocialService } from './modules/social';
-import { AccessGuard, DatabaseService, JwtStrategyService, RedisService } from './services/core';
+import {
+  AccessGuard,
+  AuditService,
+  DatabaseService,
+  FeatureFlagService,
+  JwtStrategyService,
+  RedisService,
+} from './services/core';
+import { MailService } from './services/mail';
+import { StorageService } from './services/storage';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: 'short', ttl: 1_000, limit: 12 },
-      { name: 'long', ttl: 60_000, limit: 120 },
+      { name: 'short', ttl: 1_000, limit: 20 },
+      { name: 'long', ttl: 60_000, limit: 300 },
     ]),
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_ACCESS_SECRET ?? 'development-access-secret-change-me',
-      signOptions: { issuer: 'tugla-api', audience: 'tugla-client', expiresIn: '15m' },
+      secret: env().JWT_ACCESS_SECRET,
+      signOptions: {
+        issuer: `${env().APP_SLUG}-api`,
+        audience: `${env().APP_SLUG}-client`,
+        expiresIn: env().ACCESS_TOKEN_TTL,
+      },
     }),
   ],
   controllers: [
     AuthController,
     GameController,
+    ProgressionController,
     SocialController,
     PlatformController,
-    AdminController,
+    AdminContentController,
+    AdminOperationsController,
+    AdminSystemController,
   ],
   providers: [
     DatabaseService,
     RedisService,
     JwtStrategyService,
-    AccessGuard,
+    AuditService,
+    FeatureFlagService,
+    MailService,
+    StorageService,
     AuthService,
     GameService,
+    ProgressionService,
     SocialService,
     PlatformService,
+    { provide: APP_GUARD, useClass: AccessGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(_consumer: MiddlewareConsumer) {
+    // Request-id and security middleware are applied in main.ts before routing.
+  }
+}

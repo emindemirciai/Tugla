@@ -112,6 +112,8 @@ model User {
   acceptedTermsAt       DateTime
   lastUsernameChangedAt DateTime?
   riskScore             Int                  @default(0)
+  bannedUntil           DateTime?
+  banReason             String?
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
   deletedAt             DateTime?
@@ -136,6 +138,7 @@ model User {
   achievementUnlocks    AchievementUnlock[]
   notifications         Notification[]
   purchases             Purchase[]
+  walletTransactions    WalletTransaction[]
   supportTickets        SupportTicket[]
   reports               ModerationReport[]   @relation("Reporter")
   auditLogs              AuditLog[]           @relation("AuditActor")
@@ -626,4 +629,19 @@ model Announcement {
   updatedAt   DateTime  @updatedAt
 
   @@index([publishedAt, expiresAt])
+}
+
+model WalletTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  currency  Currency
+  amount    Int
+  balance   Int
+  reason    String
+  reference String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([reason, createdAt])
 }

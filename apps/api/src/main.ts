@@ -1,23 +1,31 @@
+import './config/load-dotenv';
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
 import type { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { env } from './config/env';
+import { ZodExceptionFilter } from './services/zod-filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
-  const isProduction = process.env.NODE_ENV === 'production';
-  const webOrigins = [process.env.WEB_URL, process.env.ADMIN_URL].filter(Boolean) as string[];
+  const config = env();
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: false });
+  const logger = new Logger('Bootstrap');
+  const isProduction = config.NODE_ENV === 'production';
+  const origins = [config.WEB_URL, config.ADMIN_URL].filter(Boolean);
 
+  app.set('trust proxy', config.TRUST_PROXY);
   app.setGlobalPrefix('api');
   app.use(
     helmet({
       contentSecurityPolicy: isProduction,
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
   app.use(cookieParser());
@@ -28,32 +36,30 @@ async function bootstrap() {
     next();
   });
   app.enableCors({
-    origin: isProduction ? webOrigins : true,
+    origin: isProduction ? origins : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalFilters(new ZodExceptionFilter());
   app.enableShutdownHooks();
 
   const openApi = new DocumentBuilder()
-    .setTitle(`${process.env.APP_NAME ?? 'Tuğla'} API`)
-    .setDescription('Account, game session, social, competition and administration API')
+    .setTitle(`${config.APP_NAME} API`)
+    .setDescription('Account, gameplay, progression, social and administration API')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, openApi);
-  SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: `${process.env.APP_NAME ?? 'Tuğla'} API`,
+  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, openApi), {
+    customSiteTitle: `${config.APP_NAME} API`,
   });
 
-  const port = Number(process.env.PORT ?? 4000);
-  await app.listen(port, '0.0.0.0');
+  await app.listen(config.PORT, '0.0.0.0');
+  logger.log(`${config.APP_NAME} API listening on port ${config.PORT} (${config.NODE_ENV})`);
 }
 
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  // Configuration errors must be loud and fatal rather than a half-booted service.
+  console.error('API failed to start:', error);
+  process.exit(1);
+});

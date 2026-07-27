@@ -1,4 +1,14 @@
 import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { config as loadDotenv } from 'dotenv';
+
+for (const path of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../../.env')]) {
+  if (existsSync(path)) {
+    loadDotenv({ path, override: false });
+    break;
+  }
+}
 import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';

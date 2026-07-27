@@ -1,17 +1,43 @@
-FROM node:24-alpine
+# NestJS depends on emitDecoratorMetadata, which esbuild-based runners cannot
+# emit, so the image compiles with tsc and runs the compiled output.
+FROM node:24-alpine AS base
 RUN apk add --no-cache openssl libc6-compat && corepack enable
 WORKDIR /repo
+
+FROM base AS dependencies
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/database/package.json packages/database/package.json
 COPY packages/shared/package.json packages/shared/package.json
+COPY packages/game-engine/package.json packages/game-engine/package.json
 RUN pnpm install --frozen-lockfile
+
+FROM dependencies AS build
 COPY apps/api apps/api
 COPY packages/database packages/database
 COPY packages/shared packages/shared
-RUN pnpm --filter @tugla/database generate
+COPY packages/game-engine packages/game-engine
+RUN pnpm --filter @tugla/database generate \
+ && pnpm --filter @tugla/shared build \
+ && pnpm --filter @tugla/game-engine build \
+ && pnpm --filter @tugla/database build \
+ && pnpm --filter @tugla/api build
+
+FROM base AS runtime
 ENV NODE_ENV=production
 ENV PORT=4000
+WORKDIR /repo
+COPY --from=build /repo/node_modules ./node_modules
+COPY --from=build /repo/package.json ./package.json
+COPY --from=build /repo/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=build /repo/apps/api/package.json ./apps/api/package.json
+COPY --from=build /repo/apps/api/dist ./apps/api/dist
+COPY --from=build /repo/apps/api/node_modules ./apps/api/node_modules
+COPY --from=build /repo/packages ./packages
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 api \
+ && chown -R api:nodejs /repo
+USER api
 EXPOSE 4000
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:4000/api/health || exit 1
-CMD ["pnpm", "--filter", "@tugla/api", "exec", "tsx", "src/main.ts"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:4000/api/health || exit 1
+CMD ["node", "apps/api/dist/main.js"]

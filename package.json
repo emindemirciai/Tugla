@@ -20,7 +20,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "rename-project": "node scripts/rename-project.mjs",
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks",
+    "test:e2e:api": "node scripts/e2e-api-smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
