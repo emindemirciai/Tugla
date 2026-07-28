@@ -37,9 +37,11 @@ interface WorldRow {
 function LevelsInner() {
   const params = useSearchParams();
   const worldFilter = params.get('world');
-  const [editor, setEditor] = useState<{ open: boolean; levelId: string | null; initial?: LevelDefinition }>(
-    { open: false, levelId: null },
-  );
+  const [editor, setEditor] = useState<{
+    open: boolean;
+    levelId: string | null;
+    initial?: LevelDefinition;
+  }>({ open: false, levelId: null });
   const worlds = useAdminData<{ items: WorldRow[] }>('/admin/content/worlds');
   const levels = useAdminData<{ items: LevelRow[]; total: number }>(
     `/admin/content/levels?limit=60${worldFilter ? `&world=${worldFilter}` : ''}`,
@@ -73,7 +75,11 @@ function LevelsInner() {
   return (
     <AdminShell title="Bölümler ve dünyalar">
       <div className="admin-toolbar">
-        <button type="button" className="primary" onClick={() => setEditor({ open: true, levelId: null })}>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => setEditor({ open: true, levelId: null })}
+        >
           + Yeni bölüm
         </button>
         {message && <span className="admin-note">{message}</span>}
@@ -95,7 +101,8 @@ function LevelsInner() {
       </div>
 
       <h2 className="admin-section-title">
-        Bölümler {worldFilter ? `(Dünya ${worldFilter})` : '(tümü)'} — {levels.data?.total ?? 0} kayıt
+        Bölümler {worldFilter ? `(Dünya ${worldFilter})` : '(tümü)'} — {levels.data?.total ?? 0}{' '}
+        kayıt
       </h2>
       <StatusNote loading={levels.loading} error={levels.error} />
       <DataTable

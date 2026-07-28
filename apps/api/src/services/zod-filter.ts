@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import { type ArgumentsHost, Catch, type ExceptionFilter, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { ZodError } from 'zod';
 

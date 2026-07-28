@@ -13,7 +13,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma, type GameMode } from '@pulse/database';
+import { type Prisma, type GameMode } from '@pulse/database';
 import { runReplay, type ReplayResult } from '@pulse/game-engine';
 import {
   APP_DEFAULTS,

@@ -14,7 +14,8 @@ export default function ForgotPasswordPage() {
         <div className="auth-card">
           <h1>Bağlantı yolda</h1>
           <p className="auth-subtitle">
-            Bu e-posta kayıtlıysa, parola sıfırlama bağlantısı gönderildi. Bağlantı 1 saat geçerlidir.
+            Bu e-posta kayıtlıysa, parola sıfırlama bağlantısı gönderildi. Bağlantı 1 saat
+            geçerlidir.
           </p>
           <Link className="button" href="/auth/login">
             Girişe dön
@@ -29,7 +30,9 @@ export default function ForgotPasswordPage() {
       title="Parolanı sıfırla"
       subtitle="Hesabına bağlı e-posta adresini gir; sana tek kullanımlık bir bağlantı gönderelim."
       submitLabel="Sıfırlama bağlantısı gönder"
-      fields={[{ name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email', required: true }]}
+      fields={[
+        { name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email', required: true },
+      ]}
       onSubmit={async (values) => {
         await authApi.requestReset(String(values.email));
         setSent(true);

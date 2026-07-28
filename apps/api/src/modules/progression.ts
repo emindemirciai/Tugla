@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Injectable, Logger, Param, Post, Query, Req } from '@nestjs/common';
+import { Controller, Get, Injectable, Logger, Param, Post, Query, Req } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ApiTags } from '@nestjs/swagger';
-import { Currency, Prisma, TaskCadence, type GameMode } from '@pulse/database';
+import { type Currency, type Prisma, type TaskCadence, type GameMode } from '@pulse/database';
 import { pageSchema } from '@pulse/shared';
-import { z } from 'zod';
 import { BadRequestException } from '@nestjs/common';
 import { DatabaseService, Public, RedisService, type AuthenticatedRequest } from '../services/core';
 
@@ -306,7 +305,7 @@ export class ProgressionService {
   private async ensureLeague(key: string) {
     const now = new Date();
     const start = new Date(now);
-    start.setUTCHours(0, 0, 0, 0);
+    start.setUTCHours(0, 0);
     start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() || 7) - 1));
     const end = new Date(start);
     end.setUTCDate(end.getUTCDate() + 7);

@@ -37,10 +37,14 @@ export default function SystemPage() {
             <strong className={data.redis.status === 'up' ? 'ok' : 'bad'}>
               {data.redis.status.toUpperCase()}
             </strong>
-            <span>Redis {data.redis.detail.lastError ? `· ${data.redis.detail.lastError}` : ''}</span>
+            <span>
+              Redis {data.redis.detail.lastError ? `· ${data.redis.detail.lastError}` : ''}
+            </span>
           </div>
           <div className="stat-card">
-            <strong className={data.storage.available ? 'ok' : 'bad'}>{data.storage.provider}</strong>
+            <strong className={data.storage.available ? 'ok' : 'bad'}>
+              {data.storage.provider}
+            </strong>
             <span>Replay depolama</span>
           </div>
           <div className="stat-card">

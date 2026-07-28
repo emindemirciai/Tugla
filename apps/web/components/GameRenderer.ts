@@ -108,7 +108,11 @@ export class GameRenderer {
     this.scene.add(this.blockMesh);
     this.disposables.push(blockGeometry, blockMaterial);
 
-    const ballGeometry = new THREE.SphereGeometry(1, quality.level === 'LOW' ? 8 : 16, quality.level === 'LOW' ? 6 : 12);
+    const ballGeometry = new THREE.SphereGeometry(
+      1,
+      quality.level === 'LOW' ? 8 : 16,
+      quality.level === 'LOW' ? 6 : 12,
+    );
     const ballMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xeefcff,
       emissive: 0x38d9ff,

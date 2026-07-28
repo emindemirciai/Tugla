@@ -11,7 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma, UserRole, UserStatus } from '@pulse/database';
+import { type Prisma, UserRole, UserStatus } from '@pulse/database';
 import { pageSchema, userRoles } from '@pulse/shared';
 import { z } from 'zod';
 import { env, providerStatus } from '../config/env';

@@ -233,7 +233,9 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
         setNotice('Bölüm TASLAK olarak oluşturuldu. Yayınlamayı bölüm listesinden yapabilirsin.');
       }
     } catch (saveError) {
-      setNotice(saveError instanceof Error ? `Sunucu hatası: ${saveError.message}` : 'Kaydetme başarısız.');
+      setNotice(
+        saveError instanceof Error ? `Sunucu hatası: ${saveError.message}` : 'Kaydetme başarısız.',
+      );
     }
   };
 
@@ -249,7 +251,9 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
     try {
       const generated = await adminApi<LevelDefinition>(`/admin/content/levels/generate/${index}`);
       pushLevel(generated);
-      setNotice(`Kampanya ${index} şablonu yüklendi; düzenleyip yeni bölüm olarak kaydedebilirsin.`);
+      setNotice(
+        `Kampanya ${index} şablonu yüklendi; düzenleyip yeni bölüm olarak kaydedebilirsin.`,
+      );
     } catch {
       setNotice('Şablon alınamadı.');
     }

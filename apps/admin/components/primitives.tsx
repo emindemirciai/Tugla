@@ -58,10 +58,8 @@ export function DataTable({
         <tbody>
           {rows.map((cells, rowIndex) => (
             // Row order is stable per fetch; index keys are fine for read views.
-            // eslint-disable-next-line react/no-array-index-key
             <tr key={rowIndex}>
               {cells.map((cell, cellIndex) => (
-                // eslint-disable-next-line react/no-array-index-key
                 <td key={cellIndex}>{cell}</td>
               ))}
             </tr>
@@ -78,7 +76,11 @@ export function useAdminAction(onDone?: () => void) {
   const [message, setMessage] = useState<string | null>(null);
 
   const run = useCallback(
-    async (path: string, options: Parameters<typeof adminApi>[1], successMessage = 'Kaydedildi.') => {
+    async (
+      path: string,
+      options: Parameters<typeof adminApi>[1],
+      successMessage = 'Kaydedildi.',
+    ) => {
       setBusy(true);
       setMessage(null);
       try {

@@ -63,7 +63,10 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, loading, signIn, signOut }), [user, loading, signIn, signOut]);
+  const value = useMemo(
+    () => ({ user, loading, signIn, signOut }),
+    [user, loading, signIn, signOut],
+  );
   return <AdminSessionContext.Provider value={value}>{children}</AdminSessionContext.Provider>;
 }
 

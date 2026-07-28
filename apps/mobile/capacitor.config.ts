@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: process.env.MOBILE_APP_ID ?? 'com.example.pulse',
   appName: process.env.APP_NAME ?? 'Pulse',
-  webDir: '../web/out',
+  webDir: 'www',
   server: process.env.CAPACITOR_SERVER_URL
     ? {
         url: process.env.CAPACITOR_SERVER_URL,

@@ -16,7 +16,13 @@ export default function RegisterPage() {
       subtitle="500 bölüm, haftalık ligler ve bulut kayıt tek hesapla açılır."
       submitLabel="Kayıt ol"
       fields={[
-        { name: 'displayName', label: 'Görünen ad', type: 'text', autoComplete: 'nickname', required: true },
+        {
+          name: 'displayName',
+          label: 'Görünen ad',
+          type: 'text',
+          autoComplete: 'nickname',
+          required: true,
+        },
         { name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email', required: true },
         {
           name: 'password',
@@ -32,7 +38,11 @@ export default function RegisterPage() {
           type: 'checkbox',
           required: true,
         },
-        { name: 'marketingConsent', label: 'Yeni içerik duyurularını e-postayla almak istiyorum.', type: 'checkbox' },
+        {
+          name: 'marketingConsent',
+          label: 'Yeni içerik duyurularını e-postayla almak istiyorum.',
+          type: 'checkbox',
+        },
       ]}
       onSubmit={async (values) => {
         const result = await authApi.register({

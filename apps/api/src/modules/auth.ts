@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { TooManyRequestsException } from '../services/errors';
 import { ApiTags } from '@nestjs/swagger';
-import { AuthProvider, UserRole, UserStatus, type User } from '@pulse/database';
+import { AuthProvider, type UserRole, UserStatus, type User } from '@pulse/database';
 import {
   changePasswordSchema,
   confirmPasswordResetSchema,

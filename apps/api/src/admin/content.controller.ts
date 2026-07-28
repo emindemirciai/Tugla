@@ -12,7 +12,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma, UserRole } from '@pulse/database';
+import { type Prisma, UserRole } from '@pulse/database';
 import { generateCampaignLevel } from '@pulse/game-engine';
 import { levelDefinitionSchema, levelStatuses, pageSchema } from '@pulse/shared';
 import { z } from 'zod';

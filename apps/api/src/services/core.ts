@@ -1,17 +1,17 @@
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   ForbiddenException,
   Injectable,
   Logger,
-  OnModuleDestroy,
-  OnModuleInit,
+  type OnModuleDestroy,
+  type OnModuleInit,
   SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { createPrismaClient, Prisma, UserRole, type PrismaClient } from '@pulse/database';
+import { createPrismaClient, type Prisma, type UserRole, type PrismaClient } from '@pulse/database';
 import type { Request } from 'express';
 import Redis from 'ioredis';
 import { env } from '../config/env';

@@ -7,16 +7,32 @@ import { useAdminSession, useRequireStaff } from '../lib/session';
 
 const NAV = [
   { href: '/', label: 'Genel bakış', roles: null },
-  { href: '/levels', label: 'Bölümler ve dünyalar', roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
+  {
+    href: '/levels',
+    label: 'Bölümler ve dünyalar',
+    roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
+  },
   { href: '/users', label: 'Kullanıcılar', roles: null },
   { href: '/moderation', label: 'Moderasyon', roles: null },
   { href: '/support', label: 'Destek talepleri', roles: null },
   { href: '/tasks', label: 'Görevler', roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
-  { href: '/achievements', label: 'Başarımlar', roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
-  { href: '/economy', label: 'Mağaza ve ekonomi', roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
+  {
+    href: '/achievements',
+    label: 'Başarımlar',
+    roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
+  },
+  {
+    href: '/economy',
+    label: 'Mağaza ve ekonomi',
+    roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
+  },
   { href: '/leagues', label: 'Ligler', roles: null },
   { href: '/seasons', label: 'Sezonlar', roles: ['GAME_ADMIN', 'SUPER_ADMIN'] },
-  { href: '/announcements', label: 'Duyurular', roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
+  {
+    href: '/announcements',
+    label: 'Duyurular',
+    roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
+  },
   { href: '/flags', label: 'Feature flags', roles: null },
   { href: '/analytics', label: 'Analitik', roles: null },
   { href: '/audit', label: 'Audit log', roles: null },
@@ -47,7 +63,11 @@ export function AdminShell({ title, children }: { title: string; children: React
           {NAV.filter(
             (item) => !item.roles || (item.roles as readonly string[]).includes(user.role),
           ).map((item) => (
-            <Link key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={pathname === item.href ? 'active' : ''}
+            >
               {item.label}
             </Link>
           ))}

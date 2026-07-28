@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Injectable, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma } from '@pulse/database';
+import { type Prisma } from '@pulse/database';
 import {
   APP_DEFAULTS,
   moderationReportSchema,

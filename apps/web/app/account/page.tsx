@@ -17,7 +17,7 @@ interface DeviceSession {
 /** Account centre: verification, sessions, providers, export, deletion. */
 export default function AccountPage() {
   const router = useRouter();
-  const { user, loading, refresh, signOut } = useSession();
+  const { user, loading, signOut } = useSession();
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [providers, setProviders] = useState<{ provider: string }[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -30,7 +30,9 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!user) return;
-    void authApi.sessions().then((result) => setSessions(result.items as unknown as DeviceSession[]));
+    void authApi
+      .sessions()
+      .then((result) => setSessions(result.items as unknown as DeviceSession[]));
     void authApi
       .me()
       .then(() => authApi.sessions())
@@ -156,11 +158,15 @@ export default function AccountPage() {
                   type="button"
                   className="button-quiet"
                   onClick={() =>
-                    void authApi.revokeSession(entry.id).then(() =>
-                      authApi.sessions().then((result) =>
-                        setSessions(result.items as unknown as DeviceSession[]),
-                      ),
-                    )
+                    void authApi
+                      .revokeSession(entry.id)
+                      .then(() =>
+                        authApi
+                          .sessions()
+                          .then((result) =>
+                            setSessions(result.items as unknown as DeviceSession[]),
+                          ),
+                      )
                   }
                 >
                   Sonlandır
@@ -181,8 +187,8 @@ export default function AccountPage() {
       <section className="account-section danger">
         <h2>Hesabı sil</h2>
         <p className="muted">
-          Bu işlem geri alınamaz: kişisel verilerin anında temizlenir, skorların anonimleşir. Onaylamak
-          için kullanıcı adını yaz: <strong>{user.username}</strong>
+          Bu işlem geri alınamaz: kişisel verilerin anında temizlenir, skorların anonimleşir.
+          Onaylamak için kullanıcı adını yaz: <strong>{user.username}</strong>
         </p>
         <div className="danger-row">
           <input

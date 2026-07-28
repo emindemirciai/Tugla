@@ -1,5 +1,5 @@
-import { readdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { dirname, extname, join, relative, resolve } from 'node:path';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { extname, join, relative, resolve } from 'node:path';
 import process from 'node:process';
 
 const [, , newName, requestedSlug] = process.argv;
