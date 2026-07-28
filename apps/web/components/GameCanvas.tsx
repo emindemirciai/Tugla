@@ -1,377 +1,252 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createDemoLevel, PulseEngine, type EngineSnapshot } from '@pulse/game-engine';
-import type { BonusKind } from '@pulse/shared';
-import * as THREE from 'three';
-
-interface DroppedBonus {
-  id: string;
-  kind: BonusKind;
-  x: number;
-  y: number;
-  mesh: THREE.Mesh;
-}
+import { PulseEngine, type EngineSnapshot } from '@pulse/game-engine';
+import { levelDefinitionSchema, type LevelDefinition } from '@pulse/shared';
+import { gameApi, type SessionStart } from '../lib/api';
+import { loadSettings, resolveQuality, saveSettings, type GameSettings } from '../lib/settings';
+import { GameRenderer } from './GameRenderer';
 
 interface ViewState {
   score: number;
   lives: number;
   balls: number;
   combo: number;
+  overcharge: number;
+  blocksRemaining: number;
   status: EngineSnapshot['status'];
 }
 
-const initialState: ViewState = {
+export interface CompletionSummary {
+  accepted: boolean;
+  status: string;
+  reasons: string[];
+  rewards: {
+    credits: number;
+    crystals: number;
+    experience: number;
+    playerLevel: number;
+    tasksCompleted: string[];
+    achievementsUnlocked: string[];
+    personalBest: boolean;
+  } | null;
+}
+
+const initialView: ViewState = {
   score: 0,
   lives: 5,
   balls: 1,
   combo: 0,
+  overcharge: 1,
+  blocksRemaining: 0,
   status: 'READY',
 };
 
-const blockColors: Record<string, number> = {
-  NORMAL: 0x28d9ff,
-  TOUGH: 0x7b6cff,
-  ARMORED: 0xffb85c,
-  EXPLOSIVE: 0xff4d78,
-  ICE: 0x88eaff,
-  FIRE: 0xff784e,
-  ELECTRIC: 0xeaff65,
-  BOSS_CORE: 0xff3ef4,
-};
-
-export function GameCanvas() {
+export function GameCanvas({
+  session,
+  onExit,
+}: {
+  session: SessionStart;
+  onExit: (summary: CompletionSummary | null) => void;
+}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<PulseEngine | null>(null);
-  const [view, setView] = useState(initialState);
-  const [muted, setMuted] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(true);
-  const pointerStart = useRef<number | null>(null);
+  const submittedRef = useRef(false);
+  const [view, setView] = useState(initialView);
+  const [settings, setSettings] = useState<GameSettings>(() => loadSettings());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(true);
+  const [summary, setSummary] = useState<CompletionSummary | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const togglePause = useCallback(() => {
     const engine = engineRef.current;
     if (!engine) return;
-    const paused = engine.snapshot.status !== 'PAUSED';
-    engine.pause(paused);
+    engine.pause(engine.snapshot.status !== 'PAUSED');
     setView((current) => ({ ...current, status: engine.snapshot.status }));
   }, []);
+
+  /** Submits the signed result; the server re-simulates it before accepting. */
+  const submit = useCallback(async () => {
+    const engine = engineRef.current;
+    if (!engine || submittedRef.current) return;
+    submittedRef.current = true;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const result = engine.buildResult({
+        sessionId: session.sessionId,
+        nonce: session.nonce,
+      });
+      const response = await gameApi.completeSession(result as unknown as Record<string, unknown>);
+      setSummary({
+        accepted: response.accepted,
+        status: response.status,
+        reasons: response.reasons,
+        rewards: response.rewards,
+      });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Sonuç gönderilemedi');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [session.nonce, session.sessionId]);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const engine = new PulseEngine(createDemoLevel(), { width: 9, height: 16, maxBalls: 500 });
+    let definition: LevelDefinition;
+    try {
+      definition = levelDefinitionSchema.parse(session.level.definition);
+    } catch {
+      setSubmitError('Bölüm verisi okunamadı.');
+      return;
+    }
+
+    const engine = new PulseEngine(definition, {
+      seed: session.seed,
+      maxBalls: session.maxBalls,
+      lives: session.lives,
+      levelId: session.level.id,
+      recordReplay: true,
+    });
     engineRef.current = engine;
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x07111f, 0.028);
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: false,
-      powerPreference: 'high-performance',
+    const quality = resolveQuality(settings.quality);
+    const renderer = new GameRenderer(mount, engine, {
+      ...quality,
+      trailLength: settings.showTrails ? quality.trailLength : 0,
+      maxParticles: settings.reducedMotion ? Math.min(40, quality.maxParticles) : quality.maxParticles,
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    renderer.shadowMap.enabled = window.devicePixelRatio <= 2;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    mount.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(
-      35,
-      mount.clientWidth / mount.clientHeight,
-      0.1,
-      100,
-    );
-    camera.position.set(4.5, 7.4, 22);
-    camera.lookAt(4.5, 8, 0);
-
-    scene.add(new THREE.HemisphereLight(0x81dcff, 0x07111f, 1.5));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.7);
-    keyLight.position.set(-5, 14, 10);
-    keyLight.castShadow = true;
-    scene.add(keyLight);
-    const accentLight = new THREE.PointLight(0x7c5cff, 40, 30);
-    accentLight.position.set(9, 4, 5);
-    scene.add(accentLight);
-
-    const board = new THREE.Mesh(
-      new THREE.BoxGeometry(9.5, 16.5, 0.35),
-      new THREE.MeshPhysicalMaterial({
-        color: 0x081729,
-        roughness: 0.58,
-        metalness: 0.42,
-        clearcoat: 0.7,
-      }),
-    );
-    board.position.set(4.5, 8, -0.45);
-    board.receiveShadow = true;
-    scene.add(board);
-
-    const grid = new THREE.GridHelper(18, 36, 0x1f4866, 0x102f49);
-    grid.rotation.x = Math.PI / 2;
-    grid.position.set(4.5, 8, -0.24);
-    scene.add(grid);
-
-    const blockGeometry = new THREE.BoxGeometry(1, 1, 0.46, 2, 2, 1);
-    const blockMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      roughness: 0.22,
-      metalness: 0.5,
-      clearcoat: 1,
-      clearcoatRoughness: 0.18,
-      vertexColors: true,
-    });
-    const blockMesh = new THREE.InstancedMesh(
-      blockGeometry,
-      blockMaterial,
-      engine.snapshot.blocks.length,
-    );
-    blockMesh.castShadow = true;
-    blockMesh.receiveShadow = true;
-    blockMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    scene.add(blockMesh);
-
-    const ballGeometry = new THREE.SphereGeometry(0.105, 14, 10);
-    const ballMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xeefcff,
-      emissive: 0x38d9ff,
-      emissiveIntensity: 1.4,
-      roughness: 0.08,
-      metalness: 0.25,
-      clearcoat: 1,
-    });
-    const ballMesh = new THREE.InstancedMesh(ballGeometry, ballMaterial, 500);
-    ballMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    scene.add(ballMesh);
-
-    const paddle = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 0.55),
-      new THREE.MeshPhysicalMaterial({
-        color: 0x4ce9ff,
-        emissive: 0x124bff,
-        emissiveIntensity: 0.8,
-        metalness: 0.65,
-        roughness: 0.18,
-        clearcoat: 1,
-      }),
-    );
-    paddle.castShadow = true;
-    scene.add(paddle);
-
-    const bonusGeometry = new THREE.CapsuleGeometry(0.16, 0.2, 6, 10);
-    const bonuses: DroppedBonus[] = [];
-    const tempMatrix = new THREE.Matrix4();
-    const tempPosition = new THREE.Vector3();
-    const tempScale = new THREE.Vector3();
-    const tempQuaternion = new THREE.Quaternion();
-    const clock = new THREE.Clock();
-    let animationFrame = 0;
+    let frame = 0;
+    let last = performance.now();
     let hudAccumulator = 0;
+    let finished = false;
 
-    engine.snapshot.blocks.forEach((block, index) => {
-      blockMesh.setColorAt(index, new THREE.Color(blockColors[block.kind] ?? 0x37d4ff));
-    });
-    blockMesh.instanceColor!.needsUpdate = true;
-
-    const applyBonus = (kind: BonusKind) => {
-      if (kind === 'BALL_DOUBLE') engine.addBalls(engine.snapshot.balls.length);
-      else if (kind === 'BALL_5') engine.addBalls(5);
-      else if (kind === 'BALL_3') engine.addBalls(3);
-      else if (kind === 'BALL_1') engine.addBalls(1);
-      else if (kind === 'PADDLE_GROW')
-        engine.snapshot.paddle.width = Math.min(3.4, engine.snapshot.paddle.width + 0.45);
-      else if (kind === 'SHIELD') engine.snapshot.paddle.shield = 100;
-      else engine.snapshot.balls.forEach((ball) => ball.effects.add(kind));
-    };
-
-    const tick = () => {
-      const delta = Math.min(clock.getDelta(), 0.05);
+    const loop = (now: number) => {
+      const delta = Math.min((now - last) / 1000, 0.05);
+      last = now;
       engine.update(delta);
-
-      for (const event of engine.drainEvents()) {
-        if (event.type !== 'BONUS_DROPPED') continue;
-        const block = engine.snapshot.blocks.find((item) => item.id === event.entityId);
-        if (!block?.bonus) continue;
-        const material = new THREE.MeshPhysicalMaterial({
-          color: 0x94ffef,
-          emissive: 0x2bdcff,
-          emissiveIntensity: 1.4,
-          roughness: 0.18,
-          metalness: 0.4,
-        });
-        const mesh = new THREE.Mesh(bonusGeometry, material);
-        mesh.position.set(block.position.x, block.position.y, 0.6);
-        scene.add(mesh);
-        bonuses.push({
-          id: `${block.id}-${event.tick}`,
-          kind: block.bonus,
-          x: block.position.x,
-          y: block.position.y,
-          mesh,
-        });
-      }
-
-      bonuses.forEach((bonus) => {
-        bonus.y -= delta * 2.15;
-        bonus.mesh.position.y = bonus.y;
-        bonus.mesh.rotation.y += delta * 4;
-        bonus.mesh.rotation.z += delta * 1.7;
-        const paddleState = engine.snapshot.paddle;
-        if (
-          bonus.y <= paddleState.y + 0.35 &&
-          bonus.y >= paddleState.y - 0.35 &&
-          Math.abs(bonus.x - paddleState.x) <= paddleState.width / 2 + 0.2
-        ) {
-          applyBonus(bonus.kind);
-          bonus.y = -10;
-        }
-      });
-      for (let index = bonuses.length - 1; index >= 0; index -= 1) {
-        const bonus = bonuses[index];
-        if (bonus && bonus.y < -1) {
-          scene.remove(bonus.mesh);
-          (bonus.mesh.material as THREE.Material).dispose();
-          bonuses.splice(index, 1);
-        }
-      }
-
-      engine.snapshot.blocks.forEach((block, index) => {
-        tempPosition.set(block.position.x, block.position.y, 0.1);
-        tempScale.set(
-          block.active ? block.size.x * 0.9 : 0,
-          block.active ? block.size.y * 0.82 : 0,
-          block.active ? 1 : 0,
-        );
-        tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
-        blockMesh.setMatrixAt(index, tempMatrix);
-      });
-      blockMesh.instanceMatrix.needsUpdate = true;
-
-      const activeBalls = engine.snapshot.balls;
-      ballMesh.count = activeBalls.length;
-      activeBalls.forEach((ball, index) => {
-        const lastBallScale = activeBalls.length === 1 ? 1.16 : 1;
-        tempPosition.set(ball.position.x, ball.position.y, 0.5);
-        tempScale.setScalar(lastBallScale);
-        tempMatrix.compose(tempPosition, tempQuaternion, tempScale);
-        ballMesh.setMatrixAt(index, tempMatrix);
-      });
-      ballMesh.instanceMatrix.needsUpdate = true;
-
-      const paddleState = engine.snapshot.paddle;
-      paddle.position.set(paddleState.x, paddleState.y, 0.34);
-      paddle.scale.set(paddleState.width, paddleState.height, 1);
+      renderer.emitEvents(engine.drainEvents());
+      renderer.render(delta);
 
       hudAccumulator += delta;
-      if (hudAccumulator > 0.08) {
+      if (hudAccumulator > 0.1) {
         hudAccumulator = 0;
+        const snapshot = engine.snapshot;
         setView({
-          score: engine.snapshot.score,
-          lives: engine.snapshot.lives,
-          balls: activeBalls.length,
-          combo: engine.snapshot.combo,
-          status: engine.snapshot.status,
+          score: snapshot.score,
+          lives: snapshot.lives,
+          balls: snapshot.balls.length,
+          combo: snapshot.combo,
+          overcharge: snapshot.overcharge,
+          blocksRemaining: snapshot.blocks.filter((block) => block.active && block.required).length,
+          status: snapshot.status,
         });
       }
-      renderer.render(scene, camera);
-      animationFrame = requestAnimationFrame(tick);
-    };
-    tick();
 
-    const resize = () => {
-      if (!mount) return;
-      camera.aspect = mount.clientWidth / mount.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(mount.clientWidth, mount.clientHeight);
+      if (!finished && (engine.snapshot.status === 'COMPLETED' || engine.snapshot.status === 'FAILED')) {
+        finished = true;
+        void submit();
+      }
+      frame = requestAnimationFrame(loop);
     };
-    const pointerX = (clientX: number) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      return ((clientX - rect.left) / rect.width) * engine.width;
-    };
-    const pointerDown = (event: PointerEvent) => {
-      pointerStart.current = event.clientX;
+    frame = requestAnimationFrame(loop);
+
+    const onResize = () => renderer.resize();
+    let pointerActive = false;
+    let pointerOrigin = 0;
+
+    const onPointerDown = (event: PointerEvent) => {
+      pointerActive = true;
+      pointerOrigin = event.clientX;
       renderer.domElement.setPointerCapture(event.pointerId);
-      engine.setPaddleTarget(pointerX(event.clientX));
+      engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX));
     };
-    const pointerMove = (event: PointerEvent) => {
-      if (pointerStart.current === null) return;
-      engine.setPaddleTarget(pointerX(event.clientX));
-      if (
-        engine.snapshot.status === 'READY' &&
-        Math.abs(event.clientX - pointerStart.current) > 18
-      ) {
+    const onPointerMove = (event: PointerEvent) => {
+      if (!pointerActive) return;
+      engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX));
+      // Moving the paddle far enough before release fires the ball in that
+      // direction: the launch angle comes from how the player swiped.
+      if (engine.snapshot.status === 'READY' && Math.abs(event.clientX - pointerOrigin) > 16) {
         engine.launch();
-        setHelpOpen(false);
+        setHelpVisible(false);
       }
     };
-    const pointerUp = (event: PointerEvent) => {
+    const onPointerUp = (event: PointerEvent) => {
       if (engine.snapshot.status === 'READY') {
-        engine.setPaddleTarget(pointerX(event.clientX));
+        engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX));
         engine.launch();
-        setHelpOpen(false);
+        setHelpVisible(false);
       }
-      pointerStart.current = null;
+      pointerActive = false;
     };
-    const keyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft' || event.key === 'a')
-        engine.setPaddleTarget(engine.snapshot.paddle.targetX - 0.7);
-      if (event.key === 'ArrowRight' || event.key === 'd')
-        engine.setPaddleTarget(engine.snapshot.paddle.targetX + 0.7);
-      if (event.key === ' ' && engine.snapshot.status === 'READY') engine.launch();
-      if (event.key === 'Escape') {
-        engine.pause(engine.snapshot.status !== 'PAUSED');
+    const onKeyDown = (event: KeyboardEvent) => {
+      const paddle = engine.snapshot.paddle;
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+        engine.setPaddleTarget(paddle.targetX - 0.7);
+      } else if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+        engine.setPaddleTarget(paddle.targetX + 0.7);
+      } else if (event.key === ' ') {
+        event.preventDefault();
+        engine.launch();
+        setHelpVisible(false);
+      } else if (event.key === 'Escape') {
+        togglePause();
       }
     };
-    const visibility = () => {
+    const onVisibility = () => {
       if (document.hidden) engine.pause(true);
     };
-    window.addEventListener('resize', resize);
-    window.addEventListener('keydown', keyDown);
-    document.addEventListener('visibilitychange', visibility);
-    renderer.domElement.addEventListener('pointerdown', pointerDown);
-    renderer.domElement.addEventListener('pointermove', pointerMove);
-    renderer.domElement.addEventListener('pointerup', pointerUp);
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener('visibilitychange', onVisibility);
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointercancel', onPointerUp);
 
     return () => {
-      cancelAnimationFrame(animationFrame);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('keydown', keyDown);
-      document.removeEventListener('visibilitychange', visibility);
-      renderer.domElement.removeEventListener('pointerdown', pointerDown);
-      renderer.domElement.removeEventListener('pointermove', pointerMove);
-      renderer.domElement.removeEventListener('pointerup', pointerUp);
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('visibilitychange', onVisibility);
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
+      renderer.domElement.removeEventListener('pointercancel', onPointerUp);
       renderer.dispose();
-      blockGeometry.dispose();
-      blockMaterial.dispose();
-      ballGeometry.dispose();
-      ballMaterial.dispose();
-      bonusGeometry.dispose();
-      mount.removeChild(renderer.domElement);
       engineRef.current = null;
     };
-  }, []);
+  }, [session, settings, submit, togglePause]);
+
+  const updateSettings = (patch: Partial<GameSettings>) => {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    saveSettings(next);
+  };
+
+  const comboMultiplier = Math.min(8, Math.max(1, Math.floor(view.combo / 5) + 1));
 
   return (
     <section className="game-shell">
       <header className="game-topbar">
-        <a className="brand game-brand" href="/">
-          <span className="brand-mark" />
-          PULSE
-        </a>
+        <button type="button" className="icon-button" onClick={() => onExit(summary)}>
+          ← Çıkış
+        </button>
         <div className="level-title">
-          <span>WORLD 01 · NEON GRID</span>
-          <strong>LEVEL 01</strong>
+          <span>
+            DÜNYA {String(session.level.world).padStart(2, '0')} · {session.level.theme.toUpperCase()}
+          </span>
+          <strong>{session.level.name}</strong>
         </div>
         <div className="game-controls">
-          <button
-            type="button"
-            onClick={() => setMuted((value) => !value)}
-            aria-label="Sesi aç veya kapat"
-          >
-            {muted ? 'SOUND OFF' : 'SOUND ON'}
+          <button type="button" onClick={() => setSettingsOpen((open) => !open)} aria-label="Ayarlar">
+            ⚙
           </button>
           <button type="button" onClick={togglePause}>
             {view.status === 'PAUSED' ? 'DEVAM' : 'DURAKLAT'}
@@ -381,62 +256,137 @@ export function GameCanvas() {
 
       <div className="game-stage">
         <aside className="hud-panel">
-          <span>SCORE</span>
+          <span>SKOR</span>
           <strong>{view.score.toLocaleString('tr-TR')}</strong>
-          <span>COMBO</span>
-          <strong className="accent">×{Math.max(1, Math.floor(view.combo / 5) + 1)}</strong>
+          <span>KOMBO</span>
+          <strong className="accent">×{comboMultiplier}</strong>
+          {view.overcharge > 1 && (
+            <>
+              <span>OVERCHARGE</span>
+              <strong className="overcharge">×{view.overcharge.toFixed(2)}</strong>
+            </>
+          )}
         </aside>
 
         <div className="canvas-frame">
           <div ref={mountRef} className="game-canvas" />
-          {helpOpen && (
+
+          {helpVisible && view.status === 'READY' && (
             <div className="game-instruction">
               <span>↔</span>
               <strong>PLATFORMU HAREKET ETTİR</strong>
               <p>İlk hareketin topun çıkış açısını belirler.</p>
             </div>
           )}
-          {(view.status === 'PAUSED' ||
-            view.status === 'COMPLETED' ||
-            view.status === 'FAILED') && (
+
+          {settingsOpen && (
+            <div className="settings-panel">
+              <h2>Görüntü ayarları</h2>
+              <label>
+                Grafik kalitesi
+                <select
+                  value={settings.quality}
+                  onChange={(event) =>
+                    updateSettings({ quality: event.target.value as GameSettings['quality'] })
+                  }
+                >
+                  <option value="AUTO">Otomatik</option>
+                  <option value="LOW">Düşük</option>
+                  <option value="MEDIUM">Orta</option>
+                  <option value="HIGH">Yüksek</option>
+                </select>
+              </label>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={settings.showTrails}
+                  onChange={(event) => updateSettings({ showTrails: event.target.checked })}
+                />
+                Top izi
+              </label>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={settings.reducedMotion}
+                  onChange={(event) => updateSettings({ reducedMotion: event.target.checked })}
+                />
+                Azaltılmış hareket
+              </label>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={settings.soundEnabled}
+                  onChange={(event) => updateSettings({ soundEnabled: event.target.checked })}
+                />
+                Ses
+              </label>
+              <p className="settings-note">Kalite değişikliği sahneyi yeniden oluşturur.</p>
+              <button type="button" className="button" onClick={() => setSettingsOpen(false)}>
+                Kapat
+              </button>
+            </div>
+          )}
+
+          {view.status === 'PAUSED' && (
             <div className="game-overlay">
-              <span>{view.status === 'PAUSED' ? 'SESSION PAUSED' : 'SESSION COMPLETE'}</span>
-              <h1>
-                {view.status === 'PAUSED'
-                  ? 'Ritmi dondurdun.'
-                  : view.status === 'COMPLETED'
-                    ? 'Çekirdek temizlendi.'
-                    : 'Enerji tükendi.'}
-              </h1>
-              {view.status === 'PAUSED' && (
-                <button className="button button-primary" onClick={togglePause}>
-                  Devam et
-                </button>
+              <span>DURAKLATILDI</span>
+              <h1>Ritmi dondurdun.</h1>
+              <button type="button" className="button button-primary" onClick={togglePause}>
+                Devam et
+              </button>
+            </div>
+          )}
+
+          {(view.status === 'COMPLETED' || view.status === 'FAILED') && (
+            <div className="game-overlay">
+              <span>{view.status === 'COMPLETED' ? 'BÖLÜM TAMAMLANDI' : 'ENERJİ TÜKENDİ'}</span>
+              <h1>{view.score.toLocaleString('tr-TR')} puan</h1>
+
+              {submitting && <p>Sonuç doğrulanıyor…</p>}
+              {submitError && <p className="error">{submitError}</p>}
+
+              {summary && !summary.accepted && (
+                <p className="error">
+                  Sunucu bu sonucu doğrulayamadı ({summary.reasons.join(', ') || 'bilinmeyen sebep'}).
+                  Skor kaydedilmedi.
+                </p>
               )}
-              {view.status !== 'PAUSED' && (
-                <button className="button button-primary" onClick={() => window.location.reload()}>
-                  Yeniden başlat
-                </button>
+
+              {summary?.rewards && (
+                <ul className="reward-list">
+                  <li>+{summary.rewards.credits} kredi</li>
+                  {summary.rewards.crystals > 0 && <li>+{summary.rewards.crystals} kristal</li>}
+                  <li>+{summary.rewards.experience} XP</li>
+                  {summary.rewards.personalBest && <li className="accent">Kişisel rekor!</li>}
+                  {summary.rewards.achievementsUnlocked.map((key) => (
+                    <li key={key} className="accent">
+                      Başarım açıldı: {key}
+                    </li>
+                  ))}
+                </ul>
               )}
+
+              <button type="button" className="button button-primary" onClick={() => onExit(summary)}>
+                Bölüm listesine dön
+              </button>
             </div>
           )}
         </div>
 
         <aside className="hud-panel hud-panel-right">
-          <span>LIVES</span>
+          <span>CAN</span>
           <strong>{'♥'.repeat(Math.max(0, view.lives))}</strong>
-          <span>ACTIVE BALLS</span>
+          <span>AKTİF TOP</span>
           <strong className="accent">{view.balls}</strong>
-          <div className="progress-track">
-            <i style={{ width: `${Math.min(100, (view.score / 10_000) * 100)}%` }} />
-          </div>
+          <span>KALAN BLOK</span>
+          <strong>{view.blocksRemaining}</strong>
         </aside>
       </div>
 
       <footer className="game-footer">
-        <span>DRAG / MOUSE / ← →</span>
-        <span>WebGL 2 · FIXED 120 HZ PHYSICS</span>
-        <span>MAX 500 BALLS</span>
+        <span>SÜRÜKLE / FARE / ← →</span>
+        <span>SABİT 120 HZ FİZİK</span>
+        <span>MAKS {session.maxBalls} TOP</span>
       </footer>
     </section>
   );

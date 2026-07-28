@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { PwaRegistration } from '../components/PwaRegistration';
+import { SessionProvider } from '../lib/session';
 import './styles.css';
 
 const title = process.env.APP_NAME ?? 'Pulse';
@@ -62,7 +63,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="tr">
       <body>
-        {children}
+        <SessionProvider>{children}</SessionProvider>
         <PwaRegistration />
         <script
           type="application/ld+json"

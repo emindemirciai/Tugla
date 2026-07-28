@@ -8,6 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { createDemoLevel } from '@pulse/game-engine';
+import { adminApi } from '../lib/api';
 import {
   blockKinds,
   levelDefinitionSchema,
@@ -39,8 +40,17 @@ const colorByKind: Record<BlockKind, string> = {
 
 const clone = <T,>(value: T): T => structuredClone(value);
 
-export function LevelEditor() {
-  const [level, setLevel] = useState<LevelDefinition>(() => createDemoLevel());
+export interface LevelEditorProps {
+  /** Existing level being edited, if any. */
+  levelId?: string | null;
+  initialLevel?: LevelDefinition;
+  /** Called after a successful create so the page can switch to edit mode. */
+  onSaved?: (levelId: string) => void;
+}
+
+export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEditorProps) {
+  const [persistedId, setPersistedId] = useState<string | null>(levelId);
+  const [level, setLevel] = useState<LevelDefinition>(() => initialLevel ?? createDemoLevel());
   const [history, setHistory] = useState<LevelDefinition[]>([]);
   const [future, setFuture] = useState<LevelDefinition[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -199,25 +209,50 @@ export function LevelEditor() {
     );
   };
 
+  /** Persists to the API: create on first save, versioned update afterwards. */
   const saveDraft = async () => {
-    const token = window.localStorage.getItem('pulse_admin_token');
-    if (!token) {
-      window.localStorage.setItem('pulse_level_draft', JSON.stringify(level));
-      setNotice('API oturumu yok; taslak bu cihazda güvenli biçimde saklandı.');
+    const parsed = levelDefinitionSchema.safeParse(level);
+    if (!parsed.success) {
+      setNotice(`Hata: ${parsed.error.issues[0]?.message ?? 'Bölüm geçersiz.'}`);
       return;
     }
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/admin/levels`,
-      {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${token}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(level),
-      },
-    );
-    setNotice(response.ok ? 'Taslak sunucuya kaydedildi.' : 'Sunucu taslağı reddetti.');
+    try {
+      if (persistedId) {
+        await adminApi(`/admin/content/levels/${persistedId}`, {
+          method: 'PATCH',
+          body: { definition: parsed.data },
+        });
+        setNotice('Yeni sürüm kaydedildi (sürüm geçmişinde saklanır).');
+      } else {
+        const created = await adminApi<{ id: string }>('/admin/content/levels', {
+          method: 'POST',
+          body: { definition: parsed.data },
+        });
+        setPersistedId(created.id);
+        onSaved?.(created.id);
+        setNotice('Bölüm TASLAK olarak oluşturuldu. Yayınlamayı bölüm listesinden yapabilirsin.');
+      }
+    } catch (saveError) {
+      setNotice(saveError instanceof Error ? `Sunucu hatası: ${saveError.message}` : 'Kaydetme başarısız.');
+    }
+  };
+
+  /** Pulls the deterministic campaign definition for an index as a scaffold. */
+  const loadGenerated = async () => {
+    const raw = window.prompt('Kampanya bölüm numarası (1-500):');
+    if (!raw) return;
+    const index = Number(raw);
+    if (!Number.isInteger(index) || index < 1) {
+      setNotice('Geçerli bir bölüm numarası gir.');
+      return;
+    }
+    try {
+      const generated = await adminApi<LevelDefinition>(`/admin/content/levels/generate/${index}`);
+      pushLevel(generated);
+      setNotice(`Kampanya ${index} şablonu yüklendi; düzenleyip yeni bölüm olarak kaydedebilirsin.`);
+    } catch {
+      setNotice('Şablon alınamadı.');
+    }
   };
 
   const metrics = useMemo(() => {
@@ -270,6 +305,7 @@ export function LevelEditor() {
           </div>
           <div className="top-actions">
             <button onClick={validate}>Validate</button>
+            <button onClick={loadGenerated}>Kampanyadan yükle</button>
             <button className="primary" onClick={saveDraft}>
               Save draft
             </button>
