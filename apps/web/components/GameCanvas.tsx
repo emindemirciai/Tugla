@@ -118,7 +118,9 @@ export function GameCanvas({
     const renderer = new GameRenderer(mount, engine, {
       ...quality,
       trailLength: settings.showTrails ? quality.trailLength : 0,
-      maxParticles: settings.reducedMotion ? Math.min(40, quality.maxParticles) : quality.maxParticles,
+      maxParticles: settings.reducedMotion
+        ? Math.min(40, quality.maxParticles)
+        : quality.maxParticles,
     });
 
     let frame = 0;
@@ -148,7 +150,10 @@ export function GameCanvas({
         });
       }
 
-      if (!finished && (engine.snapshot.status === 'COMPLETED' || engine.snapshot.status === 'FAILED')) {
+      if (
+        !finished &&
+        (engine.snapshot.status === 'COMPLETED' || engine.snapshot.status === 'FAILED')
+      ) {
         finished = true;
         void submit();
       }
@@ -240,12 +245,17 @@ export function GameCanvas({
         </button>
         <div className="level-title">
           <span>
-            DÜNYA {String(session.level.world).padStart(2, '0')} · {session.level.theme.toUpperCase()}
+            DÜNYA {String(session.level.world).padStart(2, '0')} ·{' '}
+            {session.level.theme.toUpperCase()}
           </span>
           <strong>{session.level.name}</strong>
         </div>
         <div className="game-controls">
-          <button type="button" onClick={() => setSettingsOpen((open) => !open)} aria-label="Ayarlar">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen((open) => !open)}
+            aria-label="Ayarlar"
+          >
             ⚙
           </button>
           <button type="button" onClick={togglePause}>
@@ -347,8 +357,8 @@ export function GameCanvas({
 
               {summary && !summary.accepted && (
                 <p className="error">
-                  Sunucu bu sonucu doğrulayamadı ({summary.reasons.join(', ') || 'bilinmeyen sebep'}).
-                  Skor kaydedilmedi.
+                  Sunucu bu sonucu doğrulayamadı ({summary.reasons.join(', ') || 'bilinmeyen sebep'}
+                  ). Skor kaydedilmedi.
                 </p>
               )}
 
@@ -366,7 +376,11 @@ export function GameCanvas({
                 </ul>
               )}
 
-              <button type="button" className="button button-primary" onClick={() => onExit(summary)}>
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => onExit(summary)}
+              >
                 Bölüm listesine dön
               </button>
             </div>

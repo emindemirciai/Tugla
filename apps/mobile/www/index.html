@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Tuğla</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: #07111f;
+        color: #e8f4ff;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+      }
+      .mark {
+        font-size: 44px;
+        color: #37d4ff;
+      }
+      p {
+        color: #8fa7bd;
+        max-width: 280px;
+        line-height: 1.5;
+      }
+      button {
+        background: #2dd9ff;
+        color: #04121f;
+        border: 0;
+        border-radius: 12px;
+        padding: 14px 26px;
+        font-weight: 700;
+        font-size: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Offline bootstrap shell. In normal operation Capacitor is configured with
+      server.url (CAPACITOR_SERVER_URL) and loads the live PWA; this page only
+      appears when the app starts with no connectivity at all.
+    -->
+    <main>
+      <div class="mark">◇</div>
+      <h1 id="app-name">Tuğla</h1>
+      <p>Bağlantı kurulamadı. İnternete bağlandığında oyun otomatik yüklenir.</p>
+      <button onclick="window.location.reload()">Tekrar dene</button>
+    </main>
+    <script>
+      // The rename script updates the visible name via this data hook.
+      document.getElementById('app-name').textContent = document.title || 'Tuğla';
+    </script>
+  </body>
+</html>

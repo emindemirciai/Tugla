@@ -121,4 +121,4 @@ export interface EngineOptions {
   recordReplay?: boolean;
 }
 
-export interface EngineLevel extends LevelDefinition {}
+export type EngineLevel = LevelDefinition;

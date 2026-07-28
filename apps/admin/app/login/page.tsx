@@ -47,7 +47,9 @@ export default function AdminLoginPage() {
         <button type="submit" disabled={pending}>
           {pending ? 'Doğrulanıyor…' : 'Giriş yap'}
         </button>
-        <p className="admin-note">Yalnızca personel rollerine açıktır. Tüm işlemler audit log'a yazılır.</p>
+        <p className="admin-note">
+          Yalnızca personel rollerine açıktır. Tüm işlemler audit log'a yazılır.
+        </p>
       </form>
     </main>
   );

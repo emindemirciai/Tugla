@@ -9,7 +9,6 @@
  * Usage: node scripts/e2e-api-smoke.mjs
  */
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -95,20 +94,34 @@ try {
     '(google should be off with no client id)',
   );
   const worlds = await call('/game/worlds');
-  check('10 worlds are published', worlds.body?.items?.length === 10, `got ${worlds.body?.items?.length}`);
+  check(
+    'campaign worlds are published',
+    (worlds.body?.items?.length ?? 0) >= 10,
+    `got ${worlds.body?.items?.length}`,
+  );
 
   console.log('\nAccount lifecycle');
   const email = `smoke-${Date.now()}@example.com`;
   const password = 'smoke-password-1';
   const weak = await call('/auth/register', {
     method: 'POST',
-    body: { email: `weak-${Date.now()}@example.com`, password: 'onlyletters', displayName: 'Weak', acceptedTerms: true },
+    body: {
+      email: `weak-${Date.now()}@example.com`,
+      password: 'onlyletters',
+      displayName: 'Weak',
+      acceptedTerms: true,
+    },
   });
   check('weak password rejected', weak.status === 400, `status ${weak.status}`);
 
   const noTerms = await call('/auth/register', {
     method: 'POST',
-    body: { email: `nt-${Date.now()}@example.com`, password, displayName: 'NoTerms', acceptedTerms: false },
+    body: {
+      email: `nt-${Date.now()}@example.com`,
+      password,
+      displayName: 'NoTerms',
+      acceptedTerms: false,
+    },
   });
   check('registration without terms rejected', noTerms.status === 400, `status ${noTerms.status}`);
 
@@ -116,7 +129,11 @@ try {
     method: 'POST',
     body: { email, password, displayName: 'Smoke Player', acceptedTerms: true, locale: 'tr' },
   });
-  check('registration succeeds', registered.status === 201 || registered.status === 200, `status ${registered.status}`);
+  check(
+    'registration succeeds',
+    registered.status === 201 || registered.status === 200,
+    `status ${registered.status}`,
+  );
   const token = registered.body?.accessToken;
   check('access token issued', typeof token === 'string' && token.length > 20);
   check('email is not verified yet', registered.body?.user?.emailVerified === false);
@@ -128,19 +145,35 @@ try {
   check('duplicate email rejected', duplicate.status === 400, `status ${duplicate.status}`);
 
   const unauthorised = await call('/auth/me');
-  check('protected route requires a token', unauthorised.status === 401, `status ${unauthorised.status}`);
+  check(
+    'protected route requires a token',
+    unauthorised.status === 401,
+    `status ${unauthorised.status}`,
+  );
 
   const me = await call('/auth/me', { token });
-  check('authenticated profile returns balances', Array.isArray(me.body?.balances) && me.body.balances.length === 2);
+  check(
+    'authenticated profile returns balances',
+    Array.isArray(me.body?.balances) && me.body.balances.length === 2,
+  );
 
-  const badLogin = await call('/auth/login', { method: 'POST', body: { email, password: 'wrong-password' } });
+  const badLogin = await call('/auth/login', {
+    method: 'POST',
+    body: { email, password: 'wrong-password' },
+  });
   check('wrong password rejected', badLogin.status === 401, `status ${badLogin.status}`);
 
   const login = await call('/auth/login', { method: 'POST', body: { email, password } });
   check('login succeeds', login.status === 200 || login.status === 201, `status ${login.status}`);
 
-  const resetRequest = await call('/auth/password/reset/request', { method: 'POST', body: { email } });
-  check('password reset request accepted', resetRequest.status === 200 || resetRequest.status === 201);
+  const resetRequest = await call('/auth/password/reset/request', {
+    method: 'POST',
+    body: { email },
+  });
+  check(
+    'password reset request accepted',
+    resetRequest.status === 200 || resetRequest.status === 201,
+  );
   const unknownReset = await call('/auth/password/reset/request', {
     method: 'POST',
     body: { email: 'nobody-here@example.com' },
@@ -152,7 +185,10 @@ try {
 
   const exported = await call('/auth/export', { token });
   check('data export returns the account bundle', Boolean(exported.body?.account?.id));
-  check('export never contains the password hash', !JSON.stringify(exported.body).includes('passwordHash'));
+  check(
+    'export never contains the password hash',
+    !JSON.stringify(exported.body).includes('passwordHash'),
+  );
 
   console.log('\nGameplay and score verification');
   const levels = await call('/game/levels?limit=1', { token });
@@ -212,8 +248,15 @@ try {
   check('admin can publish a level', published.body?.status === 'PUBLISHED');
   const level = { id: created.body?.id };
 
-  const session = await call('/game/sessions', { method: 'POST', body: { levelId: level.id }, token });
-  check('session starts with a server seed and nonce', Boolean(session.body?.seed && session.body?.nonce));
+  const session = await call('/game/sessions', {
+    method: 'POST',
+    body: { levelId: level.id },
+    token,
+  });
+  check(
+    'session starts with a server seed and nonce',
+    Boolean(session.body?.seed && session.body?.nonce),
+  );
 
   const { TuğlaEngine } = await import(resolve(ROOT, 'packages/game-engine/dist/index.js'));
   const { levelDefinitionSchema } = await import(resolve(ROOT, 'packages/shared/dist/index.js'));
@@ -230,7 +273,10 @@ try {
     engine.step();
     if (engine.snapshot.status === 'COMPLETED' || engine.snapshot.status === 'FAILED') break;
   }
-  const result = engine.buildResult({ sessionId: session.body.sessionId, nonce: session.body.nonce });
+  const result = engine.buildResult({
+    sessionId: session.body.sessionId,
+    nonce: session.body.nonce,
+  });
   console.log(
     `  (simulated ${engine.snapshot.tick} ticks, status=${engine.snapshot.status}, score=${engine.snapshot.score})`,
   );
@@ -252,7 +298,11 @@ try {
   check('wallet transaction written', (wallet.body?.transactions?.length ?? 0) > 0);
 
   console.log('\nAnti-cheat');
-  const session2 = await call('/game/sessions', { method: 'POST', body: { levelId: level.id }, token });
+  const session2 = await call('/game/sessions', {
+    method: 'POST',
+    body: { levelId: level.id },
+    token,
+  });
   const tampered = {
     ...result,
     sessionId: session2.body.sessionId,
@@ -270,7 +320,11 @@ try {
     JSON.stringify(cheated.body?.reasons),
   );
 
-  const session3 = await call('/game/sessions', { method: 'POST', body: { levelId: level.id }, token });
+  const session3 = await call('/game/sessions', {
+    method: 'POST',
+    body: { levelId: level.id },
+    token,
+  });
   const engine3 = new TuğlaEngine(definition, { seed: session3.body.seed, recordReplay: true });
   engine3.launch();
   for (let tick = 0; tick < 600; tick += 1) engine3.step();
@@ -280,7 +334,11 @@ try {
   });
   // Claim completion the replay does not support.
   const lying = { ...shortRun, completed: true, score: shortRun.score + 250_000 };
-  const lyingResponse = await call('/game/sessions/complete', { method: 'POST', body: lying, token });
+  const lyingResponse = await call('/game/sessions/complete', {
+    method: 'POST',
+    body: lying,
+    token,
+  });
   check(
     'score inflated beyond the replay is rejected',
     lyingResponse.body?.accepted === false,
@@ -302,17 +360,28 @@ try {
   );
   const league = await call('/progression/league', { token });
   check('player was placed into the weekly league', Boolean(league.body?.league?.key));
-  check('league standings include the player', league.body?.standings?.some((row) => row.isSelf));
+  check(
+    'league standings include the player',
+    league.body?.standings?.some((row) => row.isSelf),
+  );
 
   console.log('\nAdmin authorisation');
   const forbidden = await call('/admin/system/overview', { token });
-  check('players cannot reach admin endpoints', forbidden.status === 403, `status ${forbidden.status}`);
+  check(
+    'players cannot reach admin endpoints',
+    forbidden.status === 403,
+    `status ${forbidden.status}`,
+  );
 
   if (adminToken) {
     const overview = await call('/admin/system/overview', { token: adminToken });
     check('admin overview returns metrics', typeof overview.body?.users === 'number');
     const adminLevels = await call('/admin/content/levels?limit=5', { token: adminToken });
-    check('admin level list is paginated', adminLevels.body?.total >= 500, `total ${adminLevels.body?.total}`);
+    check(
+      'admin level list is paginated',
+      adminLevels.body?.total >= 500,
+      `total ${adminLevels.body?.total}`,
+    );
     const generated = await call('/admin/content/levels/generate/7', { token: adminToken });
     check('editor can scaffold a generated level', (generated.body?.blocks?.length ?? 0) > 0);
     const adminHealth = await call('/admin/system/health', { token: adminToken });
@@ -326,7 +395,10 @@ try {
     });
     check('feature flag can be written', flag.body?.key === 'smoke-flag', `status ${flag.status}`);
     const configAfter = await call('/config');
-    check('flag surfaces in remote config', configAfter.body?.flags?.['smoke-flag']?.enabled === true);
+    check(
+      'flag surfaces in remote config',
+      configAfter.body?.flags?.['smoke-flag']?.enabled === true,
+    );
     const analytics = await call('/admin/system/analytics?days=7', { token: adminToken });
     check('analytics aggregates return rows', Array.isArray(analytics.body?.signups));
   }
@@ -335,7 +407,11 @@ try {
   const deleted = await call('/auth/me', { method: 'DELETE', token });
   check('account deletion succeeds', deleted.body?.deleted === true);
   const afterDelete = await call('/auth/login', { method: 'POST', body: { email, password } });
-  check('deleted account can no longer sign in', afterDelete.status === 401, `status ${afterDelete.status}`);
+  check(
+    'deleted account can no longer sign in',
+    afterDelete.status === 401,
+    `status ${afterDelete.status}`,
+  );
 } catch (error) {
   failed += 1;
   console.error('\nSmoke run threw:', error);

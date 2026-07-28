@@ -45,7 +45,9 @@ export function AuthForm({
     const values: Record<string, string | boolean> = {};
     for (const field of fields) {
       values[field.name] =
-        field.type === 'checkbox' ? form.get(field.name) === 'on' : String(form.get(field.name) ?? '');
+        field.type === 'checkbox'
+          ? form.get(field.name) === 'on'
+          : String(form.get(field.name) ?? '');
     }
     setPending(true);
     setError(null);
@@ -57,7 +59,9 @@ export function AuthForm({
         setError(submitError.message);
         setDetails(submitError.details ?? []);
       } else {
-        setError(submitError instanceof Error ? submitError.message : 'Beklenmeyen bir hata oluştu');
+        setError(
+          submitError instanceof Error ? submitError.message : 'Beklenmeyen bir hata oluştu',
+        );
       }
     } finally {
       setPending(false);

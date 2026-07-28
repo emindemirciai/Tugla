@@ -10,7 +10,7 @@
   "scripts": {
     "build": "pnpm -r --if-present build",
     "dev": "pnpm --parallel --filter @tugla/web --filter @tugla/admin --filter @tugla/api dev",
-    "lint": "pnpm -r --if-present lint",
+    "lint": "prettier --check . && eslint .",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "test:load": "k6 run tests/load/smoke.js",
@@ -21,14 +21,18 @@
     "format:check": "prettier --check .",
     "rename-project": "node scripts/rename-project.mjs",
     "prepare": "simple-git-hooks",
-    "test:e2e:api": "node scripts/e2e-api-smoke.mjs"
+    "test:e2e:api": "node scripts/e2e-api-smoke.mjs",
+    "build:packages": "pnpm --filter @tugla/shared --filter @tugla/game-engine --filter @tugla/database build"
   },
   "devDependencies": {
+    "@eslint/js": "9.28.0",
     "@types/node": "22.15.30",
     "eslint": "9.28.0",
+    "globals": "16.2.0",
     "prettier": "3.5.3",
     "simple-git-hooks": "2.11.1",
     "typescript": "5.8.3",
+    "typescript-eslint": "8.33.1",
     "vitest": "3.2.2"
   },
   "simple-git-hooks": {

@@ -53,7 +53,8 @@ export const cacheLevel = (level: SessionStart['level']) => {
   write(LEVEL_CACHE_KEY, cache.slice(0, MAX_CACHED_LEVELS));
 };
 
-export const cachedLevels = () => read<CachedLevel[]>(LEVEL_CACHE_KEY, []).map((entry) => entry.level);
+export const cachedLevels = () =>
+  read<CachedLevel[]>(LEVEL_CACHE_KEY, []).map((entry) => entry.level);
 
 export const queueOfflineRun = (run: OfflineRun) => {
   const queue = read<OfflineRun[]>(QUEUE_KEY, []);

@@ -93,8 +93,9 @@ export async function api<T = unknown>(path: string, options: RequestOptions = {
 
   if (!response.ok) {
     const message =
-      (Array.isArray(payload?.message) ? payload.message.join(', ') : (payload?.message as string)) ??
-      'Request failed';
+      (Array.isArray(payload?.message)
+        ? payload.message.join(', ')
+        : (payload?.message as string)) ?? 'Request failed';
     throw new ApiError(
       response.status,
       message,
@@ -229,7 +230,15 @@ export interface SessionStart {
   sessionId: string;
   seed: number;
   nonce: string;
-  level: { id: string; name: string; world: number; index: number; type: string; theme: string; definition: unknown };
+  level: {
+    id: string;
+    name: string;
+    world: number;
+    index: number;
+    type: string;
+    theme: string;
+    definition: unknown;
+  };
   lives: number;
   maxBalls: number;
   serverTime: number;
@@ -237,12 +246,16 @@ export interface SessionStart {
 
 export const gameApi = {
   config: () => api<RemoteConfig>('/config', { auth: false }),
-  worlds: () => api<{ items: { world: number; theme: string; levels: number }[] }>('/game/worlds', { auth: false }),
+  worlds: () =>
+    api<{ items: { world: number; theme: string; levels: number }[] }>('/game/worlds', {
+      auth: false,
+    }),
   levels: (world?: number, limit = 50) =>
     api<{ items: LevelSummary[]; nextCursor: string | null }>(
       `/game/levels?limit=${limit}${world ? `&world=${world}` : ''}`,
     ),
-  level: (id: string) => api<{ id: string; name: string; definition: unknown }>(`/game/levels/${id}`),
+  level: (id: string) =>
+    api<{ id: string; name: string; definition: unknown }>(`/game/levels/${id}`),
   startSession: (levelId: string, mode = 'CAMPAIGN') =>
     api<SessionStart>('/game/sessions', { method: 'POST', body: { levelId, mode } }),
   completeSession: (result: Record<string, unknown>) =>
@@ -299,7 +312,8 @@ export const progressionApi = {
         claimed: boolean;
       }[];
     }>('/progression/achievements'),
-  claimAchievement: (id: string) => api(`/progression/achievements/${id}/claim`, { method: 'POST' }),
+  claimAchievement: (id: string) =>
+    api(`/progression/achievements/${id}/claim`, { method: 'POST' }),
   league: () =>
     api<{
       league: { key: string; tier: string; endsAt: string };
@@ -316,7 +330,13 @@ export const progressionApi = {
   wallet: () =>
     api<{
       balances: { currency: string; amount: number }[];
-      transactions: { id: string; currency: string; amount: number; reason: string; createdAt: string }[];
+      transactions: {
+        id: string;
+        currency: string;
+        amount: number;
+        reason: string;
+        createdAt: string;
+      }[];
     }>('/progression/wallet'),
 };
 
@@ -331,9 +351,9 @@ export const socialApi = {
   acceptFriend: (id: string) => api(`/social/friends/${id}/accept`, { method: 'POST' }),
   friends: () => api<{ items: Record<string, unknown>[] }>('/social/friends'),
   leaderboard: (boardKey: string) =>
-    api<{ items: { score: number; user: { id: string; username: string; displayName: string } }[] }>(
-      `/social/leaderboards/${encodeURIComponent(boardKey)}`,
-    ),
+    api<{
+      items: { score: number; user: { id: string; username: string; displayName: string } }[];
+    }>(`/social/leaderboards/${encodeURIComponent(boardKey)}`),
 };
 
 export const platformApi = {
@@ -343,19 +363,28 @@ export const platformApi = {
       { auth: false },
     ),
   notifications: () =>
-    api<{ items: { id: string; title: string; body: string; readAt: string | null; createdAt: string }[]; unread: number }>(
-      '/notifications',
-    ),
+    api<{
+      items: {
+        id: string;
+        title: string;
+        body: string;
+        readAt: string | null;
+        createdAt: string;
+      }[];
+      unread: number;
+    }>('/notifications'),
   readNotification: (id: string) => api(`/notifications/${id}/read`, { method: 'POST' }),
   registerDevice: (input: { fingerprint: string; name: string; platform: string }) =>
     api('/devices', { method: 'POST', body: input }),
   sync: (input: { version: number; offlineSessions?: unknown[] }) =>
-    api<{ stale: boolean; progress: Record<string, unknown>; offlineSessionsRecorded: number }>('/sync', {
-      method: 'POST',
-      body: input,
-    }),
+    api<{ stale: boolean; progress: Record<string, unknown>; offlineSessionsRecorded: number }>(
+      '/sync',
+      {
+        method: 'POST',
+        body: input,
+      },
+    ),
   support: (input: Record<string, unknown>) =>
     api('/support', { method: 'POST', body: input, auth: false }),
-  shop: () =>
-    api<{ items: Record<string, unknown>[]; paymentsEnabled: boolean }>('/shop'),
+  shop: () => api<{ items: Record<string, unknown>[]; paymentsEnabled: boolean }>('/shop'),
 };

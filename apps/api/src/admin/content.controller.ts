@@ -12,7 +12,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma, UserRole } from '@tugla/database';
+import { type Prisma, UserRole } from '@tugla/database';
 import { generateCampaignLevel } from '@tugla/game-engine';
 import { levelDefinitionSchema, levelStatuses, pageSchema } from '@tugla/shared';
 import { z } from 'zod';

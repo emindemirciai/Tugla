@@ -13,7 +13,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma, type GameMode } from '@tugla/database';
+import { type Prisma, type GameMode } from '@tugla/database';
 import { runReplay, type ReplayResult } from '@tugla/game-engine';
 import {
   APP_DEFAULTS,

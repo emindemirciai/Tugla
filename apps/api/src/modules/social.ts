@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Injectable,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -13,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { pageSchema } from '@tugla/shared';
 import { z } from 'zod';
-import { type AuthenticatedRequest, DatabaseService, Public } from '../services/core';
+import { type AuthenticatedRequest, DatabaseService } from '../services/core';
 
 const friendshipSchema = z.object({ userId: z.string().uuid() });
 

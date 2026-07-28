@@ -2,11 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-
-permissions:
-  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -20,44 +17,71 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: tugla_test
           POSTGRES_USER: tugla
           POSTGRES_PASSWORD: tugla
-        ports:
-          - 5432:5432
+          POSTGRES_DB: tugla
+        ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U tugla -d tugla_test"
+          --health-cmd "pg_isready -U tugla"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
       redis:
-        image: redis:8-alpine
-        ports:
-          - 6379:6379
+        image: redis:7-alpine
+        ports: ['6379:6379']
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s
-          --health-timeout 3s
+          --health-timeout 5s
           --health-retries 10
+
     env:
-      DATABASE_URL: postgresql://tugla:tugla@localhost:5432/tugla_test?schema=public
+      DATABASE_URL: postgresql://tugla:tugla@localhost:5432/tugla?schema=public
       REDIS_URL: redis://localhost:6379
-      JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-ci-access-secret
-      SESSION_ENCRYPTION_KEY: ci-game-secret-ci-game-secret-ci-game-secret
+      NODE_ENV: development
+      ADMIN_BOOTSTRAP_EMAIL: ci-admin@example.com
+      ADMIN_BOOTSTRAP_PASSWORD: ci-admin-password-1
       NEXT_PUBLIC_API_URL: http://localhost:4000/api
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11.10.0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:generate
-      - run: pnpm --filter @tugla/database exec prisma db push --skip-generate
-      - run: pnpm format:check
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Build workspace packages
+        run: pnpm build:packages
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Seed database
+        run: pnpm db:seed
+
+      - name: Build API
+        run: pnpm --filter @tugla/api build
+
+      - name: API end-to-end smoke (register -> play -> verified score -> admin)
+        run: pnpm test:e2e:api
+
+      - name: Build web + admin
+        run: pnpm --filter @tugla/web --filter @tugla/admin build

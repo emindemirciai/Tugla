@@ -63,7 +63,10 @@ export default function ModerationPage() {
                   onClick={() =>
                     void run(
                       `/admin/operations/reports/${row.id}`,
-                      { method: 'PATCH', body: { status: 'ACTIONED', resolution: 'Handled via panel' } },
+                      {
+                        method: 'PATCH',
+                        body: { status: 'ACTIONED', resolution: 'Handled via panel' },
+                      },
                       'Şikayet işleme alındı.',
                     )
                   }

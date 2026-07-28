@@ -4,11 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { GameCanvas, type CompletionSummary } from '../../components/GameCanvas';
-import {
-  gameApi,
-  type LevelSummary,
-  type SessionStart,
-} from '../../lib/api';
+import { gameApi, type LevelSummary, type SessionStart } from '../../lib/api';
 import { cacheLevel, flushOfflineRuns, pendingOfflineRuns } from '../../lib/offline';
 import { useSession } from '../../lib/session';
 
@@ -107,7 +103,11 @@ function PlayInner() {
         </Link>
         <nav className="nav-links">
           <Link href="/account">{user?.displayName ?? 'Hesap'}</Link>
-          <button type="button" className="button-quiet" onClick={() => void signOut().then(() => router.push('/'))}>
+          <button
+            type="button"
+            className="button-quiet"
+            onClick={() => void signOut().then(() => router.push('/'))}
+          >
             Çıkış
           </button>
         </nav>
@@ -162,7 +162,8 @@ function PlayInner() {
                 {badge && <span className="level-badge">{badge}</span>}
                 <span className="level-name">{level.name}</span>
                 <span className="level-meta">
-                  ~{Math.round(level.estimatedSeconds / 60)} dk · zorluk {Math.round(level.difficulty)}
+                  ~{Math.round(level.estimatedSeconds / 60)} dk · zorluk{' '}
+                  {Math.round(level.difficulty)}
                 </span>
                 {starting === level.id && <span className="level-starting">Başlatılıyor…</span>}
               </button>

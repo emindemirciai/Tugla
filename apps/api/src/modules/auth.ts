@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { TooManyRequestsException } from '../services/errors';
 import { ApiTags } from '@nestjs/swagger';
-import { AuthProvider, UserRole, UserStatus, type User } from '@tugla/database';
+import { AuthProvider, type UserRole, UserStatus, type User } from '@tugla/database';
 import {
   changePasswordSchema,
   confirmPasswordResetSchema,
