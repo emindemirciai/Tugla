@@ -45,6 +45,26 @@ pnpm --filter @tugla/admin dev       # yönetim paneli :3001
 değişiklik yaptıysan `pnpm build:packages` çalıştır. API, NestJS decorator metadata gereksinimi nedeniyle
 yalnızca `tsc` çıktısından (`apps/api/dist`) çalıştırılır.
 
+### Oyuncu uygulaması ekranları
+
+`/` açılış · `/auth/*` kayıt, giriş, doğrulama, parola sıfırlama · `/play` dünya + bölüm seçimi ve
+oyun · `/progress` görevler, başarımlar, cüzdan defteri · `/leagues` haftalık lig ve küresel tablo ·
+`/social` oyuncu arama, takip, arkadaşlık · `/shop` katalog ve oyun içi para ile satın alma ·
+`/inbox` bildirimler + duyurular · `/replays` doğrulanmış tekrarlar ve paylaşım · `/account` profil,
+dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
+oturum yoksa girişe yönlendirir (misafir hesap yoktur).
+
+### Arayüz önizlemesi
+
+```bash
+pnpm build          # önce üretim derlemesi (CSS paketleri gerekli)
+pnpm build:preview  # preview/ui-preview.html üretir
+```
+
+Tek dosyalık, bağımsız bir HTML çıkar: üretim derlemesinden alınan **gerçek CSS paketleriyle**
+dokuz ekranı (açılış, giriş, bölüm seçimi, oyun HUD'u, ilerleme, lig, mağaza, admin genel bakış,
+admin kullanıcılar) TR/EN anahtarıyla gösterir. İçindeki veriler örnektir; hiçbir API çağrısı yapmaz.
+
 ### Doğrulama kapısı
 
 ```bash
@@ -132,7 +152,7 @@ emitted decorator metadata.
 
 ### Verification gate
 
-`pnpm lint` · `pnpm typecheck` · `pnpm test` (42 unit tests) · `pnpm build` ·
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (42 unit tests) · `pnpm build` · `pnpm build:preview` ·
 `pnpm test:e2e:api` (48-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
@@ -141,6 +161,18 @@ with Postgres+Redis services and triggers the Dokploy webhook on success.
 The server issues a signed seed+nonce per session; the client records inputs; on completion the server
 **re-simulates the deterministic engine** with the submitted replay. Any checksum/score/stat mismatch
 rejects the session (never touching leaderboards) and surfaces it in the moderation screen.
+
+### Player screens & UI preview
+
+`/` landing · `/auth/*` sign-up, sign-in, verification, password reset · `/play` world + level
+selection and the game itself · `/progress` tasks, achievements, wallet ledger · `/leagues` weekly
+league and global board · `/social` player search, follow, friendships · `/shop` catalogue and
+in-game-currency purchases · `/inbox` notifications + announcements · `/replays` verified replays and
+sharing · `/account` profile, language, sessions, data export, deletion.
+
+`pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
+renders nine screens with the **real compiled CSS** from the production build and a TR/EN switch. The
+data inside is sample data and no API calls are made.
 
 ### Localisation
 

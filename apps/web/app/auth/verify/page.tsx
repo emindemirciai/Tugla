@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { authApi } from '../../../lib/api';
+import { useI18n } from '../../../lib/i18n';
 
 function VerifyInner() {
+  const { t } = useI18n();
   const token = useSearchParams().get('token');
   const [state, setState] = useState<'working' | 'done' | 'failed'>('working');
 
@@ -23,25 +25,22 @@ function VerifyInner() {
   return (
     <main className="auth-page">
       <div className="auth-card">
-        {state === 'working' && <h1>E-posta doğrulanıyor…</h1>}
+        {state === 'working' && <h1>{t('auth.verify.working')}</h1>}
         {state === 'done' && (
           <>
-            <h1>E-posta doğrulandı ✓</h1>
-            <p className="auth-subtitle">Hesabın tam yetkili. İyi oyunlar!</p>
+            <h1>{t('auth.verify.doneTitle')}</h1>
+            <p className="auth-subtitle">{t('auth.verify.doneBody')}</p>
             <Link className="button button-primary" href="/play">
-              Oynamaya başla
+              {t('auth.verify.play')}
             </Link>
           </>
         )}
         {state === 'failed' && (
           <>
-            <h1>Bağlantı geçersiz</h1>
-            <p className="auth-subtitle">
-              Doğrulama bağlantısı süresi dolmuş veya daha önce kullanılmış olabilir. Hesap
-              sayfandan yeni bir bağlantı isteyebilirsin.
-            </p>
+            <h1>{t('auth.verify.failedTitle')}</h1>
+            <p className="auth-subtitle">{t('auth.verify.failedBody')}</p>
             <Link className="button" href="/account">
-              Hesabıma git
+              {t('auth.verify.goAccount')}
             </Link>
           </>
         )}

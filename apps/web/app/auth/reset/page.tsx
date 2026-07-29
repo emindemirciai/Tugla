@@ -5,21 +5,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { AuthForm } from '../../../components/AuthForm';
 import { authApi } from '../../../lib/api';
+import { useI18n } from '../../../lib/i18n';
 
 function ResetForm() {
   const router = useRouter();
+  const { t } = useI18n();
   const token = useSearchParams().get('token') ?? '';
 
   if (!token) {
     return (
       <main className="auth-page">
         <div className="auth-card">
-          <h1>Bağlantı eksik</h1>
-          <p className="auth-subtitle">
-            Bu sayfa yalnızca e-postadaki sıfırlama bağlantısıyla açılabilir.
-          </p>
+          <h1>{t('auth.reset.missingTitle')}</h1>
+          <p className="auth-subtitle">{t('auth.reset.missingBody')}</p>
           <Link className="button" href="/auth/forgot">
-            Yeni bağlantı iste
+            {t('auth.reset.requestNew')}
           </Link>
         </div>
       </main>
@@ -28,17 +28,17 @@ function ResetForm() {
 
   return (
     <AuthForm
-      title="Yeni parola belirle"
-      subtitle="Parolan güncellendiğinde diğer tüm cihazlardaki oturumlar kapatılır."
-      submitLabel="Parolayı güncelle"
+      title={t('auth.reset.title')}
+      subtitle={t('auth.reset.subtitle')}
+      submitLabel={t('auth.reset.submit')}
       fields={[
         {
           name: 'password',
-          label: 'Yeni parola',
+          label: t('auth.field.newPassword'),
           type: 'password',
           autoComplete: 'new-password',
           required: true,
-          hint: 'En az 10 karakter; harf + rakam veya sembol.',
+          hint: t('auth.field.passwordHint'),
         },
       ]}
       onSubmit={async (values) => {

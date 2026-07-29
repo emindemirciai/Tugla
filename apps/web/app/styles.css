@@ -1263,3 +1263,222 @@ a {
 .lang-switch.compact button {
   padding: 4px 8px;
 }
+
+/* ----- player hub shell ------------------------------------------------------ */
+.hub-page {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 16px 72px;
+  display: flex;
+  flex-direction: column;
+}
+.hub-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 0 10px;
+  scrollbar-width: none;
+}
+.hub-tabs::-webkit-scrollbar {
+  display: none;
+}
+.hub-tabs a {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 190, 235, 0.2);
+  background: rgba(10, 24, 40, 0.8);
+  color: #9db6cc;
+  text-decoration: none;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+.hub-tabs a.active {
+  border-color: #37d4ff;
+  color: #46dcff;
+  background: rgba(45, 217, 255, 0.12);
+}
+.hub-title {
+  margin: 8px 0 4px;
+  font-size: 1.5rem;
+}
+.hub-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hub-section {
+  margin: 18px 0 2px;
+  font-size: 1.02rem;
+  color: #cfe6f7;
+}
+.hub-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hub-toolbar input {
+  flex: 1 1 220px;
+  background: rgba(4, 12, 22, 0.85);
+  border: 1px solid rgba(110, 190, 235, 0.22);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #ecf7ff;
+}
+.segmented {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(8, 19, 33, 0.9);
+  border: 1px solid rgba(110, 190, 235, 0.18);
+  border-radius: 12px;
+  padding: 4px;
+  align-self: flex-start;
+}
+.segmented button {
+  border: 0;
+  background: none;
+  color: #8fa7bd;
+  padding: 8px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+.segmented button.active {
+  background: rgba(45, 217, 255, 0.16);
+  color: #46dcff;
+}
+
+.card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.card {
+  background: rgba(10, 23, 39, 0.88);
+  border: 1px solid rgba(110, 190, 235, 0.16);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-unread {
+  border-color: rgba(55, 212, 255, 0.45);
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.card-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+.card p {
+  margin: 0;
+}
+.progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(110, 190, 235, 0.14);
+  overflow: hidden;
+}
+.progress-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2dd9ff, #45f1ac);
+}
+.balance-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.balance-chip {
+  background: rgba(12, 26, 44, 0.9);
+  border: 1px solid rgba(110, 190, 235, 0.18);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.balance-chip strong {
+  font-size: 1.2rem;
+  color: #46dcff;
+}
+.balance-chip span {
+  font-size: 0.72rem;
+  color: #7089a1;
+  letter-spacing: 0.08em;
+}
+.hub-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.hub-table th {
+  text-align: left;
+  padding: 8px 10px;
+  color: #6f8aa2;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(110, 190, 235, 0.14);
+}
+.hub-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(110, 190, 235, 0.08);
+}
+.hub-table .self-row {
+  background: rgba(45, 217, 255, 0.08);
+}
+.rarity-legendary {
+  background: rgba(255, 184, 92, 0.14);
+  border: 1px solid rgba(255, 184, 92, 0.5);
+  color: #ffce8f;
+}
+.rarity-epic {
+  background: rgba(213, 85, 255, 0.14);
+  border: 1px solid rgba(213, 85, 255, 0.5);
+  color: #e4a7ff;
+}
+.rarity-rare {
+  background: rgba(45, 217, 255, 0.12);
+  border: 1px solid rgba(45, 217, 255, 0.45);
+  color: #8fe6ff;
+}
+.rarity-common {
+  background: rgba(140, 150, 170, 0.14);
+  border: 1px solid rgba(140, 150, 170, 0.4);
+  color: #aab6c8;
+}
+.legal-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.auth-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}

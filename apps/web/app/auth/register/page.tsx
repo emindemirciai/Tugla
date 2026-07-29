@@ -5,42 +5,50 @@ import { useRouter } from 'next/navigation';
 import { AuthForm } from '../../../components/AuthForm';
 import { authApi } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
+import { useI18n } from '../../../lib/i18n';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t, locale } = useI18n();
   const { setUser } = useSession();
 
   return (
     <AuthForm
-      title="Hesabını oluştur"
-      subtitle="500 bölüm, haftalık ligler ve bulut kayıt tek hesapla açılır."
-      submitLabel="Kayıt ol"
+      title={t('auth.register.title')}
+      subtitle={t('auth.register.subtitle')}
+      submitLabel={t('auth.register.submit')}
       fields={[
         {
           name: 'displayName',
-          label: 'Görünen ad',
+          label: t('auth.field.displayName'),
           type: 'text',
           autoComplete: 'nickname',
           required: true,
         },
-        { name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email', required: true },
+        {
+          name: 'email',
+          label: t('auth.field.email'),
+          type: 'email',
+          autoComplete: 'email',
+          required: true,
+        },
         {
           name: 'password',
-          label: 'Parola',
+          label: t('auth.field.password'),
           type: 'password',
           autoComplete: 'new-password',
           required: true,
-          hint: 'En az 10 karakter; harf + rakam veya sembol.',
+          hint: t('auth.field.passwordHint'),
         },
         {
           name: 'acceptedTerms',
-          label: 'Kullanım şartlarını ve gizlilik politikasını kabul ediyorum.',
+          label: t('auth.field.terms'),
           type: 'checkbox',
           required: true,
         },
         {
           name: 'marketingConsent',
-          label: 'Yeni içerik duyurularını e-postayla almak istiyorum.',
+          label: t('auth.field.marketing'),
           type: 'checkbox',
         },
       ]}
@@ -51,14 +59,15 @@ export default function RegisterPage() {
           displayName: String(values.displayName),
           acceptedTerms: true,
           marketingConsent: Boolean(values.marketingConsent),
-          locale: 'tr',
+          locale,
         });
         setUser(result.user);
         router.push(result.verificationEmailSent ? '/play?verify=sent' : '/play');
       }}
       footer={
         <span>
-          Zaten hesabın var mı? <Link href="/auth/login">Giriş yap</Link>
+          {t('auth.register.haveAccount')}{' '}
+          <Link href="/auth/login">{t('auth.register.loginLink')}</Link>
         </span>
       }
     />

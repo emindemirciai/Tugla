@@ -19,3 +19,6 @@ packages/database/prisma/dev.db
 uploads/
 certs/
 
+
+# generated UI preview (rebuild with: pnpm build:preview)
+preview/

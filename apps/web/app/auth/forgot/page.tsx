@@ -4,21 +4,20 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { AuthForm } from '../../../components/AuthForm';
 import { authApi } from '../../../lib/api';
+import { useI18n } from '../../../lib/i18n';
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [sent, setSent] = useState(false);
 
   if (sent) {
     return (
       <main className="auth-page">
         <div className="auth-card">
-          <h1>Bağlantı yolda</h1>
-          <p className="auth-subtitle">
-            Bu e-posta kayıtlıysa, parola sıfırlama bağlantısı gönderildi. Bağlantı 1 saat
-            geçerlidir.
-          </p>
+          <h1>{t('auth.forgot.sentTitle')}</h1>
+          <p className="auth-subtitle">{t('auth.forgot.sentBody')}</p>
           <Link className="button" href="/auth/login">
-            Girişe dön
+            {t('auth.forgot.backToLogin')}
           </Link>
         </div>
       </main>
@@ -27,9 +26,9 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthForm
-      title="Parolanı sıfırla"
-      subtitle="Hesabına bağlı e-posta adresini gir; sana tek kullanımlık bir bağlantı gönderelim."
-      submitLabel="Sıfırlama bağlantısı gönder"
+      title={t('auth.forgot.title')}
+      subtitle={t('auth.forgot.subtitle')}
+      submitLabel={t('auth.forgot.submit')}
       fields={[
         { name: 'email', label: 'E-posta', type: 'email', autoComplete: 'email', required: true },
       ]}
@@ -37,7 +36,7 @@ export default function ForgotPasswordPage() {
         await authApi.requestReset(String(values.email));
         setSent(true);
       }}
-      footer={<Link href="/auth/login">Girişe dön</Link>}
+      footer={<Link href="/auth/login">{t('auth.forgot.backToLogin')}</Link>}
     />
   );
 }
