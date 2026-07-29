@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { ApiError } from '../lib/api';
+import { LanguageSwitcher, useI18n } from '../lib/i18n';
 
 interface Field {
   name: string;
@@ -34,6 +35,7 @@ export function AuthForm({
   footer?: ReactNode;
   children?: ReactNode;
 }) {
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [details, setDetails] = useState<{ path: string; message: string }[]>([]);
@@ -71,10 +73,13 @@ export function AuthForm({
   return (
     <main className="auth-page">
       <div className="auth-card">
-        <Link href="/" className="brand">
-          <span className="brand-mark">◇</span>
-          {process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}
-        </Link>
+        <div className="auth-card-top">
+          <Link href="/" className="brand">
+            <span className="brand-mark">◇</span>
+            {process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}
+          </Link>
+          <LanguageSwitcher compact />
+        </div>
         <h1>{title}</h1>
         <p className="auth-subtitle">{subtitle}</p>
 
@@ -118,7 +123,7 @@ export function AuthForm({
           {children}
 
           <button type="submit" className="button button-primary auth-submit" disabled={pending}>
-            {pending ? 'İşleniyor…' : submitLabel}
+            {pending ? t('common.processing') : submitLabel}
           </button>
         </form>
 

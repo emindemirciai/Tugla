@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authApi } from '../../lib/api';
 import { useSession } from '../../lib/session';
+import { LanguageSwitcher, useI18n } from '../../lib/i18n';
 
 interface DeviceSession {
   id: string;
@@ -17,6 +18,7 @@ interface DeviceSession {
 /** Account centre: verification, sessions, providers, export, deletion. */
 export default function AccountPage() {
   const router = useRouter();
+  const { t, locale } = useI18n();
   const { user, loading, signOut } = useSession();
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [providers, setProviders] = useState<{ provider: string }[]>([]);
@@ -64,9 +66,9 @@ export default function AccountPage() {
       anchor.download = `${user.username}-export.json`;
       anchor.click();
       URL.revokeObjectURL(url);
-      setMessage('Verilerin JSON olarak indirildi.');
+      setMessage(t('account.exportDone'));
     } catch {
-      setMessage('Dışa aktarma başarısız oldu.');
+      setMessage(t('account.exportFailed'));
     } finally {
       setBusy(false);
     }
@@ -80,7 +82,7 @@ export default function AccountPage() {
       await signOut();
       router.push('/');
     } catch {
-      setMessage('Hesap silme başarısız oldu.');
+      setMessage(t('account.deleteFailed'));
       setBusy(false);
     }
   };
@@ -89,25 +91,25 @@ export default function AccountPage() {
     <main className="account-page">
       <header className="nav">
         <Link href="/play" className="brand">
-          ← Oyuna dön
+          {t('account.backToGame')}
         </Link>
       </header>
 
-      <h1>Hesap</h1>
+      <h1>{t('account.title')}</h1>
       {message && <div className="banner">{message}</div>}
 
       <section className="account-section">
-        <h2>Profil</h2>
+        <h2>{t('account.profile')}</h2>
         <dl className="account-facts">
-          <dt>Görünen ad</dt>
+          <dt>{t('account.displayName')}</dt>
           <dd>{user.displayName}</dd>
-          <dt>Kullanıcı adı</dt>
+          <dt>{t('account.username')}</dt>
           <dd>@{user.username}</dd>
-          <dt>E-posta</dt>
+          <dt>{t('account.email')}</dt>
           <dd>
             {user.email}{' '}
             {user.emailVerified ? (
-              <span className="tag tag-ok">doğrulandı</span>
+              <span className="tag tag-ok">{t('account.verified')}</span>
             ) : (
               <button
                 type="button"
@@ -118,13 +120,13 @@ export default function AccountPage() {
                     .then((result) =>
                       setMessage(
                         result.sent
-                          ? 'Doğrulama e-postası gönderildi.'
-                          : 'E-posta servisi yapılandırılmadığı için gönderilemedi.',
+                          ? t('account.verificationSent')
+                          : t('account.verificationUnavailable'),
                       ),
                     )
                 }
               >
-                doğrulama bağlantısı gönder
+                {t('account.sendVerification')}
               </button>
             )}
           </dd>
@@ -132,25 +134,31 @@ export default function AccountPage() {
       </section>
 
       <section className="account-section">
-        <h2>Bağlı sağlayıcılar</h2>
+        <h2>{t('account.providers')}</h2>
         <p className="muted">
           {providers.length
             ? providers.map((entry) => entry.provider).join(', ')
-            : 'Yalnızca e-posta + parola.'}{' '}
-          Google/Apple bağlama, sağlayıcı anahtarları yapılandırıldığında giriş ekranında görünür.
+            : t('account.providersNone')}{' '}
+          {t('account.providersNote')}
         </p>
       </section>
 
       <section className="account-section">
-        <h2>Aktif oturumlar</h2>
+        <h2>{t('account.language')}</h2>
+        <LanguageSwitcher />
+        <p className="muted">{t('account.languageNote')}</p>
+      </section>
+
+      <section className="account-section">
+        <h2>{t('account.sessions')}</h2>
         <ul className="session-list">
           {sessions.map((entry) => (
             <li key={entry.id}>
               <div>
-                <strong>{entry.deviceName ?? 'Bilinmeyen cihaz'}</strong>
+                <strong>{entry.deviceName ?? t('account.unknownDevice')}</strong>
                 <span className="muted">
-                  {entry.ipAddress ?? ''} · {new Date(entry.createdAt).toLocaleString('tr-TR')}
-                  {entry.current ? ' · bu cihaz' : ''}
+                  {entry.ipAddress ?? ''} · {new Date(entry.createdAt).toLocaleString(locale)}
+                  {entry.current ? ` · ${t('account.thisDevice')}` : ''}
                 </span>
               </div>
               {!entry.current && (
@@ -169,7 +177,7 @@ export default function AccountPage() {
                       )
                   }
                 >
-                  Sonlandır
+                  {t('account.revoke')}
                 </button>
               )}
             </li>
@@ -178,24 +186,23 @@ export default function AccountPage() {
       </section>
 
       <section className="account-section">
-        <h2>Verilerin</h2>
+        <h2>{t('account.data')}</h2>
         <button type="button" className="button" onClick={() => void exportData()} disabled={busy}>
-          Tüm verilerimi indir (JSON)
+          {t('account.export')}
         </button>
       </section>
 
       <section className="account-section danger">
-        <h2>Hesabı sil</h2>
+        <h2>{t('account.delete')}</h2>
         <p className="muted">
-          Bu işlem geri alınamaz: kişisel verilerin anında temizlenir, skorların anonimleşir.
-          Onaylamak için kullanıcı adını yaz: <strong>{user.username}</strong>
+          {t('account.deleteWarning')} <strong>{user.username}</strong>
         </p>
         <div className="danger-row">
           <input
             value={confirmDelete}
             onChange={(event) => setConfirmDelete(event.target.value)}
             placeholder={user.username}
-            aria-label="Silme onayı"
+            aria-label={t('account.deleteConfirmAria')}
           />
           <button
             type="button"
@@ -203,7 +210,7 @@ export default function AccountPage() {
             disabled={confirmDelete !== user.username || busy}
             onClick={() => void deleteAccount()}
           >
-            Hesabı kalıcı olarak sil
+            {t('account.deleteButton')}
           </button>
         </div>
       </section>

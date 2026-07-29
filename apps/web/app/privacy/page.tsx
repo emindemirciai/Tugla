@@ -1,31 +1,46 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Gizlilik' };
+import { LegalPage, type LegalCopy } from '../../components/LegalPage';
+
+const copy: Record<'tr' | 'en', LegalCopy> = {
+  tr: {
+    title: 'Gizlilik bildirimi',
+    updated: 'Son güncelleme: 27 Temmuz 2026',
+    sections: [
+      {
+        heading: 'Toplanan veriler',
+        body: 'Hesap bilgileri, oyun ilerlemesi, güvenlik kayıtları, cihaz türü ve oyuncunun açıkça gönderdiği destek içerikleri hizmeti çalıştırmak için işlenir. Konum, rehber veya serbest profil fotoğrafı toplanmaz.',
+      },
+      {
+        heading: 'Amaç ve saklama',
+        body: 'Veriler hesap eşitleme, hile önleme, ligler, destek ve güvenlik için kullanılır. Normal tekrarlar 7 gün, paylaşılan tekrarlar 90 gün, lig tekrarları 30 gün saklanır.',
+      },
+      {
+        heading: 'Haklarınız',
+        body: 'Hesap ekranından tüm verilerinizi JSON olarak dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. KVKK ve GDPR kapsamındaki talepler destek formundan iletilebilir.',
+      },
+    ],
+  },
+  en: {
+    title: 'Privacy notice',
+    updated: 'Last updated: 27 July 2026',
+    sections: [
+      {
+        heading: 'Data we process',
+        body: 'Account details, gameplay progress, security logs, device type and any support content you send are processed to operate the service. We do not collect location, contacts or free-form profile photos.',
+      },
+      {
+        heading: 'Purpose and retention',
+        body: 'Data is used for account sync, anti-cheat, leagues, support and security. Ordinary replays are kept for 7 days, shared replays for 90 days and league replays for 30 days.',
+      },
+      {
+        heading: 'Your rights',
+        body: 'You can export all of your data as JSON or permanently delete your account from the account screen. GDPR and KVKK requests can be submitted through the support form.',
+      },
+    ],
+  },
+};
 
 export default function PrivacyPage() {
-  return (
-    <main className="legal">
-      <a className="brand" href="/">
-        <span className="brand-mark" /> PULSE
-      </a>
-      <h1>Gizlilik bildirimi</h1>
-      <p>Son güncelleme: 27 Temmuz 2026</p>
-      <h2>Toplanan veriler</h2>
-      <p>
-        Hesap bilgileri, oyun ilerlemesi, güvenlik kayıtları, cihaz türü ve oyuncunun açıkça
-        gönderdiği destek içerikleri hizmeti çalıştırmak için işlenir. Konum, rehber veya serbest
-        profil fotoğrafı toplanmaz.
-      </p>
-      <h2>Amaç ve saklama</h2>
-      <p>
-        Veriler hesap eşitleme, hile önleme, ligler, destek ve güvenlik için kullanılır. Normal
-        tekrarlar 7 gün; paylaşılan tekrarlar 90 gün; lig tekrarları 30 gün saklanır.
-      </p>
-      <h2>Haklarınız</h2>
-      <p>
-        Hesap ekranından verilerinizi dışa aktarabilir veya hesabınızı silebilirsiniz. KVKK ve GDPR
-        kapsamındaki talepler destek formundan iletilebilir.
-      </p>
-    </main>
-  );
+  return <LegalPage copy={copy} />;
 }

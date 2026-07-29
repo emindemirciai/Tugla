@@ -7,6 +7,7 @@ import { gameApi, type SessionStart } from '../lib/api';
 import { GameAudio } from '../lib/audio';
 import { loadSettings, resolveQuality, saveSettings, type GameSettings } from '../lib/settings';
 import { GameRenderer } from './GameRenderer';
+import { useI18n } from '../lib/i18n';
 
 interface ViewState {
   score: number;
@@ -50,6 +51,7 @@ export function GameCanvas({
   session: SessionStart;
   onExit: (summary: CompletionSummary | null) => void;
 }) {
+  const { t, locale } = useI18n();
   const mountRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<PulseEngine | null>(null);
   const submittedRef = useRef(false);
@@ -88,7 +90,7 @@ export function GameCanvas({
         rewards: response.rewards,
       });
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Sonuç gönderilemedi');
+      setSubmitError(error instanceof Error ? error.message : t('game.over.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -102,7 +104,7 @@ export function GameCanvas({
     try {
       definition = levelDefinitionSchema.parse(session.level.definition);
     } catch {
-      setSubmitError('Bölüm verisi okunamadı.');
+      setSubmitError(t('game.error.levelData'));
       return;
     }
 
@@ -247,11 +249,11 @@ export function GameCanvas({
     <section className="game-shell">
       <header className="game-topbar">
         <button type="button" className="icon-button" onClick={() => onExit(summary)}>
-          ← Çıkış
+          {t('game.exit')}
         </button>
         <div className="level-title">
           <span>
-            DÜNYA {String(session.level.world).padStart(2, '0')} ·{' '}
+            {t('game.world')} {String(session.level.world).padStart(2, '0')} ·{' '}
             {session.level.theme.toUpperCase()}
           </span>
           <strong>{session.level.name}</strong>
@@ -260,25 +262,25 @@ export function GameCanvas({
           <button
             type="button"
             onClick={() => setSettingsOpen((open) => !open)}
-            aria-label="Ayarlar"
+            aria-label={t('game.settingsAria')}
           >
             ⚙
           </button>
           <button type="button" onClick={togglePause}>
-            {view.status === 'PAUSED' ? 'DEVAM' : 'DURAKLAT'}
+            {view.status === 'PAUSED' ? t('game.resume') : t('game.pause')}
           </button>
         </div>
       </header>
 
       <div className="game-stage">
         <aside className="hud-panel">
-          <span>SKOR</span>
-          <strong>{view.score.toLocaleString('tr-TR')}</strong>
-          <span>KOMBO</span>
+          <span>{t('game.hud.score')}</span>
+          <strong>{view.score.toLocaleString(locale)}</strong>
+          <span>{t('game.hud.combo')}</span>
           <strong className="accent">×{comboMultiplier}</strong>
           {view.overcharge > 1 && (
             <>
-              <span>OVERCHARGE</span>
+              <span>{t('game.hud.overcharge')}</span>
               <strong className="overcharge">×{view.overcharge.toFixed(2)}</strong>
             </>
           )}
@@ -290,14 +292,14 @@ export function GameCanvas({
           {helpVisible && view.status === 'READY' && (
             <div className="game-instruction">
               <span>↔</span>
-              <strong>PLATFORMU HAREKET ETTİR</strong>
-              <p>İlk hareketin topun çıkış açısını belirler.</p>
+              <strong>{t('game.instruction.title')}</strong>
+              <p>{t('game.instruction.body')}</p>
             </div>
           )}
 
           {settingsOpen && (
             <div className="settings-panel">
-              <h2>Görüntü ayarları</h2>
+              <h2>{t('game.settings.title')}</h2>
               <label>
                 Grafik kalitesi
                 <select
@@ -307,9 +309,9 @@ export function GameCanvas({
                   }
                 >
                   <option value="AUTO">Otomatik</option>
-                  <option value="LOW">Düşük</option>
+                  <option value="LOW">{t('game.settings.low')}</option>
                   <option value="MEDIUM">Orta</option>
-                  <option value="HIGH">Yüksek</option>
+                  <option value="HIGH">{t('game.settings.high')}</option>
                 </select>
               </label>
               <label className="checkbox">
@@ -326,7 +328,7 @@ export function GameCanvas({
                   checked={settings.reducedMotion}
                   onChange={(event) => updateSettings({ reducedMotion: event.target.checked })}
                 />
-                Azaltılmış hareket
+                {t('game.settings.reducedMotion')}
               </label>
               <label className="checkbox">
                 <input
@@ -336,7 +338,7 @@ export function GameCanvas({
                 />
                 Ses
               </label>
-              <p className="settings-note">Kalite değişikliği sahneyi yeniden oluşturur.</p>
+              <p className="settings-note">{t('game.settings.note')}</p>
               <button type="button" className="button" onClick={() => setSettingsOpen(false)}>
                 Kapat
               </button>
@@ -355,28 +357,35 @@ export function GameCanvas({
 
           {(view.status === 'COMPLETED' || view.status === 'FAILED') && (
             <div className="game-overlay">
-              <span>{view.status === 'COMPLETED' ? 'BÖLÜM TAMAMLANDI' : 'ENERJİ TÜKENDİ'}</span>
-              <h1>{view.score.toLocaleString('tr-TR')} puan</h1>
+              <span>
+                {view.status === 'COMPLETED' ? t('game.over.completed') : t('game.over.failed')}
+              </span>
+              <h1>{t('game.over.points', { score: view.score.toLocaleString(locale) })}</h1>
 
-              {submitting && <p>Sonuç doğrulanıyor…</p>}
+              {submitting && <p>{t('game.over.verifying')}</p>}
               {submitError && <p className="error">{submitError}</p>}
 
               {summary && !summary.accepted && (
                 <p className="error">
-                  Sunucu bu sonucu doğrulayamadı ({summary.reasons.join(', ') || 'bilinmeyen sebep'}
-                  ). Skor kaydedilmedi.
+                  {t('game.over.rejected', {
+                    reasons: summary.reasons.join(', ') || t('game.over.rejectedUnknown'),
+                  })}
                 </p>
               )}
 
               {summary?.rewards && (
                 <ul className="reward-list">
-                  <li>+{summary.rewards.credits} kredi</li>
-                  {summary.rewards.crystals > 0 && <li>+{summary.rewards.crystals} kristal</li>}
-                  <li>+{summary.rewards.experience} XP</li>
-                  {summary.rewards.personalBest && <li className="accent">Kişisel rekor!</li>}
+                  <li>{t('game.over.credits', { count: summary.rewards.credits })}</li>
+                  {summary.rewards.crystals > 0 && (
+                    <li>{t('game.over.crystals', { count: summary.rewards.crystals })}</li>
+                  )}
+                  <li>{t('game.over.xp', { count: summary.rewards.experience })}</li>
+                  {summary.rewards.personalBest && (
+                    <li className="accent">{t('game.over.personalBest')}</li>
+                  )}
                   {summary.rewards.achievementsUnlocked.map((key) => (
                     <li key={key} className="accent">
-                      Başarım açıldı: {key}
+                      {t('game.over.achievement', { name: key })}
                     </li>
                   ))}
                 </ul>
@@ -387,26 +396,26 @@ export function GameCanvas({
                 className="button button-primary"
                 onClick={() => onExit(summary)}
               >
-                Bölüm listesine dön
+                {t('game.over.backToLevels')}
               </button>
             </div>
           )}
         </div>
 
         <aside className="hud-panel hud-panel-right">
-          <span>CAN</span>
+          <span>{t('game.hud.lives')}</span>
           <strong>{'♥'.repeat(Math.max(0, view.lives))}</strong>
-          <span>AKTİF TOP</span>
+          <span>{t('game.hud.balls')}</span>
           <strong className="accent">{view.balls}</strong>
-          <span>KALAN BLOK</span>
+          <span>{t('game.hud.blocks')}</span>
           <strong>{view.blocksRemaining}</strong>
         </aside>
       </div>
 
       <footer className="game-footer">
-        <span>SÜRÜKLE / FARE / ← →</span>
-        <span>SABİT 120 HZ FİZİK</span>
-        <span>MAKS {session.maxBalls} TOP</span>
+        <span>{t('game.footer.controls')}</span>
+        <span>{t('game.footer.physics')}</span>
+        <span>{t('game.footer.maxBalls', { count: session.maxBalls })}</span>
       </footer>
     </section>
   );

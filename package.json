@@ -22,7 +22,8 @@
     "rename-project": "node scripts/rename-project.mjs",
     "prepare": "simple-git-hooks",
     "test:e2e:api": "node scripts/e2e-api-smoke.mjs",
-    "build:packages": "pnpm --filter @pulse/shared --filter @pulse/game-engine --filter @pulse/database build"
+    "build:packages": "pnpm --filter @pulse/shared --filter @pulse/game-engine --filter @pulse/database build",
+    "build:preview": "node scripts/build-preview.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.28.0",

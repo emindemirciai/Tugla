@@ -386,5 +386,22 @@ export const platformApi = {
     ),
   support: (input: Record<string, unknown>) =>
     api('/support', { method: 'POST', body: input, auth: false }),
-  shop: () => api<{ items: Record<string, unknown>[]; paymentsEnabled: boolean }>('/shop'),
+  shop: () =>
+    api<{
+      items: {
+        id: string;
+        sku: string;
+        name: string;
+        description: string;
+        category: string;
+        rarity: string;
+        currency: string | null;
+        price: number | null;
+      }[];
+      paymentsEnabled: boolean;
+    }>('/shop'),
+  purchase: (sku: string) =>
+    api<{ purchased: boolean; sku: string }>('/shop/purchase', { method: 'POST', body: { sku } }),
+  inventory: () =>
+    api<{ items: { id: string; item: { sku: string; name: string } }[] }>('/inventory'),
 };
