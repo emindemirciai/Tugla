@@ -8,6 +8,7 @@ import {
   useAdminAction,
   useAdminData,
 } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface Report {
   id: string;
@@ -38,13 +39,20 @@ export default function ModerationPage() {
   const { run, busy, message } = useAdminAction(reports.reload);
 
   return (
-    <AdminShell title="Moderasyon">
+    <AdminShell title={t('mod.title')}>
       {message && <p className="admin-note">{message}</p>}
 
-      <h2 className="admin-section-title">Kullanıcı şikayetleri</h2>
+      <h2 className="admin-section-title">{t('mod.reports')}</h2>
       <StatusNote loading={reports.loading} error={reports.error} />
       <DataTable
-        headers={['Hedef', 'Sebep', 'Bildiren', 'Durum', 'Tarih', 'İşlem']}
+        headers={[
+          t('mod.target'),
+          t('mod.reason'),
+          t('mod.reporter'),
+          t('common.status'),
+          t('common.date'),
+          t('common.actions'),
+        ]}
         rows={(reports.data?.items ?? []).map((row) => [
           `${row.targetType} · ${row.targetId.slice(0, 8)}`,
           <div key="reason">
@@ -67,11 +75,11 @@ export default function ModerationPage() {
                         method: 'PATCH',
                         body: { status: 'ACTIONED', resolution: 'Handled via panel' },
                       },
-                      'Şikayet işleme alındı.',
+                      t('mod.actioned'),
                     )
                   }
                 >
-                  İşlem yap
+                  {t('mod.action')}
                 </button>
                 <button
                   type="button"
@@ -80,11 +88,11 @@ export default function ModerationPage() {
                     void run(
                       `/admin/operations/reports/${row.id}`,
                       { method: 'PATCH', body: { status: 'DISMISSED' } },
-                      'Şikayet reddedildi.',
+                      t('mod.dismissed'),
                     )
                   }
                 >
-                  Reddet
+                  {t('mod.dismiss')}
                 </button>
               </>
             )}
@@ -92,14 +100,17 @@ export default function ModerationPage() {
         ])}
       />
 
-      <h2 className="admin-section-title">Anti-cheat: şüpheli oturumlar</h2>
-      <p className="admin-note">
-        Bu oturumlar sunucu tarafı replay doğrulamasından geçemedi; skorları hiçbir tabloya
-        yazılmadı.
-      </p>
+      <h2 className="admin-section-title">{t('mod.flaggedTitle')}</h2>
+      <p className="admin-note">{t('mod.flaggedNote')}</p>
       <StatusNote loading={flagged.loading} error={flagged.error} />
       <DataTable
-        headers={['Oyuncu', 'Bölüm', 'Bildirilen skor', 'Risk', 'Tarih']}
+        headers={[
+          t('mod.player'),
+          t('mod.level'),
+          t('mod.reportedScore'),
+          t('users.risk'),
+          t('common.date'),
+        ]}
         rows={(flagged.data?.items ?? []).map((row) => [
           `@${row.user.username} (risk ${row.user.riskScore})`,
           `${row.level.world}-${row.level.index} ${row.level.name}`,

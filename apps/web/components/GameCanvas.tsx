@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { PulseEngine, type EngineSnapshot } from '@pulse/game-engine';
 import { levelDefinitionSchema, type LevelDefinition } from '@pulse/shared';
 import { gameApi, type SessionStart } from '../lib/api';
+import { GameAudio } from '../lib/audio';
 import { loadSettings, resolveQuality, saveSettings, type GameSettings } from '../lib/settings';
 import { GameRenderer } from './GameRenderer';
 
@@ -114,6 +115,8 @@ export function GameCanvas({
     });
     engineRef.current = engine;
 
+    const audio = new GameAudio();
+    audio.enabled = settings.soundEnabled;
     const quality = resolveQuality(settings.quality);
     const renderer = new GameRenderer(mount, engine, {
       ...quality,
@@ -132,7 +135,9 @@ export function GameCanvas({
       const delta = Math.min((now - last) / 1000, 0.05);
       last = now;
       engine.update(delta);
-      renderer.emitEvents(engine.drainEvents());
+      const events = engine.drainEvents();
+      renderer.emitEvents(events);
+      audio.handle(events);
       renderer.render(delta);
 
       hudAccumulator += delta;
@@ -225,6 +230,7 @@ export function GameCanvas({
       renderer.domElement.removeEventListener('pointerup', onPointerUp);
       renderer.domElement.removeEventListener('pointercancel', onPointerUp);
       renderer.dispose();
+      audio.dispose();
       engineRef.current = null;
     };
   }, [session, settings, submit, togglePause]);

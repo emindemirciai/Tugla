@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { adminApi, restoreAdminSession, setAccessToken, STAFF_ROLES, type AdminUser } from './api';
+import { t } from '../lib/i18n';
 
 interface AdminSessionState {
   user: AdminUser | null;
@@ -51,7 +52,7 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
     });
     if (!STAFF_ROLES.includes(result.user.role)) {
       setAccessToken(null);
-      throw new Error('Bu hesabın yönetim paneline erişim yetkisi yok.');
+      throw new Error(t('login.forbidden'));
     }
     setAccessToken(result.accessToken);
     setUser(result.user);

@@ -1,62 +1,65 @@
+'use client';
+
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
+import { LanguageSwitcher, useI18n } from '../lib/i18n';
 
-const features = [
-  { number: '500', label: 'tasarlanmış bölüm', detail: '10 enerji dünyasında dengeli ilerleme.' },
-  {
-    number: '500×',
-    label: 'aktif top kapasitesi',
-    detail: 'Cihaza uyarlanan instanced rendering.',
-  },
-  { number: '∞', label: 'topluluk bölümü', detail: 'Tasarla, doğrula ve arkadaşlarınla paylaş.' },
-];
-
+/** Marketing landing page; every visible string flows through the dictionary. */
 export default function HomePage() {
+  const { t } = useI18n();
+  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse';
+
+  const stats = [
+    { number: '10', label: t('landing.stats.worlds') },
+    { number: '500', label: t('landing.stats.levels') },
+    { number: '500', label: t('landing.stats.balls') },
+    { number: '120 Hz', label: t('landing.stats.fps') },
+  ];
+
+  const features = [
+    { title: t('landing.feature1.title'), body: t('landing.feature1.body') },
+    { title: t('landing.feature2.title'), body: t('landing.feature2.body') },
+    { title: t('landing.feature3.title'), body: t('landing.feature3.body') },
+  ];
+
   return (
     <main className="landing">
       <nav className="nav shell">
-        <Link className="brand" href="/" aria-label="Pulse ana sayfa">
+        <Link className="brand" href="/" aria-label={appName}>
           <span className="brand-mark" />
-          PULSE
+          {appName.toUpperCase()}
         </Link>
         <div className="nav-links">
-          <a href="#worlds">Dünyalar</a>
-          <a href="#systems">Sistemler</a>
-          <Link href="/support">Destek</Link>
+          <Link href="/auth/login">{t('landing.nav.signIn')}</Link>
+          <Link href="/auth/register">{t('landing.nav.register')}</Link>
+          <LanguageSwitcher compact />
         </div>
         <Link className="button button-quiet" href="/play">
-          Oyuna gir
+          {t('landing.nav.play')}
         </Link>
       </nav>
 
       <section className="hero shell">
         <div className="hero-copy">
-          <span className="eyebrow">2.5D ARCADE · TEK ELLE OYNANIŞ</span>
-          <h1>
-            Yansımayı yönet.
-            <br />
-            <span>Fırtınayı çoğalt.</span>
-          </h1>
-          <p>
-            Tek topla başla. Enerji kapsüllerini yakala, yüzlerce topu serbest bırak ve bozulmuş
-            çekirdekleri parçala.
-          </p>
+          <span className="eyebrow">{t('landing.hero.eyebrow')}</span>
+          <h1>{t('landing.hero.title')}</h1>
+          <p>{t('landing.hero.body')}</p>
           <div className="hero-actions">
             <Link className="button button-primary" href="/play">
-              Ücretsiz oyna <span aria-hidden>↗</span>
+              {t('landing.hero.cta')} <span aria-hidden>↗</span>
             </Link>
-            <a className="button button-quiet" href="#systems">
-              Nasıl çalışır
-            </a>
+            <Link className="button button-quiet" href="/auth/register">
+              {t('landing.hero.secondary')}
+            </Link>
           </div>
           <div className="trust-row">
             <span>WEB</span>
             <span>PWA</span>
             <span>ANDROID</span>
             <span>iOS</span>
-            <span>PAY-TO-WIN YOK</span>
           </div>
         </div>
-        <div className="hero-visual" aria-label="Pulse oyun alanı önizlemesi">
+        <div className="hero-visual" aria-hidden>
           <div className="orb orb-one" />
           <div className="orb orb-two" />
           <div className="game-preview">
@@ -75,7 +78,7 @@ export default function HomePage() {
             </div>
             <div className="preview-balls">
               {Array.from({ length: 18 }, (_, index) => (
-                <i key={index} style={{ '--i': index } as React.CSSProperties} />
+                <i key={index} style={{ '--i': index } as CSSProperties} />
               ))}
             </div>
             <div className="preview-paddle" />
@@ -84,26 +87,25 @@ export default function HomePage() {
       </section>
 
       <section className="stats shell" id="systems">
-        {features.map((feature) => (
-          <article key={feature.label}>
-            <strong>{feature.number}</strong>
-            <h2>{feature.label}</h2>
-            <p>{feature.detail}</p>
+        {stats.map((stat) => (
+          <article key={stat.label}>
+            <strong>{stat.number}</strong>
+            <h2>{stat.label}</h2>
           </article>
         ))}
       </section>
 
-      <section className="world-section shell" id="worlds">
+      <section className="world-section shell" id="features">
         <div>
-          <span className="eyebrow">HER 50 BÖLÜMDE YENİ BİR ÇEKİRDEK</span>
-          <h2>On dünya. Tek ritim.</h2>
+          <span className="eyebrow">{t('landing.worlds.title')}</span>
+          <h2>{t('landing.worlds.body')}</h2>
         </div>
         <div className="world-cards">
-          {['Neon Grid', 'Crystal Core', 'Solar Forge', 'Dark Matter'].map((world, index) => (
-            <article key={world} className={`world-card world-${index + 1}`}>
+          {features.map((feature, index) => (
+            <article key={feature.title} className={`world-card world-${index + 1}`}>
               <span>0{index + 1}</span>
-              <h3>{world}</h3>
-              <p>{index === 3 ? 'WORLD BOSS' : '50 LEVELS'}</p>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
             </article>
           ))}
         </div>
@@ -112,12 +114,15 @@ export default function HomePage() {
       <footer className="footer shell">
         <div className="brand">
           <span className="brand-mark" />
-          PULSE
+          {appName.toUpperCase()}
         </div>
-        <p>© {new Date().getFullYear()} Pulse. Kod adı; marka ayarından değiştirilebilir.</p>
+        <p>
+          © {new Date().getFullYear()} {appName}. {t('landing.footer.rights')}
+        </p>
         <div>
-          <Link href="/privacy">Gizlilik</Link>
-          <Link href="/terms">Koşullar</Link>
+          <Link href="/privacy">{t('landing.footer.privacy')}</Link>
+          <Link href="/terms">{t('landing.footer.terms')}</Link>
+          <Link href="/support">{t('landing.footer.support')}</Link>
         </div>
       </footer>
     </main>

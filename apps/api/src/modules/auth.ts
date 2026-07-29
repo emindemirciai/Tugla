@@ -179,7 +179,11 @@ export class AuthService {
     });
 
     const token = await this.createActionToken(user.id, 'EMAIL_VERIFY');
-    const delivery = await this.mail.sendVerification(user.email, token);
+    const delivery = await this.mail.sendVerification(
+      user.email,
+      token,
+      user.locale === 'tr' ? 'tr' : 'en',
+    );
     return {
       user: this.publicUser(user),
       ...(await this.issueTokens(user, meta)),
@@ -389,7 +393,11 @@ export class AuthService {
     const user = await this.db.user.findUnique({ where: { email: data.email } });
     if (!user || user.emailVerifiedAt) return { sent: this.mail.enabled };
     const token = await this.createActionToken(user.id, 'EMAIL_VERIFY');
-    const delivery = await this.mail.sendVerification(user.email, token);
+    const delivery = await this.mail.sendVerification(
+      user.email,
+      token,
+      user.locale === 'tr' ? 'tr' : 'en',
+    );
     return { sent: delivery.delivered };
   }
 
@@ -407,7 +415,11 @@ export class AuthService {
     // Always report the same result so the endpoint cannot enumerate accounts.
     if (!user || user.status === UserStatus.DELETED) return { sent: this.mail.enabled };
     const token = await this.createActionToken(user.id, 'PASSWORD_RESET');
-    const delivery = await this.mail.sendPasswordReset(user.email, token);
+    const delivery = await this.mail.sendPasswordReset(
+      user.email,
+      token,
+      user.locale === 'tr' ? 'tr' : 'en',
+    );
     return { sent: delivery.delivered };
   }
 
@@ -587,7 +599,7 @@ export class AuthService {
       userAgent: meta.userAgent,
     });
     if (user.email && !user.email.startsWith('deleted-'))
-      await this.mail.sendAccountDeleted(user.email);
+      await this.mail.sendAccountDeleted(user.email, user.locale === 'tr' ? 'tr' : 'en');
     return { deleted: true };
   }
 

@@ -4,39 +4,41 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useAdminSession, useRequireStaff } from '../lib/session';
+import { AdminLanguageSwitcher } from './AdminLanguageSwitcher';
+import { t } from '../lib/i18n';
 
 const NAV = [
-  { href: '/', label: 'Genel bakış', roles: null },
+  { href: '/', label: t('nav.overview'), roles: null },
   {
     href: '/levels',
-    label: 'Bölümler ve dünyalar',
+    label: t('nav.levels'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
-  { href: '/users', label: 'Kullanıcılar', roles: null },
-  { href: '/moderation', label: 'Moderasyon', roles: null },
-  { href: '/support', label: 'Destek talepleri', roles: null },
-  { href: '/tasks', label: 'Görevler', roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
+  { href: '/users', label: t('nav.users'), roles: null },
+  { href: '/moderation', label: t('nav.moderation'), roles: null },
+  { href: '/support', label: t('nav.support'), roles: null },
+  { href: '/tasks', label: t('nav.tasks'), roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
   {
     href: '/achievements',
-    label: 'Başarımlar',
+    label: t('nav.achievements'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
   {
     href: '/economy',
-    label: 'Mağaza ve ekonomi',
+    label: t('nav.economy'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
-  { href: '/leagues', label: 'Ligler', roles: null },
-  { href: '/seasons', label: 'Sezonlar', roles: ['GAME_ADMIN', 'SUPER_ADMIN'] },
+  { href: '/leagues', label: t('nav.leagues'), roles: null },
+  { href: '/seasons', label: t('nav.seasons'), roles: ['GAME_ADMIN', 'SUPER_ADMIN'] },
   {
     href: '/announcements',
-    label: 'Duyurular',
+    label: t('nav.announcements'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
-  { href: '/flags', label: 'Feature flags', roles: null },
-  { href: '/analytics', label: 'Analitik', roles: null },
-  { href: '/audit', label: 'Audit log', roles: null },
-  { href: '/system', label: 'Sistem sağlığı', roles: null },
+  { href: '/flags', label: t('nav.flags'), roles: null },
+  { href: '/analytics', label: t('nav.analytics'), roles: null },
+  { href: '/audit', label: t('nav.audit'), roles: null },
+  { href: '/system', label: t('nav.system'), roles: null },
 ] as const;
 
 /** Panel chrome: every sidebar entry is a real route with a real page. */
@@ -46,7 +48,7 @@ export function AdminShell({ title, children }: { title: string; children: React
   const pathname = usePathname();
   const router = useRouter();
 
-  if (loading) return <div className="admin-loading">Oturum doğrulanıyor…</div>;
+  if (loading) return <div className="admin-loading">{t('chrome.checkingSession')}</div>;
   if (!user) return null;
 
   return (
@@ -56,7 +58,7 @@ export function AdminShell({ title, children }: { title: string; children: React
           <span className="brand-mark">◇</span>
           <div>
             <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}</strong>
-            <span>YÖNETİM</span>
+            <span>{t('chrome.panel')}</span>
           </div>
         </div>
         <nav>
@@ -72,13 +74,14 @@ export function AdminShell({ title, children }: { title: string; children: React
             </Link>
           ))}
         </nav>
+        <AdminLanguageSwitcher />
         <footer>
           <span title={user.email}>
             {user.displayName}
             <small>{user.role}</small>
           </span>
           <button type="button" onClick={() => void signOut().then(() => router.push('/login'))}>
-            Çıkış
+            {t('chrome.signOut')}
           </button>
         </footer>
       </aside>

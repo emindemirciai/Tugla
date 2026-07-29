@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { PwaRegistration } from '../components/PwaRegistration';
+import { LocaleProvider } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
 import './styles.css';
 
@@ -63,7 +64,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="tr">
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <LocaleProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </LocaleProvider>
         <PwaRegistration />
         <script
           type="application/ld+json"

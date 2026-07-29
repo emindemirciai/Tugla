@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../components/AdminShell';
 import { StatusNote, useAdminData } from '../components/primitives';
+import { t } from '../lib/i18n';
 
 interface Overview {
   users: number;
@@ -19,19 +20,19 @@ export default function AdminDashboard() {
 
   const cards = data
     ? [
-        { label: 'Aktif kullanıcı', value: data.users },
-        { label: 'Bu hafta yeni kayıt', value: data.newUsersThisWeek },
-        { label: 'Bugün oynayan', value: data.activeToday },
-        { label: 'Son 24 saat oturum', value: data.sessions24h },
-        { label: 'Yayında bölüm', value: data.publishedLevels },
-        { label: 'Açık moderasyon', value: data.openReports },
-        { label: 'Açık destek talebi', value: data.openTickets },
-        { label: 'Bu hafta şüpheli oturum', value: data.flaggedSessionsThisWeek },
+        { label: t('dash.users'), value: data.users },
+        { label: t('dash.newUsers'), value: data.newUsersThisWeek },
+        { label: t('dash.activeToday'), value: data.activeToday },
+        { label: t('dash.sessions24h'), value: data.sessions24h },
+        { label: t('dash.publishedLevels'), value: data.publishedLevels },
+        { label: t('dash.openReports'), value: data.openReports },
+        { label: t('dash.openTickets'), value: data.openTickets },
+        { label: t('dash.flagged'), value: data.flaggedSessionsThisWeek },
       ]
     : [];
 
   return (
-    <AdminShell title="Genel bakış">
+    <AdminShell title={t('nav.overview')}>
       <StatusNote loading={loading} error={error} />
       <div className="stat-grid">
         {cards.map((card) => (

@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { DataTable, StatusNote, useAdminData } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface Analytics {
   days: number;
@@ -14,13 +15,18 @@ export default function AnalyticsPage() {
   const { data, loading, error } = useAdminData<Analytics>('/admin/system/analytics?days=14');
 
   return (
-    <AdminShell title="Analitik (son 14 gün)">
+    <AdminShell title={t('analytics.title')}>
       <StatusNote loading={loading} error={error} />
       {data && (
         <>
-          <h2 className="admin-section-title">Günlük kayıt ve oturum</h2>
+          <h2 className="admin-section-title">{t('analytics.daily')}</h2>
           <DataTable
-            headers={['Gün', 'Yeni kayıt', 'Oturum', 'Ortalama skor']}
+            headers={[
+              t('analytics.day'),
+              t('analytics.signups'),
+              t('analytics.sessions'),
+              t('analytics.avgScore'),
+            ]}
             rows={data.sessions.map((session) => {
               const signup = data.signups.find((entry) => entry.day === session.day);
               return [
@@ -31,9 +37,9 @@ export default function AnalyticsPage() {
               ];
             })}
           />
-          <h2 className="admin-section-title">Ekonomi akışı (kaynak bazında)</h2>
+          <h2 className="admin-section-title">{t('analytics.economy')}</h2>
           <DataTable
-            headers={['Kaynak', 'Net hareket']}
+            headers={[t('analytics.source'), t('analytics.net')]}
             rows={data.economy.map((row) => [
               <code key="r">{row.reason}</code>,
               row.total.toLocaleString('tr-TR'),

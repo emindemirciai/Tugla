@@ -8,6 +8,7 @@ import {
   useAdminAction,
   useAdminData,
 } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface Ticket {
   id: string;
@@ -29,11 +30,17 @@ export default function SupportPage() {
   const { run, busy, message } = useAdminAction(reload);
 
   return (
-    <AdminShell title="Destek talepleri">
+    <AdminShell title={t('support.title')}>
       {message && <p className="admin-note">{message}</p>}
       <StatusNote loading={loading} error={error} />
       <DataTable
-        headers={['Konu', 'Kategori', 'Gönderen', 'Durum', 'Tarih']}
+        headers={[
+          t('support.subject'),
+          t('support.category'),
+          t('support.from'),
+          t('common.status'),
+          t('common.date'),
+        ]}
         rows={(data?.items ?? []).map((row) => [
           <div key="subject">
             <strong>{row.subject}</strong>
@@ -41,7 +48,7 @@ export default function SupportPage() {
           </div>,
           row.category,
           <div key="from">
-            {row.user ? `@${row.user.username}` : 'misafir e-posta'}
+            {row.user ? `@${row.user.username}` : t('support.guest')}
             <div className="admin-sub">{row.email}</div>
           </div>,
           <select
@@ -52,7 +59,7 @@ export default function SupportPage() {
               void run(
                 `/admin/operations/tickets/${row.id}`,
                 { method: 'PATCH', body: { status: event.target.value } },
-                'Talep güncellendi.',
+                t('support.updated'),
               )
             }
           >

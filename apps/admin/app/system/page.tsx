@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { StatusNote, useAdminData } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface SystemHealth {
   database: { status: string; latencyMs: number; size: string };
@@ -16,10 +17,10 @@ export default function SystemPage() {
   const { data, loading, error, reload } = useAdminData<SystemHealth>('/admin/system/health');
 
   return (
-    <AdminShell title="Sistem sağlığı">
+    <AdminShell title={t('system.title')}>
       <div className="admin-toolbar">
         <button type="button" onClick={() => void reload()}>
-          Yenile
+          {t('common.refresh')}
         </button>
       </div>
       <StatusNote loading={loading} error={error} />
@@ -45,11 +46,11 @@ export default function SystemPage() {
             <strong className={data.storage.available ? 'ok' : 'bad'}>
               {data.storage.provider}
             </strong>
-            <span>Replay depolama</span>
+            <span>{t('system.replayStorage')}</span>
           </div>
           <div className="stat-card">
             <strong className={data.mail.enabled ? 'ok' : 'bad'}>{data.mail.provider}</strong>
-            <span>E-posta sağlayıcısı</span>
+            <span>{t('system.mailProvider')}</span>
           </div>
           <div className="stat-card">
             <strong>{Math.floor(data.process.uptimeSeconds / 3600)}h</strong>
@@ -60,16 +61,15 @@ export default function SystemPage() {
           </div>
           {Object.entries(data.providers).map(([key, value]) => (
             <div key={key} className="stat-card">
-              <strong className={value ? 'ok' : 'muted'}>{value ? 'HAZIR' : 'KAPALI'}</strong>
+              <strong className={value ? 'ok' : 'muted'}>
+                {value ? t('system.ready') : t('system.offline')}
+              </strong>
               <span>{key}</span>
             </div>
           ))}
         </div>
       )}
-      <p className="admin-note">
-        "KAPALI" sağlayıcılar, ilgili environment anahtarları girilmediği için devre dışıdır; kod
-        tarafı hazırdır.
-      </p>
+      <p className="admin-note">{t('system.note')}</p>
     </AdminShell>
   );
 }

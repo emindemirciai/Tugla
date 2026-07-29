@@ -3,6 +3,7 @@
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
 import { formatDate } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface Season {
   id: string;
@@ -17,12 +18,20 @@ interface Season {
 
 export default function SeasonsPage() {
   return (
-    <AdminShell title="Sezonlar">
+    <AdminShell title={t('seasons.title')}>
       <CatalogEditor<Season>
         listPath="/admin/content/seasons"
         upsertPath="/admin/content/seasons"
-        description="Aynı anda tek sezon aktif olur; yeni bir sezonu aktif kaydetmek öncekini otomatik pasifleştirir."
-        headers={['#', 'Key', 'Ad', 'Tema', 'Başlangıç', 'Bitiş', 'Aktif']}
+        description={t('seasons.desc')}
+        headers={[
+          '#',
+          'Key',
+          t('seasons.name'),
+          t('seasons.theme'),
+          t('seasons.start'),
+          t('seasons.end'),
+          t('seasons.active'),
+        ]}
         toRow={(item) => [
           item.number,
           <code key="k">{item.key}</code>,

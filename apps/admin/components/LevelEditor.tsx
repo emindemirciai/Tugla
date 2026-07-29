@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { createDemoLevel } from '@pulse/game-engine';
 import { adminApi } from '../lib/api';
+import { t } from '../lib/i18n';
 import {
   blockKinds,
   levelDefinitionSchema,
@@ -56,7 +57,7 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
   const [selected, setSelected] = useState<string[]>([]);
   const [activeKind, setActiveKind] = useState<BlockKind>('NORMAL');
   const [gridSize, setGridSize] = useState(0.025);
-  const [notice, setNotice] = useState('Taslak yerel olarak hazır.');
+  const [notice, setNotice] = useState('');
   const dragState = useRef<{ id: string; dx: number; dy: number } | null>(null);
 
   const pushLevel = useCallback(
@@ -204,8 +205,13 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
     const result = levelDefinitionSchema.safeParse(level);
     setNotice(
       result.success
-        ? `Doğrulandı: ${level.blocks.length} blok, ${level.blocks.filter((block) => block.required).length} zorunlu hedef.`
-        : `Hata: ${result.error.issues[0]?.message ?? 'Bölüm geçersiz.'}`,
+        ? t('editor.validated', {
+            blocks: level.blocks.length,
+            required: level.blocks.filter((block) => block.required).length,
+          })
+        : t('editor.invalid', {
+            message: result.error.issues[0]?.message ?? t('editor.invalidDefault'),
+          }),
     );
   };
 
@@ -213,7 +219,11 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
   const saveDraft = async () => {
     const parsed = levelDefinitionSchema.safeParse(level);
     if (!parsed.success) {
-      setNotice(`Hata: ${parsed.error.issues[0]?.message ?? 'Bölüm geçersiz.'}`);
+      setNotice(
+        t('editor.invalid', {
+          message: parsed.error.issues[0]?.message ?? t('editor.invalidDefault'),
+        }),
+      );
       return;
     }
     try {
@@ -222,7 +232,7 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
           method: 'PATCH',
           body: { definition: parsed.data },
         });
-        setNotice('Yeni sürüm kaydedildi (sürüm geçmişinde saklanır).');
+        setNotice(t('editor.savedVersion'));
       } else {
         const created = await adminApi<{ id: string }>('/admin/content/levels', {
           method: 'POST',
@@ -230,32 +240,32 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
         });
         setPersistedId(created.id);
         onSaved?.(created.id);
-        setNotice('Bölüm TASLAK olarak oluşturuldu. Yayınlamayı bölüm listesinden yapabilirsin.');
+        setNotice(t('editor.createdDraft'));
       }
     } catch (saveError) {
       setNotice(
-        saveError instanceof Error ? `Sunucu hatası: ${saveError.message}` : 'Kaydetme başarısız.',
+        saveError instanceof Error
+          ? t('editor.serverError', { message: saveError.message })
+          : t('editor.saveFailed'),
       );
     }
   };
 
   /** Pulls the deterministic campaign definition for an index as a scaffold. */
   const loadGenerated = async () => {
-    const raw = window.prompt('Kampanya bölüm numarası (1-500):');
+    const raw = window.prompt(t('editor.campaignPrompt'));
     if (!raw) return;
     const index = Number(raw);
     if (!Number.isInteger(index) || index < 1) {
-      setNotice('Geçerli bir bölüm numarası gir.');
+      setNotice(t('editor.campaignInvalid'));
       return;
     }
     try {
       const generated = await adminApi<LevelDefinition>(`/admin/content/levels/generate/${index}`);
       pushLevel(generated);
-      setNotice(
-        `Kampanya ${index} şablonu yüklendi; düzenleyip yeni bölüm olarak kaydedebilirsin.`,
-      );
+      setNotice(t('editor.campaignLoaded', { index }));
     } catch {
-      setNotice('Şablon alınamadı.');
+      setNotice(t('editor.campaignFailed'));
     }
   };
 
@@ -270,249 +280,219 @@ export function LevelEditor({ levelId = null, initialLevel, onSaved }: LevelEdit
   }, [level.blocks]);
 
   return (
-    <main className="admin-shell">
-      <aside className="sidebar">
-        <div className="admin-brand">
-          <span className="brand-icon">P</span>
-          <div>
-            <strong>PULSE</strong>
-            <small>CONTROL CENTER</small>
-          </div>
+    <section className="admin-workspace">
+      <header className="admin-topbar">
+        <div>
+          <span>
+            {t('editor.world')} {String(level.world).padStart(2, '0')} · {t('editor.index')}{' '}
+            {level.index} · {persistedId ? t('editor.stateSaved') : t('editor.stateNew')}
+          </span>
+          <h1>{level.name}</h1>
         </div>
-        <nav>
-          <button className="active">▦ Level Editor</button>
-          <button>◈ Worlds</button>
-          <button>⌁ Bosses</button>
-          <button>✦ Bonuses</button>
-          <button>♙ Players</button>
-          <button>♜ Leagues</button>
-          <button>✓ Missions</button>
-          <button>◇ Economy</button>
-          <button>⚑ Moderation</button>
-          <button>◉ Analytics</button>
-          <button>⚙ System</button>
-        </nav>
-        <div className="environment">
-          <i />
-          <div>
-            <span>ENVIRONMENT</span>
-            <strong>STAGING</strong>
-          </div>
+        <div className="top-actions">
+          <button onClick={validate}>{t('editor.validate')}</button>
+          <button onClick={loadGenerated}>{t('editor.loadCampaign')}</button>
+          <button className="primary" onClick={saveDraft}>
+            {t('editor.saveDraft')}
+          </button>
         </div>
-      </aside>
+      </header>
 
-      <section className="admin-workspace">
-        <header className="admin-topbar">
-          <div>
-            <span>CONTENT / WORLDS / NEON GRID</span>
-            <h1>{level.name}</h1>
-          </div>
-          <div className="top-actions">
-            <button onClick={validate}>Validate</button>
-            <button onClick={loadGenerated}>Kampanyadan yükle</button>
-            <button className="primary" onClick={saveDraft}>
-              Save draft
-            </button>
-          </div>
-        </header>
+      <div className="editor-toolbar">
+        <div>
+          <button onClick={undo} disabled={!history.length} title={t('editor.undo')}>
+            ↶
+          </button>
+          <button onClick={redo} disabled={!future.length} title={t('editor.redo')}>
+            ↷
+          </button>
+          <button
+            onClick={duplicateSelected}
+            disabled={!selected.length}
+            title={t('editor.duplicate')}
+          >
+            ⧉
+          </button>
+          <button onClick={removeSelected} disabled={!selected.length} title={t('editor.delete')}>
+            ⌫
+          </button>
+          <button onClick={mirror} title={t('editor.mirror')}>
+            ⋈
+          </button>
+        </div>
+        <div className="toolbar-meta">
+          <label>
+            {t('editor.grid')}
+            <select value={gridSize} onChange={(event) => setGridSize(Number(event.target.value))}>
+              <option value={0.0125}>80 × 80</option>
+              <option value={0.025}>40 × 40</option>
+              <option value={0.05}>20 × 20</option>
+            </select>
+          </label>
+          <span>{t('editor.selected', { count: selected.length })}</span>
+        </div>
+      </div>
 
-        <div className="editor-toolbar">
-          <div>
-            <button onClick={undo} disabled={!history.length} title="Undo">
-              ↶
-            </button>
-            <button onClick={redo} disabled={!future.length} title="Redo">
-              ↷
-            </button>
-            <button onClick={duplicateSelected} disabled={!selected.length} title="Duplicate">
-              ⧉
-            </button>
-            <button onClick={removeSelected} disabled={!selected.length} title="Delete">
-              ⌫
-            </button>
-            <button onClick={mirror} title="Mirror left to right">
-              ⋈
-            </button>
+      <div className="editor-body">
+        <aside className="block-palette">
+          <div className="panel-heading">
+            <span>BLOCK LIBRARY</span>
+            <small>{blockKinds.length} TYPES</small>
           </div>
-          <div className="toolbar-meta">
-            <label>
-              GRID
-              <select
-                value={gridSize}
-                onChange={(event) => setGridSize(Number(event.target.value))}
+          <div className="palette-grid">
+            {blockKinds.map((kind) => (
+              <button
+                key={kind}
+                className={activeKind === kind ? 'active' : ''}
+                onClick={() => setActiveKind(kind)}
               >
-                <option value={0.0125}>80 × 80</option>
-                <option value={0.025}>40 × 40</option>
-                <option value={0.05}>20 × 20</option>
-              </select>
-            </label>
-            <span>Selected {selected.length}</span>
+                <i style={{ background: colorByKind[kind] }} />
+                <span>{kind.replace('_', ' ')}</span>
+              </button>
+            ))}
           </div>
-        </div>
+        </aside>
 
-        <div className="editor-body">
-          <aside className="block-palette">
-            <div className="panel-heading">
-              <span>BLOCK LIBRARY</span>
-              <small>{blockKinds.length} TYPES</small>
-            </div>
-            <div className="palette-grid">
-              {blockKinds.map((kind) => (
-                <button
-                  key={kind}
-                  className={activeKind === kind ? 'active' : ''}
-                  onClick={() => setActiveKind(kind)}
-                >
-                  <i style={{ background: colorByKind[kind] }} />
-                  <span>{kind.replace('_', ' ')}</span>
-                </button>
-              ))}
-            </div>
-          </aside>
+        <section className="editor-center">
+          <div className="canvas-meta">
+            <span>PORTRAIT · 9:16</span>
+            <span>{notice}</span>
+          </div>
+          <div
+            className="level-board"
+            onPointerDown={placeBlock}
+            style={{
+              backgroundSize: `${gridSize * 100}% ${gridSize * 100}%`,
+            }}
+          >
+            <div className="danger-line">DANGER LINE</div>
+            {level.blocks.map((block) => (
+              <button
+                key={block.id}
+                className={`editor-block ${selected.includes(block.id) ? 'selected' : ''}`}
+                aria-label={`${block.kind} block`}
+                onPointerDown={(event) => beginDrag(event, block)}
+                onPointerMove={moveDrag}
+                onPointerUp={endDrag}
+                style={{
+                  left: `${block.x * 100}%`,
+                  bottom: `${block.y * 100}%`,
+                  width: `${block.width * 100}%`,
+                  height: `${block.height * 100}%`,
+                  background: colorByKind[block.kind],
+                  transform: `translate(-50%, 50%) rotate(${block.rotation}deg)`,
+                }}
+              >
+                {block.hitPoints > 1 ? block.hitPoints : ''}
+              </button>
+            ))}
+            <div className="editor-paddle" />
+          </div>
+          <div className="zoom-row">
+            <span>Click empty space to add · Shift-click to multi-select</span>
+            <strong>100%</strong>
+          </div>
+        </section>
 
-          <section className="editor-center">
-            <div className="canvas-meta">
-              <span>PORTRAIT · 9:16</span>
-              <span>{notice}</span>
-            </div>
-            <div
-              className="level-board"
-              onPointerDown={placeBlock}
-              style={{
-                backgroundSize: `${gridSize * 100}% ${gridSize * 100}%`,
-              }}
-            >
-              <div className="danger-line">DANGER LINE</div>
-              {level.blocks.map((block) => (
-                <button
-                  key={block.id}
-                  className={`editor-block ${selected.includes(block.id) ? 'selected' : ''}`}
-                  aria-label={`${block.kind} block`}
-                  onPointerDown={(event) => beginDrag(event, block)}
-                  onPointerMove={moveDrag}
-                  onPointerUp={endDrag}
-                  style={{
-                    left: `${block.x * 100}%`,
-                    bottom: `${block.y * 100}%`,
-                    width: `${block.width * 100}%`,
-                    height: `${block.height * 100}%`,
-                    background: colorByKind[block.kind],
-                    transform: `translate(-50%, 50%) rotate(${block.rotation}deg)`,
-                  }}
-                >
-                  {block.hitPoints > 1 ? block.hitPoints : ''}
-                </button>
-              ))}
-              <div className="editor-paddle" />
-            </div>
-            <div className="zoom-row">
-              <span>Click empty space to add · Shift-click to multi-select</span>
-              <strong>100%</strong>
-            </div>
-          </section>
-
-          <aside className="inspector">
-            <div className="panel-heading">
-              <span>LEVEL SETTINGS</span>
-              <small>V{level.version}</small>
-            </div>
+        <aside className="inspector">
+          <div className="panel-heading">
+            <span>LEVEL SETTINGS</span>
+            <small>V{level.version}</small>
+          </div>
+          <label>
+            {t('editor.name')}
+            <input
+              value={level.name}
+              onChange={(event) => setLevel({ ...level, name: event.target.value })}
+            />
+          </label>
+          <div className="field-row">
             <label>
-              NAME
+              {t('editor.world')}
               <input
-                value={level.name}
-                onChange={(event) => setLevel({ ...level, name: event.target.value })}
+                type="number"
+                min={1}
+                value={level.world}
+                onChange={(event) => setLevel({ ...level, world: Number(event.target.value) })}
               />
             </label>
-            <div className="field-row">
-              <label>
-                WORLD
-                <input
-                  type="number"
-                  min={1}
-                  value={level.world}
-                  onChange={(event) => setLevel({ ...level, world: Number(event.target.value) })}
-                />
-              </label>
-              <label>
-                INDEX
-                <input
-                  type="number"
-                  min={1}
-                  value={level.index}
-                  onChange={(event) => setLevel({ ...level, index: Number(event.target.value) })}
-                />
-              </label>
-            </div>
             <label>
-              THEME
-              <select
-                value={level.theme}
-                onChange={(event) => setLevel({ ...level, theme: event.target.value })}
-              >
-                {worldThemes.map((theme) => (
-                  <option value={theme} key={theme}>
-                    {theme.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              LEVEL TYPE
-              <select
-                value={level.type}
-                onChange={(event) =>
-                  setLevel({ ...level, type: event.target.value as LevelDefinition['type'] })
-                }
-              >
-                <option>NORMAL</option>
-                <option>MINI_BOSS</option>
-                <option>WORLD_BOSS</option>
-                <option>DAILY</option>
-                <option>COMMUNITY</option>
-              </select>
-            </label>
-            <div className="difficulty">
-              <div>
-                <span>EST. DIFFICULTY</span>
-                <strong>{metrics.difficulty} / 10</strong>
-              </div>
-              <progress max={10} value={metrics.difficulty} />
-            </div>
-            <div className="metric-grid">
-              <div>
-                <span>BLOCKS</span>
-                <strong>{level.blocks.length}</strong>
-              </div>
-              <div>
-                <span>TOTAL HP</span>
-                <strong>{metrics.hitPoints}</strong>
-              </div>
-              <div>
-                <span>SPECIAL</span>
-                <strong>{metrics.special}</strong>
-              </div>
-              <div>
-                <span>SEED</span>
-                <strong>{level.seed}</strong>
-              </div>
-            </div>
-            {selected.length === 1 && (
-              <SelectedInspector
-                block={level.blocks.find((block) => block.id === selected[0])}
-                onChange={(changed) =>
-                  setLevel({
-                    ...level,
-                    blocks: level.blocks.map((block) =>
-                      block.id === changed.id ? changed : block,
-                    ),
-                  })
-                }
+              {t('editor.index')}
+              <input
+                type="number"
+                min={1}
+                value={level.index}
+                onChange={(event) => setLevel({ ...level, index: Number(event.target.value) })}
               />
-            )}
-          </aside>
-        </div>
-      </section>
-    </main>
+            </label>
+          </div>
+          <label>
+            {t('editor.theme')}
+            <select
+              value={level.theme}
+              onChange={(event) => setLevel({ ...level, theme: event.target.value })}
+            >
+              {worldThemes.map((theme) => (
+                <option value={theme} key={theme}>
+                  {theme.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t('editor.levelType')}
+            <select
+              value={level.type}
+              onChange={(event) =>
+                setLevel({ ...level, type: event.target.value as LevelDefinition['type'] })
+              }
+            >
+              <option>NORMAL</option>
+              <option>MINI_BOSS</option>
+              <option>WORLD_BOSS</option>
+              <option>DAILY</option>
+              <option>COMMUNITY</option>
+            </select>
+          </label>
+          <div className="difficulty">
+            <div>
+              <span>EST. DIFFICULTY</span>
+              <strong>{metrics.difficulty} / 10</strong>
+            </div>
+            <progress max={10} value={metrics.difficulty} />
+          </div>
+          <div className="metric-grid">
+            <div>
+              <span>BLOCKS</span>
+              <strong>{level.blocks.length}</strong>
+            </div>
+            <div>
+              <span>TOTAL HP</span>
+              <strong>{metrics.hitPoints}</strong>
+            </div>
+            <div>
+              <span>SPECIAL</span>
+              <strong>{metrics.special}</strong>
+            </div>
+            <div>
+              <span>SEED</span>
+              <strong>{level.seed}</strong>
+            </div>
+          </div>
+          {selected.length === 1 && (
+            <SelectedInspector
+              block={level.blocks.find((block) => block.id === selected[0])}
+              onChange={(changed) =>
+                setLevel({
+                  ...level,
+                  blocks: level.blocks.map((block) => (block.id === changed.id ? changed : block)),
+                })
+              }
+            />
+          )}
+        </aside>
+      </div>
+    </section>
   );
 }
 
@@ -527,10 +507,10 @@ function SelectedInspector({
   return (
     <div className="selected-inspector">
       <div className="panel-heading">
-        <span>SELECTED BLOCK</span>
+        <span>{t('editor.selectedBlock')}</span>
       </div>
       <label>
-        TYPE
+        {t('editor.blockType')}
         <select
           value={block.kind}
           onChange={(event) => onChange({ ...block, kind: event.target.value as BlockKind })}
@@ -541,7 +521,7 @@ function SelectedInspector({
         </select>
       </label>
       <label>
-        HIT POINTS
+        {t('editor.hitPoints')}
         <input
           type="number"
           min={1}
@@ -556,7 +536,7 @@ function SelectedInspector({
           checked={block.required}
           onChange={(event) => onChange({ ...block, required: event.target.checked })}
         />
-        Required objective
+        {t('editor.required')}
       </label>
     </div>
   );
