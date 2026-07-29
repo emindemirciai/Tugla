@@ -791,3 +791,24 @@ button {
   font-size: 0.84rem;
   color: #a9c2d8;
 }
+
+/* ----- language switcher ----------------------------------------------------- */
+.lang-switch {
+  display: inline-flex;
+  gap: 4px;
+}
+.lang-switch button {
+  background: rgba(45, 217, 255, 0.06);
+  border: 1px solid rgba(110, 190, 235, 0.25);
+  color: #8fb2cc;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.lang-switch button.active {
+  background: rgba(45, 217, 255, 0.18);
+  color: #46dcff;
+  border-color: #37d4ff;
+}

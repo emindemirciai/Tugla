@@ -13,6 +13,7 @@ import {
   useAdminData,
 } from '../../components/primitives';
 import { adminApi } from '../../lib/api';
+import { t } from '../../lib/i18n';
 
 interface LevelRow {
   id: string;
@@ -57,10 +58,10 @@ function LevelsInner() {
 
   if (editor.open) {
     return (
-      <AdminShell title="Görsel bölüm editörü">
+      <AdminShell title={t('levels.editorTitle')}>
         <div className="admin-toolbar">
           <button type="button" onClick={() => setEditor({ open: false, levelId: null })}>
-            ← Bölüm listesine dön
+            {t('levels.backToList')}
           </button>
         </div>
         <LevelEditor
@@ -73,19 +74,19 @@ function LevelsInner() {
   }
 
   return (
-    <AdminShell title="Bölümler ve dünyalar">
+    <AdminShell title={t('levels.title')}>
       <div className="admin-toolbar">
         <button
           type="button"
           className="primary"
           onClick={() => setEditor({ open: true, levelId: null })}
         >
-          + Yeni bölüm
+          {t('levels.new')}
         </button>
         {message && <span className="admin-note">{message}</span>}
       </div>
 
-      <h2 className="admin-section-title">Dünyalar</h2>
+      <h2 className="admin-section-title">{t('levels.worlds')}</h2>
       <StatusNote loading={worlds.loading} error={worlds.error} />
       <div className="stat-grid">
         {(worlds.data?.items ?? []).map((world) => (
@@ -94,24 +95,37 @@ function LevelsInner() {
               {world.published}/{world.total}
             </strong>
             <span>
-              Dünya {world.world} · {world.theme}
+              {t('levels.world')} {world.world} · {world.theme}
             </span>
           </a>
         ))}
       </div>
 
       <h2 className="admin-section-title">
-        Bölümler {worldFilter ? `(Dünya ${worldFilter})` : '(tümü)'} — {levels.data?.total ?? 0}{' '}
-        kayıt
+        {t('levels.list')}{' '}
+        {worldFilter ? `(${t('levels.world')} ${worldFilter})` : `(${t('levels.all')})`} —{' '}
+        {levels.data?.total ?? 0} {t('levels.records')}
       </h2>
       <StatusNote loading={levels.loading} error={levels.error} />
       <DataTable
-        headers={['#', 'Ad', 'Tür', 'Durum', 'Zorluk', 'Güncelleme', 'İşlemler']}
+        headers={[
+          '#',
+          t('levels.name'),
+          t('levels.type'),
+          t('common.status'),
+          t('levels.difficulty'),
+          t('levels.updatedAt'),
+          t('common.actions'),
+        ]}
         rows={(levels.data?.items ?? []).map((row) => [
           `${row.world}-${row.index}`,
           <div key="name">
             <strong>{row.name}</strong>
-            {row.author && <div className="admin-sub">yazar: @{row.author.username}</div>}
+            {row.author && (
+              <div className="admin-sub">
+                {t('levels.author')}: @{row.author.username}
+              </div>
+            )}
           </div>,
           row.type,
           <span key="status" className={`tag tag-${row.status.toLowerCase()}`}>
@@ -121,7 +135,7 @@ function LevelsInner() {
           formatDate(row.updatedAt),
           <div key="actions" className="admin-actions">
             <button type="button" onClick={() => void openExisting(row.id)}>
-              Düzenle
+              {t('levels.edit')}
             </button>
             {row.status !== 'PUBLISHED' ? (
               <button
@@ -131,11 +145,11 @@ function LevelsInner() {
                   void run(
                     `/admin/content/levels/${row.id}/status`,
                     { method: 'POST', body: { status: 'PUBLISHED' } },
-                    'Bölüm yayınlandı.',
+                    t('levels.published'),
                   )
                 }
               >
-                Yayınla
+                {t('levels.publish')}
               </button>
             ) : (
               <button
@@ -145,11 +159,11 @@ function LevelsInner() {
                   void run(
                     `/admin/content/levels/${row.id}/status`,
                     { method: 'POST', body: { status: 'ARCHIVED' } },
-                    'Bölüm arşivlendi.',
+                    t('levels.archived'),
                   )
                 }
               >
-                Arşivle
+                {t('levels.archive')}
               </button>
             )}
           </div>,

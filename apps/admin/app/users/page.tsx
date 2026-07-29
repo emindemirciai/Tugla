@@ -10,6 +10,7 @@ import {
   useAdminData,
 } from '../../components/primitives';
 import { useAdminSession } from '../../lib/session';
+import { t } from '../../lib/i18n';
 
 interface UserRow {
   id: string;
@@ -36,7 +37,7 @@ export default function UsersPage() {
   const canModerate = ['GAME_ADMIN', 'SUPER_ADMIN'].includes(staff?.role ?? '');
 
   return (
-    <AdminShell title="Kullanıcı yönetimi">
+    <AdminShell title={t('users.title')}>
       <form
         className="admin-toolbar"
         onSubmit={(event) => {
@@ -47,14 +48,21 @@ export default function UsersPage() {
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="E-posta, kullanıcı adı veya isim ara"
+          placeholder={t('users.searchPlaceholder')}
         />
-        <button type="submit">Ara</button>
+        <button type="submit">{t('common.search')}</button>
         {message && <span className="admin-note">{message}</span>}
       </form>
       <StatusNote loading={loading} error={error} />
       <DataTable
-        headers={['Kullanıcı', 'Rol', 'Durum', 'Risk', 'Kayıt', 'İşlemler']}
+        headers={[
+          t('users.user'),
+          t('users.role'),
+          t('common.status'),
+          t('users.risk'),
+          t('users.joined'),
+          t('common.actions'),
+        ]}
         rows={(data?.items ?? []).map((row) => [
           <div key="who">
             <strong>{row.displayName}</strong>
@@ -70,7 +78,7 @@ export default function UsersPage() {
                 void run(
                   `/admin/operations/users/${row.id}/role`,
                   { method: 'PATCH', body: { role: event.target.value } },
-                  'Rol güncellendi.',
+                  t('users.roleUpdated'),
                 )
               }
             >
@@ -95,18 +103,18 @@ export default function UsersPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => {
-                  const reason = window.prompt('Ban gerekçesi (kullanıcıya iletilir):');
+                  const reason = window.prompt(t('users.banReasonPrompt'));
                   if (!reason) return;
-                  const daysRaw = window.prompt('Süre (gün, boş = süresiz):') ?? '';
+                  const daysRaw = window.prompt(t('users.banDaysPrompt')) ?? '';
                   const days = daysRaw.trim() === '' ? null : Number(daysRaw);
                   void run(
                     `/admin/operations/users/${row.id}/ban`,
                     { method: 'POST', body: { reason, days: Number.isFinite(days) ? days : null } },
-                    'Kullanıcı askıya alındı.',
+                    t('users.banned'),
                   );
                 }}
               >
-                Banla
+                {t('users.ban')}
               </button>
             )}
             {canModerate && row.status === 'SUSPENDED' && (
@@ -117,11 +125,11 @@ export default function UsersPage() {
                   void run(
                     `/admin/operations/users/${row.id}/unban`,
                     { method: 'POST' },
-                    'Ban kaldırıldı.',
+                    t('users.unbanned'),
                   )
                 }
               >
-                Banı kaldır
+                {t('users.unban')}
               </button>
             )}
             {canModerate && (
@@ -129,25 +137,25 @@ export default function UsersPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => {
-                  const amountRaw = window.prompt('Kredi miktarı (negatif = düş):');
+                  const amountRaw = window.prompt(t('users.grantAmountPrompt'));
                   if (!amountRaw) return;
                   const amount = Number(amountRaw);
                   if (!Number.isFinite(amount) || amount === 0) return;
-                  const reason = window.prompt('Gerekçe:') ?? 'manual-adjustment';
+                  const reason = window.prompt(t('users.grantReasonPrompt')) ?? 'manual-adjustment';
                   void run(
                     `/admin/operations/users/${row.id}/grant`,
                     { method: 'POST', body: { currency: 'CREDITS', amount, reason } },
-                    'Bakiye güncellendi.',
+                    t('users.granted'),
                   );
                 }}
               >
-                Kredi ver
+                {t('users.grant')}
               </button>
             )}
           </div>,
         ])}
       />
-      {data && <p className="admin-note">Toplam {data.total} kullanıcı.</p>}
+      {data && <p className="admin-note">{t('users.total', { count: data.total })}</p>}
     </AdminShell>
   );
 }

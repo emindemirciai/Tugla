@@ -26,6 +26,65 @@ export interface MailDeliveryResult {
  * Nothing here pretends a message was sent when it was not: the boolean in the
  * result is what auth flows surface to the user.
  */
+export type MailLocale = 'tr' | 'en';
+
+/** Transactional email copy in both supported product languages. */
+const MAIL_COPY: Record<
+  MailLocale,
+  Record<
+    'verification' | 'reset' | 'deleted',
+    { subject: string; title: string; body: string; expiry: string; action: string }
+  >
+> = {
+  en: {
+    verification: {
+      subject: 'verify your email',
+      title: 'Verify your email',
+      body: 'Confirm your email address to finish creating your account:',
+      expiry: 'The link expires in 24 hours.',
+      action: 'Verify email',
+    },
+    reset: {
+      subject: 'reset your password',
+      title: 'Reset your password',
+      body: 'Use this link to choose a new password:',
+      expiry: 'The link expires in 1 hour. If you did not request it you can ignore this email.',
+      action: 'Reset password',
+    },
+    deleted: {
+      subject: 'account deleted',
+      title: 'Account deleted',
+      body: 'Your account has been deleted and your personal data removed from the live systems.',
+      expiry: '',
+      action: '',
+    },
+  },
+  tr: {
+    verification: {
+      subject: 'e-postanı doğrula',
+      title: 'E-postanı doğrula',
+      body: 'Hesabını tamamlamak için e-posta adresini doğrula:',
+      expiry: 'Bağlantı 24 saat geçerlidir.',
+      action: 'E-postayı doğrula',
+    },
+    reset: {
+      subject: 'parolanı sıfırla',
+      title: 'Parolanı sıfırla',
+      body: 'Yeni bir parola belirlemek için bu bağlantıyı kullan:',
+      expiry:
+        'Bağlantı 1 saat geçerlidir. Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin.',
+      action: 'Parolayı sıfırla',
+    },
+    deleted: {
+      subject: 'hesap silindi',
+      title: 'Hesap silindi',
+      body: 'Hesabın silindi ve kişisel verilerin canlı sistemlerden kaldırıldı.',
+      expiry: '',
+      action: '',
+    },
+  },
+};
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -93,43 +152,35 @@ export class MailService {
 <p style="color:#5d7186;font-size:12px;margin-top:40px">${config.APP_NAME} · ${config.ROOT_DOMAIN}</p></body></html>`;
   }
 
-  sendVerification(to: string, token: string) {
+  sendVerification(to: string, token: string, locale: MailLocale = 'en') {
     const url = `${env().WEB_URL}/auth/verify?token=${encodeURIComponent(token)}`;
+    const copy = MAIL_COPY[locale].verification;
     return this.send({
       to,
-      subject: `${env().APP_NAME} — verify your email`,
-      text: `Confirm your email address to finish creating your account:\n${url}\n\nThe link expires in 24 hours.`,
-      html: this.layout(
-        'Verify your email',
-        'Confirm your email address to finish creating your account. The link expires in 24 hours.',
-        { label: 'Verify email', url },
-      ),
+      subject: `${env().APP_NAME} — ${copy.subject}`,
+      text: `${copy.body}\n${url}\n\n${copy.expiry}`,
+      html: this.layout(copy.title, `${copy.body} ${copy.expiry}`, { label: copy.action, url }),
     });
   }
 
-  sendPasswordReset(to: string, token: string) {
+  sendPasswordReset(to: string, token: string, locale: MailLocale = 'en') {
     const url = `${env().WEB_URL}/auth/reset?token=${encodeURIComponent(token)}`;
+    const copy = MAIL_COPY[locale].reset;
     return this.send({
       to,
-      subject: `${env().APP_NAME} — reset your password`,
-      text: `Reset your password using this link:\n${url}\n\nThe link expires in 1 hour. If you did not request it you can ignore this email.`,
-      html: this.layout(
-        'Reset your password',
-        'Use the button below to choose a new password. The link expires in 1 hour. If you did not request this, you can ignore this email.',
-        { label: 'Reset password', url },
-      ),
+      subject: `${env().APP_NAME} — ${copy.subject}`,
+      text: `${copy.body}\n${url}\n\n${copy.expiry}`,
+      html: this.layout(copy.title, `${copy.body} ${copy.expiry}`, { label: copy.action, url }),
     });
   }
 
-  sendAccountDeleted(to: string) {
+  sendAccountDeleted(to: string, locale: MailLocale = 'en') {
+    const copy = MAIL_COPY[locale].deleted;
     return this.send({
       to,
-      subject: `${env().APP_NAME} — account deleted`,
-      text: 'Your account has been deleted and your personal data removed from the live systems.',
-      html: this.layout(
-        'Account deleted',
-        'Your account has been deleted and your personal data removed from the live systems.',
-      ),
+      subject: `${env().APP_NAME} — ${copy.subject}`,
+      text: copy.body,
+      html: this.layout(copy.title, copy.body),
     });
   }
 }

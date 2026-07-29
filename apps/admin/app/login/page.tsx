@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
+import { AdminLanguageSwitcher } from '../../components/AdminLanguageSwitcher';
 import { useAdminSession } from '../../lib/session';
+import { t } from '../../lib/i18n';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function AdminLoginPage() {
       await signIn(String(form.get('email') ?? ''), String(form.get('password') ?? ''));
       router.push('/');
     } catch (signInError) {
-      setError(signInError instanceof Error ? signInError.message : 'Giriş başarısız');
+      setError(signInError instanceof Error ? signInError.message : t('login.failed'));
     } finally {
       setPending(false);
     }
@@ -32,24 +34,23 @@ export default function AdminLoginPage() {
           <span className="brand-mark">◇</span>
           <div>
             <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}</strong>
-            <span>YÖNETİM PANELİ</span>
+            <span>{t('login.panel')}</span>
           </div>
         </div>
         <label>
-          E-posta
+          {t('login.email')}
           <input name="email" type="email" autoComplete="username" required />
         </label>
         <label>
-          Parola
+          {t('login.password')}
           <input name="password" type="password" autoComplete="current-password" required />
         </label>
+        <AdminLanguageSwitcher />
         {error && <p className="admin-error">{error}</p>}
         <button type="submit" disabled={pending}>
-          {pending ? 'Doğrulanıyor…' : 'Giriş yap'}
+          {pending ? t('login.pending') : t('login.submit')}
         </button>
-        <p className="admin-note">
-          Yalnızca personel rollerine açıktır. Tüm işlemler audit log'a yazılır.
-        </p>
+        <p className="admin-note">{t('login.note')}</p>
       </form>
     </main>
   );

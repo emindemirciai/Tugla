@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AdminShell } from '../../components/AdminShell';
 import { DataTable, formatDate, StatusNote, useAdminData } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface AuditRow {
   id: string;
@@ -22,7 +23,7 @@ export default function AuditPage() {
   );
 
   return (
-    <AdminShell title="Audit log">
+    <AdminShell title={t('audit.title')}>
       <form
         className="admin-toolbar"
         onSubmit={(event) => {
@@ -33,22 +34,22 @@ export default function AuditPage() {
         <input
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Eylem filtrele (ör. LEVEL, USER_BAN)"
+          placeholder={t('audit.filterPlaceholder')}
         />
-        <button type="submit">Filtrele</button>
+        <button type="submit">{t('common.filter')}</button>
       </form>
       <StatusNote loading={loading} error={error} />
       <DataTable
-        headers={['Eylem', 'Hedef', 'Yapan', 'IP', 'Zaman']}
+        headers={[t('audit.action'), t('mod.target'), t('audit.actor'), 'IP', t('audit.time')]}
         rows={(data?.items ?? []).map((row) => [
           <code key="a">{row.action}</code>,
           `${row.targetType}${row.targetId ? ` · ${row.targetId.slice(0, 8)}` : ''}`,
-          row.actor ? `@${row.actor.username}` : 'sistem',
+          row.actor ? `@${row.actor.username}` : t('audit.system'),
           row.ipAddress ?? '—',
           formatDate(row.createdAt),
         ])}
       />
-      {data && <p className="admin-note">Toplam {data.total} kayıt (immutable).</p>}
+      {data && <p className="admin-note">{t('audit.total', { count: data.total })}</p>}
     </AdminShell>
   );
 }

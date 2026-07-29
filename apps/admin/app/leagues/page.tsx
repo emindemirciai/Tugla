@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { DataTable, formatDate, StatusNote, useAdminData } from '../../components/primitives';
+import { t } from '../../lib/i18n';
 
 interface League {
   id: string;
@@ -16,15 +17,18 @@ interface League {
 export default function LeaguesPage() {
   const { data, loading, error } = useAdminData<{ items: League[] }>('/admin/system/leagues');
   return (
-    <AdminShell title="Haftalık ligler">
-      <p className="admin-note">
-        Ligler ISO hafta anahtarıyla otomatik açılır; oyuncular ilk skoru gönderdiklerinde 30
-        kişilik gruplara yerleştirilir. Kapanış her Pazartesi 00:05 UTC'de zamanlanmış görevle
-        yapılır: sıralama, terfi/düşme ve ödüller otomatik dağıtılır.
-      </p>
+    <AdminShell title={t('leagues.title')}>
+      <p className="admin-note">{t('leagues.desc')}</p>
       <StatusNote loading={loading} error={error} />
       <DataTable
-        headers={['Hafta', 'Kademe', 'Başlangıç', 'Bitiş', 'Grup', 'Oyuncu']}
+        headers={[
+          t('leagues.week'),
+          t('leagues.tier'),
+          t('seasons.start'),
+          t('seasons.end'),
+          t('leagues.groups'),
+          t('leagues.players'),
+        ]}
         rows={(data?.items ?? []).map((row) => [
           <code key="k">{row.key}</code>,
           row.tier,

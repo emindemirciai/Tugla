@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import { t } from '../../lib/i18n';
 
 interface Flag {
   id: string;
@@ -13,21 +14,21 @@ interface Flag {
 
 export default function FlagsPage() {
   return (
-    <AdminShell title="Feature flags ve remote config">
+    <AdminShell title={t('flags.title')}>
       <CatalogEditor<Flag>
         listPath="/admin/content/flags"
         upsertPath="/admin/content/flags"
-        description="Flag'ler 30 sn Redis önbelleğiyle /config üzerinden tüm istemcilere gider. config alanı serbest JSON'dur ve remote config olarak istemciye aynen iletilir."
-        headers={['Key', 'Açıklama', 'Durum', 'Config']}
+        description={t('flags.desc')}
+        headers={['Key', t('flags.description'), t('common.status'), 'Config']}
         toRow={(item) => [
           <code key="k">{item.key}</code>,
           item.description,
-          item.enabled ? 'açık' : 'kapalı',
+          item.enabled ? t('common.on') : t('common.off'),
           <code key="c">{JSON.stringify(item.config)}</code>,
         ]}
         template={{
           key: 'community-levels',
-          description: 'Topluluk bölümleri sekmesini aç/kapat',
+          description: 'Toggle the community levels tab',
           enabled: false,
           config: { minPlayerLevel: 5 },
         }}

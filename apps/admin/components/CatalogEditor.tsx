@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { DataTable, StatusNote, useAdminAction, useAdminData } from './primitives';
 import type { ReactNode } from 'react';
+import { t } from '../lib/i18n';
 
 export function CatalogEditor<T extends { id: string }>({
   listPath,
@@ -17,7 +18,7 @@ export function CatalogEditor<T extends { id: string }>({
   toRow,
   template,
   deletePath,
-  deleteLabel = 'Devre dışı bırak',
+  deleteLabel,
   description,
 }: {
   listPath: string;
@@ -40,10 +41,10 @@ export function CatalogEditor<T extends { id: string }>({
     try {
       body = JSON.parse(draft);
     } catch {
-      setParseError('JSON çözümlenemedi; sözdizimini kontrol et.');
+      setParseError(t('catalog.jsonInvalid'));
       return;
     }
-    void run(upsertPath, { method: 'POST', body }, 'Kaydedildi.');
+    void run(upsertPath, { method: 'POST', body }, t('common.saved'));
   };
 
   const actions = (item: T) =>
@@ -51,9 +52,9 @@ export function CatalogEditor<T extends { id: string }>({
       <button
         type="button"
         disabled={busy}
-        onClick={() => void run(deletePath(item), { method: 'DELETE' }, 'Güncellendi.')}
+        onClick={() => void run(deletePath(item), { method: 'DELETE' }, t('common.updated'))}
       >
-        {deleteLabel}
+        {deleteLabel ?? t('catalog.disable')}
       </button>
     ) : null;
 
@@ -64,11 +65,8 @@ export function CatalogEditor<T extends { id: string }>({
       <StatusNote loading={loading} error={error} />
       <DataTable headers={headers} rows={(data?.items ?? []).map((item) => toRow(item, actions))} />
 
-      <h2 className="admin-section-title">Ekle / güncelle</h2>
-      <p className="admin-note">
-        Aynı <code>key</code>/<code>sku</code> mevcutsa kayıt güncellenir. Şema sunucu tarafında
-        doğrulanır.
-      </p>
+      <h2 className="admin-section-title">{t('catalog.upsertTitle')}</h2>
+      <p className="admin-note">{t('catalog.upsertNote')}</p>
       <textarea
         className="admin-json"
         value={draft}
@@ -79,10 +77,10 @@ export function CatalogEditor<T extends { id: string }>({
       {parseError && <p className="admin-error">{parseError}</p>}
       <div className="admin-toolbar">
         <button type="button" disabled={busy} onClick={submit}>
-          Kaydet
+          {t('common.save')}
         </button>
         <button type="button" onClick={() => setDraft(JSON.stringify(template, null, 2))}>
-          Şablona dön
+          {t('catalog.resetTemplate')}
         </button>
       </div>
     </>

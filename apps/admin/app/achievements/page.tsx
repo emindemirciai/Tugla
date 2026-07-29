@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import { t } from '../../lib/i18n';
 
 interface Achievement {
   id: string;
@@ -16,26 +17,35 @@ interface Achievement {
 
 export default function AchievementsPage() {
   return (
-    <AdminShell title="Başarımlar">
+    <AdminShell title={t('ach.title')}>
       <CatalogEditor<Achievement>
         listPath="/admin/content/achievements"
         upsertPath="/admin/content/achievements"
-        headers={['Key', 'Ad', 'Kategori', 'Hedef', 'Olay', 'Gizli', 'Durum', '']}
+        headers={[
+          'Key',
+          t('tasks.name'),
+          t('ach.category'),
+          t('tasks.target'),
+          t('tasks.event'),
+          t('ach.hidden'),
+          t('common.status'),
+          '',
+        ]}
         toRow={(item, actions) => [
           <code key="k">{item.key}</code>,
           item.name,
           item.category,
           item.target,
           <code key="e">{item.eventType}</code>,
-          item.hidden ? 'evet' : 'hayır',
-          item.active ? 'aktif' : 'pasif',
+          item.hidden ? t('common.yes') : t('common.no'),
+          item.active ? t('common.active') : t('common.inactive'),
           actions(item),
         ]}
         deletePath={(item) => `/admin/content/achievements/${item.id}`}
         template={{
           key: 'storm-500',
-          name: 'Fırtına',
-          description: 'Aynı anda 500 topa ulaş.',
+          name: 'Storm',
+          description: 'Reach 500 simultaneous balls.',
           category: 'mastery',
           target: 500,
           eventType: 'MAX_BALLS',
