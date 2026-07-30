@@ -547,8 +547,18 @@ const en: Record<TranslationKey, string> = {
 
 export const dictionaries: Record<Locale, Record<TranslationKey, string>> = { tr, en };
 
+/**
+ * Resolution order: ?lang= (so hreflang URLs and shared links really work) →
+ * stored choice → browser language.
+ */
 export const detectLocale = (): Locale => {
   if (typeof window === 'undefined') return 'tr';
+  try {
+    const requested = new URLSearchParams(window.location.search).get('lang');
+    if (requested === 'tr' || requested === 'en') return requested;
+  } catch {
+    /* malformed URL */
+  }
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === 'tr' || stored === 'en') return stored;

@@ -54,6 +54,27 @@ oyun · `/progress` görevler, başarımlar, cüzdan defteri · `/leagues` hafta
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Keşfedilebilirlik: SEO / GEO / AEO
+
+Tüm değerler environment'tan gelir (`WEB_URL`, `APP_NAME`, `APP_TAGLINE`, `DEFAULT_LOCALE`,
+`SEO_INDEXABLE`, `AI_CRAWLERS_ALLOWED`, `SOCIAL_TWITTER`, `GOOGLE_SITE_VERIFICATION`,
+`BING_SITE_VERIFICATION`), yani alan adı ve marka değiştiğinde kod değişmez.
+
+| Çıktı                | Adres                                           | Not                                                                                                                                                                                      |
+| -------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| robots.txt           | `/robots.txt`                                   | Oyuncu ekranları ve `/api/` kapalı; GPTBot, ClaudeBot, PerplexityBot, Google-Extended gibi yapay zekâ tarayıcılarına açık ya da kapalı olduğu **açıkça** yazılır (`AI_CRAWLERS_ALLOWED`) |
+| Site haritası        | `/sitemap.xml`                                  | Yalnızca herkese açık sayfalar, her biri için `tr` + `en` alternatifleriyle                                                                                                              |
+| llms.txt             | `/llms.txt`, `/llms.txt?lang=en`                | Yanıt motorları için kısa ve doğru özet + 6 SSS; uydurma bilgi yerine alıntılanabilir kaynak                                                                                             |
+| Yapılandırılmış veri | Ana sayfa `<script type="application/ld+json">` | `@graph`: Organization, WebSite, VideoGame + SoftwareApplication, FAQPage                                                                                                                |
+| OG görseli           | `/opengraph-image`                              | 1200×630 PNG, marka değerlerinden üretilir (yeniden adlandırmada yeni görsel gerekmez)                                                                                                   |
+| PWA manifesti        | `/manifest.webmanifest`                         | `app/manifest.ts` ile environment'tan üretilir, kısayollar dahil                                                                                                                         |
+| hreflang             | Her herkese açık sayfa                          | `?lang=tr` / `?lang=en` gerçekten o dili açar (`x-default` dahil)                                                                                                                        |
+
+Gizlilik tarafı: `/play`, `/progress`, `/leagues`, `/social`, `/shop`, `/inbox`, `/replays`,
+`/account` ve tüm token akışları `noindex, nofollow, nocache` döner; yönetim paneli tamamen kapalıdır
+(`apps/admin/app/robots.ts`), API ise her yanıtta `X-Robots-Tag: noindex` gönderir.
+Üretim dışı ortamlar `SEO_INDEXABLE=false` ile varsayılan olarak tamamen kapalıdır.
+
 ### Arayüz önizlemesi
 
 ```bash
@@ -62,15 +83,15 @@ pnpm build:preview  # preview/ui-preview.html üretir
 ```
 
 Tek dosyalık, bağımsız bir HTML çıkar: üretim derlemesinden alınan **gerçek CSS paketleriyle**
-dokuz ekranı (açılış, giriş, bölüm seçimi, oyun HUD'u, ilerleme, lig, mağaza, admin genel bakış,
-admin kullanıcılar) TR/EN anahtarıyla gösterir. İçindeki veriler örnektir; hiçbir API çağrısı yapmaz.
+on ekranı (açılış, giriş, bölüm seçimi, oyun HUD'u, ilerleme, lig, mağaza, admin genel bakış,
+admin kullanıcılar, SEO/GEO çıktıları) TR/EN anahtarıyla gösterir. İçindeki veriler örnektir; hiçbir API çağrısı yapmaz.
 
 ### Doğrulama kapısı
 
 ```bash
 pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
-pnpm test            # 42 birim test (engine, shared, api, web, admin)
+pnpm test            # 52 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
 pnpm test:e2e:api    # 48 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 ```
@@ -152,7 +173,7 @@ emitted decorator metadata.
 
 ### Verification gate
 
-`pnpm lint` · `pnpm typecheck` · `pnpm test` (42 unit tests) · `pnpm build` · `pnpm build:preview` ·
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (52 unit tests) · `pnpm build` · `pnpm build:preview` ·
 `pnpm test:e2e:api` (48-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
@@ -171,8 +192,29 @@ in-game-currency purchases · `/inbox` notifications + announcements · `/replay
 sharing · `/account` profile, language, sessions, data export, deletion.
 
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
-renders nine screens with the **real compiled CSS** from the production build and a TR/EN switch. The
+renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Discoverability: SEO / GEO / AEO
+
+Everything is environment-driven (`WEB_URL`, `APP_NAME`, `APP_TAGLINE`, `DEFAULT_LOCALE`,
+`SEO_INDEXABLE`, `AI_CRAWLERS_ALLOWED`, `SOCIAL_TWITTER`, verification tokens), so a new domain or
+brand needs no code change.
+
+- `/robots.txt` — player screens and `/api/` disallowed; AI crawlers (GPTBot, ClaudeBot,
+  PerplexityBot, Google-Extended, Applebot-Extended…) answered **explicitly**, allowed or blocked via
+  `AI_CRAWLERS_ALLOWED`.
+- `/sitemap.xml` — public routes only, each declaring `tr` and `en` alternates.
+- `/llms.txt` (and `?lang=en`) — a short, accurate summary plus six FAQ entries so answer engines
+  quote real copy instead of guessing.
+- JSON-LD `@graph` on the home page — Organization, WebSite, VideoGame + SoftwareApplication, FAQPage.
+- `/opengraph-image` — 1200×630 PNG generated from the brand values.
+- `/manifest.webmanifest` — generated by `app/manifest.ts`, including app shortcuts.
+- hreflang on every public page; `?lang=tr` / `?lang=en` genuinely switch the language.
+
+Private screens and every token flow return `noindex, nofollow, nocache`; the admin panel is fully
+disallowed and the API sends `X-Robots-Tag: noindex`. Non-production environments stay unindexed
+unless `SEO_INDEXABLE=true`.
 
 ### Localisation
 

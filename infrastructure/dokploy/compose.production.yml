@@ -44,10 +44,22 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN}/api
+        NEXT_PUBLIC_APP_NAME: ${APP_NAME:-Tuğla}
+        APP_NAME: ${APP_NAME:-Tuğla}
+        APP_TAGLINE: ${APP_TAGLINE:-Break the grid}
+        WEB_URL: https://${ROOT_DOMAIN}
+        DEFAULT_LOCALE: ${DEFAULT_LOCALE:-tr}
     environment:
       NODE_ENV: production
       APP_NAME: ${APP_NAME:-Tuğla}
+      APP_TAGLINE: ${APP_TAGLINE:-Break the grid}
       WEB_URL: https://${ROOT_DOMAIN}
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-tr}
+      SEO_INDEXABLE: ${SEO_INDEXABLE:-true}
+      AI_CRAWLERS_ALLOWED: ${AI_CRAWLERS_ALLOWED:-true}
+      SOCIAL_TWITTER: ${SOCIAL_TWITTER:-}
+      GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION:-}
+      BING_SITE_VERIFICATION: ${BING_SITE_VERIFICATION:-}
     restart: unless-stopped
     depends_on:
       api:
