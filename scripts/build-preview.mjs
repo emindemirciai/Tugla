@@ -131,7 +131,7 @@ const screens = `[
         \${tabs(0)}
         <section class="world-strip">
           \${['neon-grid','crystal-core','solar-forge','dark-matter','singularity'].map((theme,i)=>
-            '<button class="world-chip '+(i===0?'active':'')+'"><span>'+L('DÜNYA','WORLD')+' 0'+(i+1)+'</span><strong>'+theme.replace('-',' ')+'</strong></button>').join('')}
+            '<button class="world-chip world-'+theme+' '+(i===0?'active':'')+'"><span>'+L('DÜNYA','WORLD')+' 0'+(i+1)+'</span><strong>'+theme.replace('-',' ')+'</strong></button>').join('')}
         </section>
         <section class="level-grid">
           \${[1,2,3,4,5,6,7,8,9,10].map((n)=>{
@@ -353,21 +353,21 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${appName} — UI preview</title>
 <style>
-  :root { color-scheme: dark; }
+  :root { color-scheme: light; }
   * { box-sizing: border-box; }
-  body { margin:0; background:#050c16; color:#e8f4ff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { margin:0; background:#f6f3ff; color:#1b1533; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
   header.page { padding:28px 20px 12px; max-width:1180px; margin:0 auto; display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; }
   header.page h1 { margin:0; font-size:1.5rem; }
-  header.page p { margin:6px 0 0; color:#8fa7bd; max-width:720px; line-height:1.55; font-size:.92rem; }
+  header.page p { margin:6px 0 0; color:#6a6390; max-width:720px; line-height:1.55; font-size:.92rem; }
   .switch { display:inline-flex; gap:6px; }
-  .switch button { background:rgba(45,217,255,.08); border:1px solid rgba(110,190,235,.3); color:#9fc4dc; border-radius:9px; padding:8px 14px; cursor:pointer; font-size:.8rem; letter-spacing:.08em; }
-  .switch button.active { background:rgba(45,217,255,.2); color:#46dcff; border-color:#37d4ff; }
+  .switch button { background:#ffffff; border:1px solid #cec2ef; color:#423a63; border-radius:9px; padding:8px 14px; cursor:pointer; font-size:.8rem; letter-spacing:.08em; }
+  .switch button.active { background:#5b4be1; color:#ffffff; border-color:#5b4be1; }
   main.grid { max-width:1180px; margin:0 auto; padding:12px 20px 64px; display:flex; flex-direction:column; gap:26px; }
-  section.screen { border:1px solid rgba(110,190,235,.16); border-radius:16px; overflow:hidden; background:rgba(9,19,33,.7); }
+  section.screen { border:1px solid #e2daf6; border-radius:18px; overflow:hidden; background:#ffffff; box-shadow:0 10px 30px rgba(43,25,96,.08); }
   section.screen > h2 { margin:0; padding:14px 18px 4px; font-size:1rem; }
-  section.screen > p { margin:0; padding:0 18px 12px; color:#7e95ab; font-size:.85rem; line-height:1.5; }
-  iframe { width:100%; border:0; display:block; background:#07111f; }
-  footer.page { max-width:1180px; margin:0 auto; padding:0 20px 60px; color:#5d7186; font-size:.8rem; line-height:1.6; }
+  section.screen > p { margin:0; padding:0 18px 12px; color:#6a6390; font-size:.85rem; line-height:1.5; }
+  iframe { width:100%; border:0; display:block; background:#f6f3ff; }
+  footer.page { max-width:1180px; margin:0 auto; padding:0 20px 60px; color:#6a6390; font-size:.8rem; line-height:1.6; }
 </style>
 </head>
 <body>

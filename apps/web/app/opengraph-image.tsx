@@ -21,8 +21,8 @@ export default function OpengraphImage() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: '80px',
-          background: 'linear-gradient(135deg, #07111f 0%, #0d2137 55%, #08182a 100%)',
-          color: '#e8f4ff',
+          background: 'linear-gradient(135deg, #f6f3ff 0%, #ece8ff 46%, #ffe9df 100%)',
+          color: '#1b1533',
           fontFamily: 'sans-serif',
         }}
       >
@@ -34,7 +34,7 @@ export default function OpengraphImage() {
               width: 56,
               height: 56,
               borderRadius: 999,
-              border: '6px solid #2dd9ff',
+              border: '6px solid #5b4be1',
               display: 'flex',
             }}
           />
@@ -43,10 +43,10 @@ export default function OpengraphImage() {
         <div style={{ fontSize: 78, fontWeight: 700, marginTop: 34, lineHeight: 1.1 }}>
           {config.tagline}
         </div>
-        <div style={{ fontSize: 32, color: '#8fb6d4', marginTop: 26, maxWidth: 900 }}>
+        <div style={{ fontSize: 32, color: '#6a6390', marginTop: 26, maxWidth: 900 }}>
           {localizedShortDescription[config.defaultLocale]}
         </div>
-        <div style={{ display: 'flex', gap: 28, marginTop: 44, fontSize: 26, color: '#46dcff' }}>
+        <div style={{ display: 'flex', gap: 28, marginTop: 44, fontSize: 26, color: '#5b4be1' }}>
           <span>10 WORLDS</span>
           <span>500 LEVELS</span>
           <span>500 BALLS</span>

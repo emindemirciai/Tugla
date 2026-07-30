@@ -3,22 +3,22 @@ import * as THREE from 'three';
 import type { ResolvedQuality } from '../lib/settings';
 
 const BLOCK_COLORS: Record<string, number> = {
-  NORMAL: 0x28d9ff,
-  TOUGH: 0x7b6cff,
-  ARMORED: 0xffb85c,
-  EXPLOSIVE: 0xff4d78,
-  ICE: 0x88eaff,
-  FIRE: 0xff784e,
-  ELECTRIC: 0xeaff65,
-  MOVING: 0x45f1ac,
-  REGENERATING: 0x65ff89,
+  NORMAL: 0x52bdf5,
+  TOUGH: 0x8b7bff,
+  ARMORED: 0x9aa3bd,
+  EXPLOSIVE: 0xff7a8f,
+  ICE: 0x7fd8ef,
+  FIRE: 0xff9a6b,
+  ELECTRIC: 0xffd166,
+  MOVING: 0x4fd6a8,
+  REGENERATING: 0x7ce8b0,
   SHIELDED: 0x6b9dff,
-  PORTAL: 0xd555ff,
-  SPLITTER: 0xff76d8,
-  BONUS: 0xfff474,
-  DEFLECTOR: 0xb8c8d6,
-  ABSORBER: 0x59677a,
-  BOSS_CORE: 0xff3ef4,
+  PORTAL: 0xc07bff,
+  SPLITTER: 0xff8ad0,
+  BONUS: 0xffd166,
+  DEFLECTOR: 0xcbd5e6,
+  ABSORBER: 0x6b7390,
+  BOSS_CORE: 0xff6b9a,
 };
 
 interface Particle {
@@ -77,7 +77,7 @@ export class GameRenderer {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(this.renderer.domElement);
 
-    this.scene.fog = new THREE.FogExp2(0x07111f, 0.026);
+    this.scene.fog = new THREE.FogExp2(0x171034, 0.026);
     this.camera = new THREE.PerspectiveCamera(35, mount.clientWidth / mount.clientHeight, 0.1, 100);
     this.camera.position.set(engine.width / 2, engine.height * 0.46, 22);
     this.camera.lookAt(engine.width / 2, engine.height * 0.5, 0);
@@ -114,8 +114,8 @@ export class GameRenderer {
       quality.level === 'LOW' ? 6 : 12,
     );
     const ballMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xeefcff,
-      emissive: 0x38d9ff,
+      color: 0xfff6ef,
+      emissive: 0xffb27a,
       emissiveIntensity: quality.bloom ? 1.8 : 1.2,
       roughness: 0.08,
       metalness: 0.25,
@@ -128,8 +128,8 @@ export class GameRenderer {
 
     const bonusGeometry = new THREE.CylinderGeometry(0.17, 0.17, 0.34, 8);
     const bonusMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x94ffef,
-      emissive: 0x2bdcff,
+      color: 0xd8ffe9,
+      emissive: 0x4fd6a8,
       emissiveIntensity: 1.4,
       roughness: 0.2,
       metalness: 0.4,
@@ -143,7 +143,7 @@ export class GameRenderer {
     if (quality.trailLength > 0) {
       const trailGeometry = new THREE.SphereGeometry(1, 6, 4);
       const trailMaterial = new THREE.MeshBasicMaterial({
-        color: 0x54e6ff,
+        color: 0xffd9c2,
         transparent: true,
         opacity: 0.34,
         depthWrite: false,
@@ -157,8 +157,8 @@ export class GameRenderer {
 
     const paddleGeometry = new THREE.BoxGeometry(1, 1, 0.55);
     const paddleMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x4ce9ff,
-      emissive: 0x124bff,
+      color: 0xffc7a3,
+      emissive: 0xff7a45,
       emissiveIntensity: 0.8,
       metalness: 0.65,
       roughness: 0.18,
@@ -193,7 +193,7 @@ export class GameRenderer {
   }
 
   private buildLighting() {
-    this.scene.add(new THREE.HemisphereLight(0x81dcff, 0x07111f, 1.4));
+    this.scene.add(new THREE.HemisphereLight(0xbaa6ff, 0x171034, 1.4));
     const key = new THREE.DirectionalLight(0xffffff, 2.6);
     key.position.set(-5, 16, 10);
     key.castShadow = this.quality.shadows;
@@ -203,7 +203,7 @@ export class GameRenderer {
       key.shadow.camera.far = 40;
     }
     this.scene.add(key);
-    const accent = new THREE.PointLight(0x7c5cff, 36, 30);
+    const accent = new THREE.PointLight(0x8b6cff, 36, 30);
     accent.position.set(this.engine.width, 4, 5);
     this.scene.add(accent);
   }
@@ -211,7 +211,7 @@ export class GameRenderer {
   private buildBoard() {
     const geometry = new THREE.BoxGeometry(this.engine.width + 0.5, this.engine.height + 0.5, 0.35);
     const material = new THREE.MeshPhysicalMaterial({
-      color: 0x081729,
+      color: 0x1d1540,
       roughness: 0.58,
       metalness: 0.42,
       clearcoat: this.quality.level === 'LOW' ? 0 : 0.7,
@@ -222,7 +222,7 @@ export class GameRenderer {
     this.scene.add(board);
     this.disposables.push(geometry, material);
 
-    const grid = new THREE.GridHelper(this.engine.height + 2, 32, 0x1f4866, 0x102f49);
+    const grid = new THREE.GridHelper(this.engine.height + 2, 32, 0x3a2f6b, 0x281f52);
     grid.rotation.x = Math.PI / 2;
     grid.position.set(this.engine.width / 2, this.engine.height / 2, -0.24);
     this.scene.add(grid);
@@ -230,7 +230,7 @@ export class GameRenderer {
 
   private applyBlockColors() {
     this.engine.snapshot.blocks.forEach((block, index) => {
-      this.tempColor.setHex(BLOCK_COLORS[block.kind] ?? 0x37d4ff);
+      this.tempColor.setHex(BLOCK_COLORS[block.kind] ?? 0x52bdf5);
       this.blockMesh.setColorAt(index, this.tempColor);
     });
     if (this.blockMesh.instanceColor) this.blockMesh.instanceColor.needsUpdate = true;
@@ -245,25 +245,25 @@ export class GameRenderer {
       if (budget <= 0) break;
 
       let count = 0;
-      let colour = 0x9be8ff;
+      let colour = 0xdcd2ff;
       let speed = 2.4;
       if (event.type === 'BLOCK_DESTROYED') {
         count = Math.min(budget, this.quality.level === 'HIGH' ? 14 : 8);
-        colour = 0x63e2ff;
+        colour = 0x8fd9ff;
       } else if (event.type === 'BLOCK_EXPLODED') {
         count = Math.min(budget, this.quality.level === 'HIGH' ? 28 : 14);
-        colour = 0xff5a7d;
+        colour = 0xff7a8f;
         speed = 4.2;
       } else if (event.type === 'BOSS_DEFEATED') {
         count = Math.min(budget, this.quality.maxParticles / 2);
-        colour = 0xff3ef4;
+        colour = 0xff6b9a;
         speed = 5;
       } else if (event.type === 'BALL_LOST') {
         count = Math.min(budget, 6);
-        colour = 0xff6b6b;
+        colour = 0xff9a6b;
       } else if (event.type === 'BONUS_COLLECTED') {
         count = Math.min(budget, 8);
-        colour = 0x9dffe0;
+        colour = 0x7ce8b0;
       }
 
       for (let index = 0; index < count; index += 1) {
