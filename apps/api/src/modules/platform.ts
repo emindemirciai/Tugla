@@ -1,3 +1,4 @@
+import { SkipThrottle } from '@nestjs/throttler';
 import { Body, Controller, Get, Injectable, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { type Prisma } from '@tugla/database';
@@ -108,6 +109,7 @@ export class PlatformController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get('health')
   health() {
     return this.platform.health();
