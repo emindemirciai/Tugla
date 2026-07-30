@@ -50,10 +50,21 @@ yalnızca `tsc` çıktısından (`apps/api/dist`) çalıştırılır.
 `/` açılış · `/auth/*` kayıt, giriş, doğrulama, parola sıfırlama · `/play` dünya + bölüm seçimi ve
 oyun · `/progress` görevler, başarımlar, cüzdan defteri · `/leagues` haftalık lig ve küresel tablo ·
 `/social` oyuncu arama, takip, arkadaşlık · `/create` **kendi bölümünü tasarla, test et, incelemeye
-gönder** · `/shop` katalog ve oyun içi para ile satın alma ·
+gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi para ile satın alma ·
 `/inbox` bildirimler + duyurular · `/replays` doğrulanmış tekrarlar ve paylaşım · `/account` profil,
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
+
+### Topluluk içeriği güvenliği
+
+Oyuncu yapımı bölümler yayına girene kadar moderasyondan geçer ve yayına girdikten sonra da denetimsiz
+kalmaz:
+
+- Gönderim `DRAFT` → `REVIEW` akışıyla ilerler; yalnızca moderatör yayınlar.
+- Yayınlanan bölümler beğeni/beğenmeme alır (kendi bölümünü değerlendiremezsin) ve liste beğeniye göre sıralanır.
+- Aynı kişi bir bölümü yalnızca bir kez bildirebilir; **üç farklı oyuncu bildirdiğinde bölüm otomatik
+  olarak yayından alınıp `REVIEW` durumuna döner** ve bu işlem audit log'a `LEVEL_AUTO_REVIEW` olarak yazılır.
+- Oynanmış bir bölüm silinmez, arşivlenir: replay doğrulaması geçmişe dönük çalışmaya devam eder.
 
 ### Keşfedilebilirlik: SEO / GEO / AEO
 
@@ -94,7 +105,7 @@ pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
 pnpm test            # 52 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 70 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 80 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 ```
 
 CI (`.github/workflows/ci.yml`) aynı kapıyı Postgres+Redis servisleriyle çalıştırır; `main`'e başarılı
@@ -202,7 +213,7 @@ emitted decorator metadata.
 ### Verification gate
 
 `pnpm lint` · `pnpm typecheck` · `pnpm test` (52 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (70-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm test:e2e:api` (80-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -223,6 +234,14 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Community safety
+
+Player-made levels go through moderation before publication and stay supervised afterwards: ratings
+(never on your own level), one report per person per level, and **three distinct reports pull a
+published level back into `REVIEW` automatically**, recorded in the audit log as `LEVEL_AUTO_REVIEW`.
+Levels that have already been played are archived rather than deleted so replay verification keeps
+working.
 
 ### Discoverability: SEO / GEO / AEO
 

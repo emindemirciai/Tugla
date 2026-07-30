@@ -553,6 +553,101 @@ try {
       `status ${stranger.status}`,
     );
 
+    // Publish it as a moderator so the rating and report flows can be exercised.
+    const publish = await call(`/admin/content/levels/${communityId}/status`, {
+      method: 'POST',
+      token: adminToken,
+      body: { status: 'PUBLISHED' },
+    });
+    check('moderator can publish a submission', publish.status === 200 || publish.status === 201);
+
+    const publicList = await call('/game/community/levels', { token: adminToken });
+    check(
+      'published community level is publicly listed',
+      (publicList.body?.items ?? []).some((item) => item.id === communityId),
+    );
+
+    const ownRating = await call(`/game/community/levels/${communityId}/rate`, {
+      method: 'POST',
+      token,
+      body: { liked: true },
+    });
+    check(
+      'authors cannot rate their own level',
+      ownRating.status === 400,
+      `status ${ownRating.status}`,
+    );
+
+    const liked = await call(`/game/community/levels/${communityId}/rate`, {
+      method: 'POST',
+      token: adminToken,
+      body: { liked: true },
+    });
+    check('another player can like the level', liked.body?.likes === 1, JSON.stringify(liked.body));
+
+    const switched = await call(`/game/community/levels/${communityId}/rate`, {
+      method: 'POST',
+      token: adminToken,
+      body: { liked: false },
+    });
+    check(
+      'changing the rating replaces it instead of stacking',
+      switched.body?.likes === 0 && switched.body?.dislikes === 1,
+      JSON.stringify(switched.body),
+    );
+
+    const firstReport = await call('/reports', {
+      method: 'POST',
+      token: adminToken,
+      body: { targetType: 'LEVEL', targetId: communityId, reason: 'SPAM' },
+    });
+    check('a level can be reported', Boolean(firstReport.body?.id));
+    const duplicateReport = await call('/reports', {
+      method: 'POST',
+      token: adminToken,
+      body: { targetType: 'LEVEL', targetId: communityId, reason: 'SPAM' },
+    });
+    check('the same reporter cannot pile on', duplicateReport.body?.duplicate === true);
+
+    // Two more distinct reporters reach the auto-review threshold.
+    const extraTokens = [];
+    for (const index of [1, 2]) {
+      const extra = await call('/auth/register', {
+        method: 'POST',
+        body: {
+          email: `reporter-${index}-${Date.now()}@example.com`,
+          password: 'smoke-password-1',
+          displayName: `Reporter ${index}`,
+          acceptedTerms: true,
+        },
+      });
+      extraTokens.push(extra.body?.accessToken);
+    }
+    let autoHidden = false;
+    for (const extraToken of extraTokens) {
+      const extraReport = await call('/reports', {
+        method: 'POST',
+        token: extraToken,
+        body: { targetType: 'LEVEL', targetId: communityId, reason: 'INAPPROPRIATE' },
+      });
+      autoHidden = autoHidden || extraReport.body?.autoHidden === true;
+    }
+    check('three distinct reports pull the level back into review', autoHidden);
+
+    const afterReports = await call('/game/community/levels', { token: adminToken });
+    check(
+      'auto-hidden level disappears from the public list',
+      !(afterReports.body?.items ?? []).some((item) => item.id === communityId),
+    );
+
+    const auditTrail = await call('/admin/system/audit?limit=20&action=LEVEL_AUTO_REVIEW', {
+      token: adminToken,
+    });
+    check(
+      'auto-review is written to the audit log',
+      (auditTrail.body?.items ?? []).some((entry) => entry.targetId === communityId),
+    );
+
     const removed = await call(`/game/community/levels/${communityId}`, {
       method: 'DELETE',
       token,

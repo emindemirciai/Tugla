@@ -292,13 +292,64 @@ export class PlatformController {
     };
   }
 
+  /** Number of distinct open reports that pulls a published level back into review. */
+  static readonly AUTO_REVIEW_THRESHOLD = 3;
+
   @Post('reports')
   async report(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
     const data = moderationReportSchema.parse(body);
-    return this.db.moderationReport.create({
+
+    // One open report per person per target: repeat clicks must not inflate the
+    // queue or trip the auto-review threshold on their own.
+    const existing = await this.db.moderationReport.findFirst({
+      where: {
+        reporterId: request.user.sub,
+        targetType: data.targetType,
+        targetId: data.targetId,
+        status: { in: ['OPEN', 'REVIEWING'] },
+      },
+      select: { id: true, status: true, createdAt: true },
+    });
+    if (existing) return { ...existing, duplicate: true };
+
+    const created = await this.db.moderationReport.create({
       data: { ...data, reporterId: request.user.sub },
       select: { id: true, status: true, createdAt: true },
     });
+
+    // Community content is user-generated: once enough distinct players report a
+    // published level it is pulled back into review automatically instead of
+    // waiting for a moderator to notice.
+    if (data.targetType === 'LEVEL') {
+      const open = await this.db.moderationReport.count({
+        where: {
+          targetType: 'LEVEL',
+          targetId: data.targetId,
+          status: { in: ['OPEN', 'REVIEWING'] },
+        },
+      });
+      if (open >= PlatformController.AUTO_REVIEW_THRESHOLD) {
+        const level = await this.db.level.findFirst({
+          where: { id: data.targetId, type: 'COMMUNITY', status: 'PUBLISHED' },
+          select: { id: true, name: true },
+        });
+        if (level) {
+          await this.db.level.update({ where: { id: level.id }, data: { status: 'REVIEW' } });
+          await this.db.auditLog.create({
+            data: {
+              actorId: null,
+              action: 'LEVEL_AUTO_REVIEW',
+              targetType: 'LEVEL',
+              targetId: level.id,
+              after: { reports: open, name: level.name },
+            },
+          });
+          return { ...created, autoHidden: true };
+        }
+      }
+    }
+
+    return { ...created, duplicate: false };
   }
 
   /** Shop catalogue. Real-money SKUs are hidden until payments are configured. */
