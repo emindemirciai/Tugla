@@ -21,6 +21,17 @@ async function bootstrap() {
 
   app.set('trust proxy', config.TRUST_PROXY);
   app.setGlobalPrefix('api');
+  // The API is data, not content: keep it out of search and answer engines.
+  app.use(
+    (
+      _request: unknown,
+      response: { setHeader: (key: string, value: string) => void },
+      next: () => void,
+    ) => {
+      response.setHeader('X-Robots-Tag', 'noindex, nofollow');
+      next();
+    },
+  );
   app.use(
     helmet({
       contentSecurityPolicy: isProduction,
