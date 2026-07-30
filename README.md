@@ -70,6 +70,10 @@ içindeki `:root`). Hiçbir bileşen kendi hex'ini yazmaz; renk değişimi tek y
 | `--mint` / `--amber` / `--rose`  | `#12b886` / `#f5a524` / `#e5484d` | Olumlu / uyarı / hata                        |
 | `--stage-top` → `--stage-bottom` | `#2a2154` → `#171034`             | **Yalnızca oyun alanı**: aydınlatılmış sahne |
 
+İki tema var: **Gündüz** (varsayılan), **Gece** ve **Cihaz** (sistem tercihini izler). Seçim hesap
+ekranından ve oyun içi ayar panelinden yapılır, ilk boyamadan önce uygulanır (tema titremesi yok).
+Gece modu siyah değil, oyun sahnesiyle aynı menekşe-erik tonlarını kullanır.
+
 Ayrım bilinçli: **arayüz gün ışığı, oyun alanı sahne.** 3B blokların parlaması için koyu bir zemin
 gerekir; menüler, hesap ekranı ve yönetim paneli için gerekmez. Her dünya kendi rengini taşır
 (`--card-hue`), böylece bölüm seçimi tek renkli değil. Durum rozetleri "tugla chip": nefes alan bir
@@ -262,7 +266,9 @@ no component hardcodes a colour. Paper `#f6f3ff`, ink `#1b1533`, one electric in
 action and a coral `#ff7a45` for energy, with mint/amber/rose for state. The playfield keeps a lit
 violet stage (`#2a2154` → `#171034`) because 3D blocks need a dark room — the rest of the product
 does not. Each world carries its own hue, status badges are "tugla chips" with a breathing dot, and
-`prefers-reduced-motion` disables every animation.
+`prefers-reduced-motion` disables every animation. Three appearances ship — Day, Night and Device
+(follows the system) — chosen from the account screen or the in-game settings panel and applied
+before first paint, so there is no theme flash. Night is plum, not black.
 
 ### Community safety
 

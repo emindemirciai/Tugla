@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { AdminLanguageSwitcher } from '../../components/AdminLanguageSwitcher';
+import { AdminThemeSwitcher } from '../../components/AdminThemeSwitcher';
 import { useAdminSession } from '../../lib/session';
 import { t } from '../../lib/i18n';
 
@@ -45,7 +46,10 @@ export default function AdminLoginPage() {
           {t('login.password')}
           <input name="password" type="password" autoComplete="current-password" required />
         </label>
-        <AdminLanguageSwitcher />
+        <div className="sidebar-prefs">
+          <AdminLanguageSwitcher />
+          <AdminThemeSwitcher />
+        </div>
         {error && <p className="admin-error">{error}</p>}
         <button type="submit" disabled={pending}>
           {pending ? t('login.pending') : t('login.submit')}

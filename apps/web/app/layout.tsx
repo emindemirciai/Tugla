@@ -9,6 +9,7 @@ import {
   seoConfig,
 } from '../lib/seo';
 import { SessionProvider } from '../lib/session';
+import { themeBootstrapScript } from '../lib/theme';
 import './styles.css';
 
 const config = seoConfig();
@@ -145,6 +146,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang={config.defaultLocale}>
       <head>
+        {/* Applies the stored appearance before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         {/* Explicit home-page hreflang set: the ?lang parameter is honoured by
             the locale provider, so these URLs resolve to real translations. */}
         <link rel="alternate" hrefLang="tr" href={`${config.webUrl}/?lang=tr`} />

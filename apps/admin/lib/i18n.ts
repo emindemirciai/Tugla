@@ -274,6 +274,10 @@ const tr = {
   'editor.campaignLoaded':
     'Kampanya {index} şablonu yüklendi; düzenleyip yeni bölüm olarak kaydedebilirsin.',
   'editor.campaignFailed': 'Şablon alınamadı.',
+  'theme.label': 'Görünüm',
+  'theme.day': 'Gündüz',
+  'theme.night': 'Gece',
+  'theme.system': 'Cihaz',
 } as const;
 
 export type AdminTranslationKey = keyof typeof tr;
@@ -497,6 +501,10 @@ const en: Record<AdminTranslationKey, string> = {
   'editor.campaignInvalid': 'Enter a valid level number.',
   'editor.campaignLoaded': 'Campaign {index} template loaded; edit it and save as a new level.',
   'editor.campaignFailed': 'Could not fetch the template.',
+  'theme.label': 'Appearance',
+  'theme.day': 'Day',
+  'theme.night': 'Night',
+  'theme.system': 'Device',
 };
 
 export const dictionaries: Record<Locale, Record<AdminTranslationKey, string>> = { tr, en };
