@@ -49,7 +49,8 @@ yalnızca `tsc` çıktısından (`apps/api/dist`) çalıştırılır.
 
 `/` açılış · `/auth/*` kayıt, giriş, doğrulama, parola sıfırlama · `/play` dünya + bölüm seçimi ve
 oyun · `/progress` görevler, başarımlar, cüzdan defteri · `/leagues` haftalık lig ve küresel tablo ·
-`/social` oyuncu arama, takip, arkadaşlık · `/shop` katalog ve oyun içi para ile satın alma ·
+`/social` oyuncu arama, takip, arkadaşlık · `/create` **kendi bölümünü tasarla, test et, incelemeye
+gönder** · `/shop` katalog ve oyun içi para ile satın alma ·
 `/inbox` bildirimler + duyurular · `/replays` doğrulanmış tekrarlar ve paylaşım · `/account` profil,
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
@@ -93,7 +94,7 @@ pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
 pnpm test            # 52 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 58 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 70 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 ```
 
 CI (`.github/workflows/ci.yml`) aynı kapıyı Postgres+Redis servisleriyle çalıştırır; `main`'e başarılı
@@ -133,6 +134,15 @@ npx cap open android   # / ios
 ```
 
 Kabuk çevrim dışıyken `apps/mobile/www` açılış ekranını gösterir; bağlantı gelince canlı PWA yüklenir.
+
+### Sürüm ve commit biçimi
+
+Tek sürüm kaynağı kökteki `package.json` (`pnpm release:version 1.5.0` tüm paketleri günceller).
+Commit başlıkları Türkçe ve şu biçimdedir:
+
+```
+feat: topluluk bölümleri — oyuncu editörü ve inceleme akışı (API, web, smoke) · v1.4
+```
 
 ### Depoyu uzak sunucuya bağlama (Claude Code)
 
@@ -192,7 +202,7 @@ emitted decorator metadata.
 ### Verification gate
 
 `pnpm lint` · `pnpm typecheck` · `pnpm test` (52 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (58-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm test:e2e:api` (70-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -205,7 +215,8 @@ rejects the session (never touching leaderboards) and surfaces it in the moderat
 
 `/` landing · `/auth/*` sign-up, sign-in, verification, password reset · `/play` world + level
 selection and the game itself · `/progress` tasks, achievements, wallet ledger · `/leagues` weekly
-league and global board · `/social` player search, follow, friendships · `/shop` catalogue and
+league and global board · `/social` player search, follow, friendships · `/create` design, test and submit your own levels ·
+`/shop` catalogue and
 in-game-currency purchases · `/inbox` notifications + announcements · `/replays` verified replays and
 sharing · `/account` profile, language, sessions, data export, deletion.
 

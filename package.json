@@ -1,6 +1,6 @@
 {
   "name": "pulse",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "private": true,
   "packageManager": "pnpm@11.10.0",
   "engines": {
@@ -23,7 +23,8 @@
     "prepare": "simple-git-hooks",
     "test:e2e:api": "node scripts/e2e-api-smoke.mjs",
     "build:packages": "pnpm --filter @pulse/shared --filter @pulse/game-engine --filter @pulse/database build",
-    "build:preview": "node scripts/build-preview.mjs"
+    "build:preview": "node scripts/build-preview.mjs",
+    "release:version": "node scripts/set-version.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.28.0",

@@ -8,7 +8,7 @@ import { AdminContentController } from './admin/content.controller';
 import { AdminOperationsController, AdminSystemController } from './admin/operations.controller';
 import { env } from './config/env';
 import { AuthController, AuthService } from './modules/auth';
-import { GameController, GameService } from './modules/game';
+import { CommunityService, GameController, GameService } from './modules/game';
 import { PlatformController, PlatformService } from './modules/platform';
 import { ProgressionController, ProgressionService } from './modules/progression';
 import { SocialController, SocialService } from './modules/social';
@@ -61,6 +61,7 @@ import { StorageService } from './services/storage';
     StorageService,
     AuthService,
     GameService,
+    CommunityService,
     ProgressionService,
     SocialService,
     PlatformService,

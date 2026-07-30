@@ -14,6 +14,7 @@ const LINKS: { href: string; key: TranslationKey; icon: string }[] = [
   { href: '/shop', key: 'hub.shop', icon: '◇' },
   { href: '/inbox', key: 'hub.inbox', icon: '✉' },
   { href: '/replays', key: 'hub.replays', icon: '⟲' },
+  { href: '/create', key: 'create.hubTab', icon: '✎' },
 ];
 
 /**

@@ -3,11 +3,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Injectable,
   Logger,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -26,6 +28,12 @@ import {
   type LevelDefinition,
 } from '@pulse/shared';
 import { z } from 'zod';
+
+const communityLevelSchema = z.object({
+  name: z.string().trim().min(3).max(60),
+  description: z.string().trim().max(280).optional(),
+  definition: levelDefinitionSchema,
+});
 import { env } from '../config/env';
 import { DatabaseService, Public, RedisService, type AuthenticatedRequest } from '../services/core';
 import { StorageService } from '../services/storage';
@@ -61,8 +69,13 @@ export class GameService {
 
   async start(userId: string, input: unknown) {
     const data = startSchema.parse(input);
+    // Published campaign content, or the author's own community level so a
+    // creator can test a draft before submitting it for review.
     const level = await this.db.level.findFirst({
-      where: { id: data.levelId, status: 'PUBLISHED' },
+      where: {
+        id: data.levelId,
+        OR: [{ status: 'PUBLISHED' }, { authorId: userId, type: 'COMMUNITY' }],
+      },
     });
     if (!level) throw new NotFoundException('Level not found');
 
@@ -376,12 +389,201 @@ export class GameService {
   }
 }
 
+/**
+ * Player-made levels.
+ *
+ * Community content lives in the reserved world 1000 so it never collides with
+ * the 10 campaign worlds, and each author gets a bounded number of levels. Nothing
+ * public until a moderator publishes it: submissions land in REVIEW and appear
+ * in the admin level list next to campaign content.
+ */
+@Injectable()
+export class CommunityService {
+  private readonly logger = new Logger(CommunityService.name);
+  /** Reserved community space; campaign uses worlds 1-10. */
+  static readonly WORLD = 1000;
+  static readonly MAX_PER_AUTHOR = 20;
+
+  constructor(private readonly database: DatabaseService) {}
+
+  private get db() {
+    return this.database.client;
+  }
+
+  private slugify(name: string, index: number) {
+    const base = name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40);
+    return `community-${base || 'level'}-${index}`;
+  }
+
+  /** Normalises an author submission into a storable definition. */
+  private normalise(definition: LevelDefinition, index: number, name: string) {
+    return levelDefinitionSchema.parse({
+      ...definition,
+      name,
+      world: CommunityService.WORLD,
+      index,
+      type: 'COMMUNITY',
+    });
+  }
+
+  async list(userId: string) {
+    const items = await this.db.level.findMany({
+      where: { authorId: userId, type: 'COMMUNITY' },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        index: true,
+        theme: true,
+        status: true,
+        difficulty: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+    return { items, limit: CommunityService.MAX_PER_AUTHOR };
+  }
+
+  async published(limit: number) {
+    const items = await this.db.level.findMany({
+      where: { type: 'COMMUNITY', status: 'PUBLISHED' },
+      orderBy: { publishedAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        theme: true,
+        difficulty: true,
+        estimatedSeconds: true,
+        publishedAt: true,
+        author: { select: { username: true, displayName: true } },
+      },
+    });
+    return { items };
+  }
+
+  async detail(userId: string, id: string) {
+    const level = await this.db.level.findFirst({
+      where: { id, authorId: userId, type: 'COMMUNITY' },
+      select: { id: true, name: true, status: true, theme: true, definition: true },
+    });
+    if (!level) throw new NotFoundException('Level not found');
+    return level;
+  }
+
+  async create(userId: string, body: unknown) {
+    const input = communityLevelSchema.parse(body);
+    const owned = await this.db.level.count({ where: { authorId: userId, type: 'COMMUNITY' } });
+    if (owned >= CommunityService.MAX_PER_AUTHOR)
+      throw new BadRequestException(
+        `You can keep at most ${CommunityService.MAX_PER_AUTHOR} community levels`,
+      );
+
+    // Reserved world; index is the next free slot inside it.
+    const last = await this.db.level.findFirst({
+      where: { world: CommunityService.WORLD },
+      orderBy: { index: 'desc' },
+      select: { index: true },
+    });
+    const index = (last?.index ?? 0) + 1;
+    const definition = this.normalise(input.definition, index, input.name);
+
+    const level = await this.db.level.create({
+      data: {
+        slug: this.slugify(input.name, index),
+        name: input.name,
+        description: input.description ?? null,
+        world: CommunityService.WORLD,
+        index,
+        type: 'COMMUNITY',
+        theme: definition.theme,
+        status: 'DRAFT',
+        definition: definition as unknown as Prisma.InputJsonValue,
+        difficulty: definition.blocks.length / 10,
+        estimatedSeconds: Math.max(60, definition.blocks.length * 3),
+        authorId: userId,
+      },
+      select: { id: true, name: true, status: true, index: true },
+    });
+    this.logger.log(`community level created by ${userId}: ${level.id}`);
+    return level;
+  }
+
+  async update(userId: string, id: string, body: unknown) {
+    const input = communityLevelSchema.parse(body);
+    const existing = await this.db.level.findFirst({
+      where: { id, authorId: userId, type: 'COMMUNITY' },
+    });
+    if (!existing) throw new NotFoundException('Level not found');
+    if (existing.status === 'PUBLISHED' || existing.status === 'REVIEW')
+      throw new BadRequestException('Published or in-review levels cannot be edited');
+
+    const definition = this.normalise(input.definition, existing.index, input.name);
+    return this.db.level.update({
+      where: { id },
+      data: {
+        name: input.name,
+        description: input.description ?? null,
+        theme: definition.theme,
+        status: 'DRAFT',
+        definition: definition as unknown as Prisma.InputJsonValue,
+        difficulty: definition.blocks.length / 10,
+        estimatedSeconds: Math.max(60, definition.blocks.length * 3),
+      },
+      select: { id: true, name: true, status: true },
+    });
+  }
+
+  async submit(userId: string, id: string) {
+    const existing = await this.db.level.findFirst({
+      where: { id, authorId: userId, type: 'COMMUNITY' },
+    });
+    if (!existing) throw new NotFoundException('Level not found');
+    if (existing.status !== 'DRAFT' && existing.status !== 'REJECTED')
+      throw new BadRequestException('Only drafts can be submitted');
+    // Re-validate: the definition may predate a schema change.
+    levelDefinitionSchema.parse(existing.definition);
+    return this.db.level.update({
+      where: { id },
+      data: { status: 'REVIEW' },
+      select: { id: true, status: true },
+    });
+  }
+
+  async remove(userId: string, id: string) {
+    const existing = await this.db.level.findFirst({
+      where: { id, authorId: userId, type: 'COMMUNITY' },
+    });
+    if (!existing) throw new NotFoundException('Level not found');
+    if (existing.status === 'PUBLISHED')
+      throw new BadRequestException('Published levels can only be removed by a moderator');
+
+    // Sessions reference the level (replays must stay verifiable), so a level
+    // that has already been played is archived instead of hard-deleted.
+    const played = await this.db.gameSession.count({ where: { levelId: id } });
+    if (played > 0) {
+      await this.db.level.update({ where: { id }, data: { status: 'ARCHIVED' } });
+      return { deleted: true, archived: true };
+    }
+    await this.db.level.delete({ where: { id } });
+    return { deleted: true, archived: false };
+  }
+}
+
 @ApiTags('game')
 @Controller('game')
 export class GameController {
   constructor(
     private readonly games: GameService,
     private readonly database: DatabaseService,
+    private readonly community: CommunityService,
   ) {}
 
   /** Public catalogue so the landing page can show worlds before sign-in. */
@@ -390,7 +592,7 @@ export class GameController {
   async worlds() {
     const rows = await this.database.client.level.groupBy({
       by: ['world', 'theme'],
-      where: { status: 'PUBLISHED' },
+      where: { status: 'PUBLISHED', type: { not: 'COMMUNITY' } },
       _count: { _all: true },
       orderBy: { world: 'asc' },
     });
@@ -412,6 +614,7 @@ export class GameController {
     const levels = await this.database.client.level.findMany({
       where: {
         status: 'PUBLISHED',
+        type: { not: 'COMMUNITY' },
         ...(filter.world ? { world: filter.world } : {}),
         ...(page.cursor ? { id: { gt: page.cursor } } : {}),
       },
@@ -448,6 +651,47 @@ export class GameController {
     });
     if (!level) throw new NotFoundException('Level not found');
     return level;
+  }
+
+  @Get('community/levels')
+  @Public()
+  communityLevels(@Query() query: unknown) {
+    const page = pageSchema.parse(query);
+    return this.community.published(page.limit);
+  }
+
+  @Get('community/levels/mine')
+  myCommunityLevels(@Req() request: AuthenticatedRequest) {
+    return this.community.list(request.user.sub);
+  }
+
+  @Get('community/levels/:id')
+  myCommunityLevel(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.community.detail(request.user.sub, id);
+  }
+
+  @Post('community/levels')
+  createCommunityLevel(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.community.create(request.user.sub, body);
+  }
+
+  @Patch('community/levels/:id')
+  updateCommunityLevel(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.community.update(request.user.sub, id, body);
+  }
+
+  @Post('community/levels/:id/submit')
+  submitCommunityLevel(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.community.submit(request.user.sub, id);
+  }
+
+  @Delete('community/levels/:id')
+  deleteCommunityLevel(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.community.remove(request.user.sub, id);
   }
 
   @Post('sessions')

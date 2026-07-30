@@ -456,6 +456,121 @@ try {
   const friends = await call('/social/friends', { token });
   check('friend list responds', Array.isArray(friends.body?.items));
 
+  console.log('\nCommunity levels');
+  const communityDefinition = {
+    version: 1,
+    name: 'Smoke community level',
+    type: 'COMMUNITY',
+    world: 1000,
+    index: 1,
+    theme: 'neon-grid',
+    seed: 1,
+    blocks: Array.from({ length: 6 }, (_, index) => ({
+      id: `c${index}`,
+      kind: 'NORMAL',
+      x: 0.1 + (index % 3) * 0.25,
+      y: 0.15 + Math.floor(index / 3) * 0.08,
+      width: 0.2,
+      height: 0.05,
+      hitPoints: 1,
+      rotation: 0,
+      required: true,
+    })),
+    metadata: {},
+  };
+
+  const authored = await call('/game/community/levels', {
+    method: 'POST',
+    token,
+    body: { name: 'Smoke community level', definition: communityDefinition },
+  });
+  check(
+    'player can create a community level',
+    authored.status === 201 || authored.status === 200,
+    `status ${authored.status}`,
+  );
+  const communityId = authored.body?.id;
+  check('new community level starts as a draft', authored.body?.status === 'DRAFT');
+
+  const invalid = await call('/game/community/levels', {
+    method: 'POST',
+    token,
+    body: { name: 'x', definition: communityDefinition },
+  });
+  check('too short names are rejected', invalid.status === 400, `status ${invalid.status}`);
+
+  const mine = await call('/game/community/levels/mine', { token });
+  check(
+    'author sees their own level',
+    (mine.body?.items ?? []).some((item) => item.id === communityId),
+  );
+
+  const notPublic = await call('/game/community/levels');
+  check(
+    'drafts are not publicly listed',
+    !(notPublic.body?.items ?? []).some((item) => item.id === communityId),
+  );
+
+  const campaign = await call('/game/levels?limit=50', { token });
+  check(
+    'community content stays out of the campaign catalogue',
+    !(campaign.body?.items ?? []).some((item) => item.type === 'COMMUNITY'),
+  );
+
+  if (communityId) {
+    const testSession = await call('/game/sessions', {
+      method: 'POST',
+      token,
+      body: { levelId: communityId, mode: 'COMMUNITY' },
+    });
+    check(
+      'author can test-play an unpublished draft',
+      testSession.status === 201 || testSession.status === 200,
+      `status ${testSession.status}`,
+    );
+
+    const submitted = await call(`/game/community/levels/${communityId}/submit`, {
+      method: 'POST',
+      token,
+    });
+    check('draft can be submitted for review', submitted.body?.status === 'REVIEW');
+
+    const lockedEdit = await call(`/game/community/levels/${communityId}`, {
+      method: 'PATCH',
+      token,
+      body: { name: 'Renamed while in review', definition: communityDefinition },
+    });
+    check(
+      'levels in review cannot be edited',
+      lockedEdit.status === 400,
+      `status ${lockedEdit.status}`,
+    );
+
+    const stranger = await call(`/game/community/levels/${communityId}`, { token: adminToken });
+    check(
+      'another account cannot open the level',
+      stranger.status === 404,
+      `status ${stranger.status}`,
+    );
+
+    const removed = await call(`/game/community/levels/${communityId}`, {
+      method: 'DELETE',
+      token,
+    });
+    check(
+      'author can withdraw their own submission',
+      removed.body?.deleted === true,
+      `status ${removed.status}`,
+    );
+    const afterRemoval = await call('/game/community/levels/mine', { token });
+    const remaining = (afterRemoval.body?.items ?? []).find((item) => item.id === communityId);
+    check(
+      'withdrawn level is gone or archived, never left in review',
+      !remaining || remaining.status === 'ARCHIVED',
+      remaining?.status,
+    );
+  }
+
   console.log('\nAdmin authorisation');
   const forbidden = await call('/admin/system/overview', { token });
   check(
