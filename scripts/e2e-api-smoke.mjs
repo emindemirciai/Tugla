@@ -365,6 +365,97 @@ try {
     league.body?.standings?.some((row) => row.isSelf),
   );
 
+  console.log('\nPlayer hub: shop, inventory, notifications, replays, social');
+  const shop = await call('/shop', { token });
+  check('shop catalogue loads', Array.isArray(shop.body?.items));
+  check(
+    'real-money items stay hidden while payments are disabled',
+    shop.body?.paymentsEnabled === false &&
+      (shop.body?.items ?? []).every((item) => item.currency !== null),
+  );
+
+  const affordable = (shop.body?.items ?? [])
+    .filter((item) => item.currency === 'CREDITS' && typeof item.price === 'number')
+    .sort((a, b) => a.price - b.price)[0];
+  if (affordable) {
+    const walletBefore = await call('/progression/wallet', { token });
+    const creditsBefore =
+      walletBefore.body?.balances?.find((balance) => balance.currency === 'CREDITS')?.amount ?? 0;
+    const purchase = await call('/shop/purchase', {
+      method: 'POST',
+      token,
+      body: { sku: affordable.sku },
+    });
+    const affordableNow = creditsBefore >= affordable.price;
+    check(
+      'shop purchase succeeds or is refused for lack of funds, never silently',
+      affordableNow ? purchase.status === 201 || purchase.status === 200 : purchase.status === 400,
+      `status ${purchase.status}, credits ${creditsBefore}, price ${affordable.price}`,
+    );
+
+    if (affordableNow) {
+      const walletAfter = await call('/progression/wallet', { token });
+      const creditsAfter =
+        walletAfter.body?.balances?.find((balance) => balance.currency === 'CREDITS')?.amount ?? 0;
+      check(
+        'purchase debited the wallet by exactly the listed price',
+        creditsAfter === creditsBefore - affordable.price,
+        `${creditsBefore} -> ${creditsAfter}`,
+      );
+      const inventory = await call('/inventory', { token });
+      check(
+        'purchased item appears in the inventory',
+        (inventory.body?.items ?? []).some((entry) => entry.item?.sku === affordable.sku),
+      );
+      const repeat = await call('/shop/purchase', {
+        method: 'POST',
+        token,
+        body: { sku: affordable.sku },
+      });
+      check('buying an owned item is rejected', repeat.status === 400, `status ${repeat.status}`);
+    }
+  }
+
+  const notifications = await call('/notifications', { token });
+  check('notifications endpoint responds with a list', Array.isArray(notifications.body?.items));
+  check(
+    'unread counter matches the unread items',
+    notifications.body?.unread ===
+      (notifications.body?.items ?? []).filter((item) => !item.readAt).length,
+  );
+
+  const replays = await call('/game/replays', { token });
+  check('verified run produced a stored replay', (replays.body?.items?.length ?? 0) > 0);
+  const replayRow = replays.body?.items?.[0];
+  if (replayRow) {
+    const shared = await call(`/game/replays/${replayRow.sessionId}/share`, {
+      method: 'POST',
+      token,
+      body: { shared: true },
+    });
+    check('replay sharing can be toggled on', shared.status === 200 || shared.status === 201);
+    const afterShare = await call('/game/replays', { token });
+    check(
+      'sharing state is persisted',
+      afterShare.body?.items?.some((item) => item.id === replayRow.id && item.shared === true),
+    );
+  }
+
+  const profile = await call('/auth/me', { token });
+  const selfSearch = await call(
+    `/social/players?q=${encodeURIComponent(profile.body?.username ?? 'smoke')}`,
+    { token },
+  );
+  check('player search returns results', Array.isArray(selfSearch.body?.items));
+  const selfFollow = await call('/social/follow', {
+    method: 'POST',
+    token,
+    body: { userId: profile.body?.id },
+  });
+  check('following yourself is rejected', selfFollow.status >= 400, `status ${selfFollow.status}`);
+  const friends = await call('/social/friends', { token });
+  check('friend list responds', Array.isArray(friends.body?.items));
+
   console.log('\nAdmin authorisation');
   const forbidden = await call('/admin/system/overview', { token });
   check(
