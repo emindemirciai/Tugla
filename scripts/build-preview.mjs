@@ -378,6 +378,8 @@ const html = `<!doctype html>
   </div>
   <div class="switch">
     <button id="btn-tr">TR</button><button id="btn-en">EN</button>
+    <span style="width:14px"></span>
+    <button id="btn-day">☀</button><button id="btn-night">☾</button>
   </div>
 </header>
 <main class="grid" id="grid"></main>
@@ -388,6 +390,7 @@ const WEB_CSS = ${JSON.stringify(webCss)};
 const ADMIN_CSS = ${JSON.stringify(adminCss)};
 const APP = ${JSON.stringify(appName)};
 let lang = (navigator.language || 'tr').toLowerCase().startsWith('tr') ? 'tr' : 'en';
+let theme = 'day';
 
 const L = (tr, en) => (lang === 'tr' ? tr : en);
 const blocks = (n) => Array.from({ length: n }, (_, i) => '<span class="preview-block tone-' + ((i + Math.floor(i / 7)) % 5) + '"></span>').join('');
@@ -403,6 +406,10 @@ function render() {
   document.documentElement.lang = lang;
   document.getElementById('btn-tr').className = TR;
   document.getElementById('btn-en').className = EN;
+  document.getElementById('btn-day').className = theme === 'day' ? 'active' : '';
+  document.getElementById('btn-night').className = theme === 'night' ? 'active' : '';
+  document.body.style.background = theme === 'night' ? '#14102b' : '#f6f3ff';
+  document.body.style.color = theme === 'night' ? '#f2eeff' : '#1b1533';
   document.querySelector('[data-i18n="title"]').textContent = L('arayüz önizlemesi', 'UI preview');
   document.querySelector('[data-i18n="intro"]').textContent = L(
     'Bu dosya, üretim derlemesinden alınan gerçek CSS paketleriyle oluşturulmuş statik bir arayüz önizlemesidir. Ekranlardaki veriler örnektir; hiçbir API çağrısı yapılmaz.',
@@ -425,7 +432,7 @@ function render() {
     grid.appendChild(section);
     const doc = frame.contentDocument;
     doc.open();
-    doc.write('<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><style>' +
+    doc.write('<!doctype html><html lang="' + lang + '" data-theme="' + theme + '"><head><meta charset="utf-8"><style>' +
       (screen.app === 'admin' ? ADMIN_CSS : WEB_CSS) +
       'body{margin:0;overflow:hidden}</style></head><body>' + screen.html + '</body></html>');
     doc.close();
@@ -435,6 +442,8 @@ function render() {
 const SCREENS = ${JSON.stringify(screens)};
 document.getElementById('btn-tr').onclick = () => { lang = 'tr'; render(); };
 document.getElementById('btn-en').onclick = () => { lang = 'en'; render(); };
+document.getElementById('btn-day').onclick = () => { theme = 'day'; render(); };
+document.getElementById('btn-night').onclick = () => { theme = 'night'; render(); };
 render();
 </script>
 </body>

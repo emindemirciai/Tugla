@@ -8,6 +8,7 @@ import { GameAudio } from '../lib/audio';
 import { loadSettings, resolveQuality, saveSettings, type GameSettings } from '../lib/settings';
 import { GameRenderer } from './GameRenderer';
 import { useI18n } from '../lib/i18n';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface ViewState {
   score: number;
@@ -337,6 +338,10 @@ export function GameCanvas({
                   onChange={(event) => updateSettings({ soundEnabled: event.target.checked })}
                 />
                 Ses
+              </label>
+              <label>
+                {t('theme.label')}
+                <ThemeSwitcher />
               </label>
               <p className="settings-note">{t('game.settings.note')}</p>
               <button type="button" className="button" onClick={() => setSettingsOpen(false)}>

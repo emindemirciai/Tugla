@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useAdminSession, useRequireStaff } from '../lib/session';
 import { AdminLanguageSwitcher } from './AdminLanguageSwitcher';
+import { AdminThemeSwitcher } from './AdminThemeSwitcher';
 import { t } from '../lib/i18n';
 
 const NAV = [
@@ -74,7 +75,10 @@ export function AdminShell({ title, children }: { title: string; children: React
             </Link>
           ))}
         </nav>
-        <AdminLanguageSwitcher />
+        <div className="sidebar-prefs">
+          <AdminLanguageSwitcher />
+          <AdminThemeSwitcher />
+        </div>
         <footer>
           <span title={user.email}>
             {user.displayName}

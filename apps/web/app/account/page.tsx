@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authApi } from '../../lib/api';
 import { useSession } from '../../lib/session';
+import { ThemeSwitcher } from '../../components/ThemeSwitcher';
 import { LanguageSwitcher, useI18n } from '../../lib/i18n';
 
 interface DeviceSession {
@@ -141,6 +142,12 @@ export default function AccountPage() {
             : t('account.providersNone')}{' '}
           {t('account.providersNote')}
         </p>
+      </section>
+
+      <section className="account-section">
+        <h2>{t('theme.label')}</h2>
+        <ThemeSwitcher />
+        <p className="muted">{t('theme.note')}</p>
       </section>
 
       <section className="account-section">

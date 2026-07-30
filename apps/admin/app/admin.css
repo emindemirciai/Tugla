@@ -688,3 +688,63 @@ button.primary:hover {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ----- night ----------------------------------------------------------------- */
+:root[data-theme='night'] {
+  --paper: #14102b;
+  --surface: #1e1840;
+  --surface-2: #272052;
+  --surface-3: #322a63;
+  --line: #342c66;
+  --line-strong: #473d80;
+
+  --ink: #f2eeff;
+  --ink-2: #cfc6f2;
+  --ink-3: #9c93c4;
+
+  --brand: #9b8bff;
+  --brand-deep: #b4a6ff;
+  --brand-soft: #2b2360;
+  --mint: #4fd6a8;
+  --mint-soft: #163a3a;
+  --amber: #ffc266;
+  --amber-soft: #3b2e1c;
+  --rose: #ff8090;
+  --rose-soft: #3d1f30;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
+
+  color-scheme: dark;
+}
+:root[data-theme='night'] .admin-sidebar nav a.active,
+:root[data-theme='night'] .admin-toolbar button.primary,
+:root[data-theme='night'] button.primary,
+:root[data-theme='night'] .admin-login-card button {
+  color: #17102f;
+}
+:root[data-theme='night'] .tag-active,
+:root[data-theme='night'] .tag-published {
+  border-color: #2c6a56;
+  color: #7fe7c4;
+}
+:root[data-theme='night'] .tag-suspended,
+:root[data-theme='night'] .tag-rejected {
+  border-color: #74303f;
+  color: #ffa8b4;
+}
+:root[data-theme='night'] .tag-draft,
+:root[data-theme='night'] .tag-review {
+  border-color: #6b5423;
+  color: #ffd28a;
+}
+:root[data-theme='night'] .admin-login {
+  background:
+    radial-gradient(760px 400px at 50% -10%, #2a2160 0%, rgba(42, 33, 96, 0) 60%), var(--paper);
+}
+.sidebar-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}

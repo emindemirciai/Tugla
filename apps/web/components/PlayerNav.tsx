@@ -27,7 +27,12 @@ export function HubTabs() {
   return (
     <div className="hub-tabs" role="navigation">
       {LINKS.map((link) => (
-        <Link key={link.href} href={link.href} className={pathname === link.href ? 'active' : ''}>
+        <Link
+          key={link.href}
+          href={link.href}
+          aria-current={pathname === link.href ? 'page' : undefined}
+          className={pathname === link.href ? 'active' : ''}
+        >
           <span aria-hidden>{link.icon}</span>
           {t(link.key)}
         </Link>
@@ -42,7 +47,10 @@ export function PlayerShell({ title, children }: { title: string; children: Reac
   const { user, signOut } = useSession();
 
   return (
-    <main className="hub-page">
+    <main className="hub-page" id="main">
+      <a className="skip-link" href="#main">
+        {t('a11y.skip')}
+      </a>
       <header className="nav">
         <Link href="/play" className="brand">
           <span className="brand-mark">◇</span>

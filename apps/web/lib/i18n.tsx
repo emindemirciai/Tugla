@@ -340,6 +340,12 @@ const tr = {
   'create.reason.OTHER': 'Diğer',
   'create.autoHidden': 'Yeterli bildirim toplandı; bölüm incelemeye alındı.',
   'create.mine': 'senin bölümün',
+  'theme.label': 'Görünüm',
+  'theme.day': 'Gündüz',
+  'theme.night': 'Gece',
+  'theme.system': 'Cihaz',
+  'theme.note': 'Gece modu, oyun sahnesiyle aynı menekşe tonlarını arayüze taşır.',
+  'a11y.skip': 'İçeriğe geç',
 } as const;
 
 export type TranslationKey = keyof typeof tr;
@@ -651,6 +657,12 @@ const en: Record<TranslationKey, string> = {
   'create.reason.OTHER': 'Other',
   'create.autoHidden': 'Enough reports were gathered; the level went back to review.',
   'create.mine': 'your level',
+  'theme.label': 'Appearance',
+  'theme.day': 'Day',
+  'theme.night': 'Night',
+  'theme.system': 'Device',
+  'theme.note': 'Night mode brings the playfield violets into the rest of the interface.',
+  'a11y.skip': 'Skip to content',
 };
 
 export const dictionaries: Record<Locale, Record<TranslationKey, string>> = { tr, en };
