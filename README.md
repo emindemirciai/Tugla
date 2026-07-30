@@ -55,6 +55,26 @@ gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi 
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Tasarım sistemi — "gün ışığı arcade"
+
+Arayüz tek bir jeton setinden beslenir (`apps/web/app/styles.css` ve `apps/admin/app/admin.css`
+içindeki `:root`). Hiçbir bileşen kendi hex'ini yazmaz; renk değişimi tek yerden yapılır.
+
+| Jeton                            | Değer                             | Kullanım                                     |
+| -------------------------------- | --------------------------------- | -------------------------------------------- |
+| `--paper`                        | `#f6f3ff`                         | Sayfa zemini (leylak kırığı gün ışığı)       |
+| `--surface`                      | `#ffffff`                         | Kartlar, tablolar, paneller                  |
+| `--ink` / `--ink-3`              | `#1b1533` / `#6a6390`             | Başlık ve ikincil metin                      |
+| `--brand`                        | `#5b4be1`                         | Birincil eylem, aktif durum                  |
+| `--coral`                        | `#ff7a45`                         | Enerji: platform, overcharge, boss rozeti    |
+| `--mint` / `--amber` / `--rose`  | `#12b886` / `#f5a524` / `#e5484d` | Olumlu / uyarı / hata                        |
+| `--stage-top` → `--stage-bottom` | `#2a2154` → `#171034`             | **Yalnızca oyun alanı**: aydınlatılmış sahne |
+
+Ayrım bilinçli: **arayüz gün ışığı, oyun alanı sahne.** 3B blokların parlaması için koyu bir zemin
+gerekir; menüler, hesap ekranı ve yönetim paneli için gerekmez. Her dünya kendi rengini taşır
+(`--card-hue`), böylece bölüm seçimi tek renkli değil. Durum rozetleri "tugla chip": nefes alan bir
+nokta + etiket. `prefers-reduced-motion` tüm animasyonları kapatır.
+
 ### Topluluk içeriği güvenliği
 
 Oyuncu yapımı bölümler yayına girene kadar moderasyondan geçer ve yayına girdikten sonra da denetimsiz
@@ -234,6 +254,15 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Design system — "daylight arcade"
+
+One token set drives both apps (`:root` in `apps/web/app/styles.css` and `apps/admin/app/admin.css`);
+no component hardcodes a colour. Paper `#f6f3ff`, ink `#1b1533`, one electric indigo `#5b4be1` for
+action and a coral `#ff7a45` for energy, with mint/amber/rose for state. The playfield keeps a lit
+violet stage (`#2a2154` → `#171034`) because 3D blocks need a dark room — the rest of the product
+does not. Each world carries its own hue, status badges are "tugla chips" with a breathing dot, and
+`prefers-reduced-motion` disables every animation.
 
 ### Community safety
 
