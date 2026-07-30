@@ -28,8 +28,16 @@ import { StorageService } from './services/storage';
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: 'short', ttl: 1_000, limit: 20 },
-      { name: 'long', ttl: 60_000, limit: 300 },
+      {
+        name: 'burst',
+        ttl: env().RATE_LIMIT_BURST_SECONDS * 1000,
+        limit: env().RATE_LIMIT_BURST,
+      },
+      {
+        name: 'sustained',
+        ttl: env().RATE_LIMIT_SUSTAINED_SECONDS * 1000,
+        limit: env().RATE_LIMIT_SUSTAINED,
+      },
     ]),
     JwtModule.register({
       global: true,

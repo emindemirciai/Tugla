@@ -11,6 +11,13 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
+  // Request throttling is per client IP. Mobile carriers put many players
+  // behind one address, so the defaults are generous enough for shared NAT
+  // while still stopping a single abusive client.
+  RATE_LIMIT_BURST: z.coerce.number().int().min(1).max(100000).default(30),
+  RATE_LIMIT_BURST_SECONDS: z.coerce.number().int().min(1).max(3600).default(1),
+  RATE_LIMIT_SUSTAINED: z.coerce.number().int().min(1).max(1000000).default(1200),
+  RATE_LIMIT_SUSTAINED_SECONDS: z.coerce.number().int().min(1).max(86400).default(60),
 
   APP_NAME: z.string().min(1).default('Pulse'),
   APP_SLUG: z

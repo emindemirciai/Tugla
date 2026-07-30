@@ -55,6 +55,19 @@ gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi 
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Kapasite ve hız sınırı
+
+`pnpm test:load` gerçek bir k6 senaryosudur: sağlık probu + dünya kataloğu + bölüm listesi +
+kimlikli oturum başlatma (yineleme başına dört istek). Bu depoda ölçülen taban değerler (geliştirme
+konteyneri, sınırlar yükseltilmiş): **78,6 istek/sn, 0 hata, p95 22 ms, p99 47 ms**. Ayrıntı ve
+kurulum: `docs/OPERATIONS.md`.
+
+API **istemci IP'si başına** hız sınırı uygular (`RATE_LIMIT_BURST` 30/sn, `RATE_LIMIT_SUSTAINED`
+1200/dk; hepsi environment'tan ayarlanır). Mobil operatörler çok sayıda oyuncuyu tek adresin arkasına
+koyduğu için varsayılanlar cömerttir. `GET /api/health` sınırdan muaftır: izleme, oyuncunun hakkını
+yemez ve sınırlayıcı bir kesintiyi gizleyemez. Yük testi sınıra takılırsa betik ölçümü geçerli
+saymaz ve `rate_limited_requests` eşiğiyle çalışmayı düşürür.
+
 ### Tasarım sistemi — "gün ışığı arcade"
 
 Arayüz tek bir jeton setinden beslenir (`apps/web/app/styles.css` ve `apps/admin/app/admin.css`
@@ -130,6 +143,7 @@ pnpm typecheck       # tüm workspace
 pnpm test            # 52 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
 pnpm test:e2e:api    # 80 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
 ```
 
 CI (`.github/workflows/ci.yml`) aynı kapıyı Postgres+Redis servisleriyle çalıştırır; `main`'e başarılı
@@ -258,6 +272,16 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Capacity and rate limiting
+
+`pnpm test:load` runs a real k6 scenario (health probe, world catalogue, level list and an
+authenticated session start per iteration). Baseline measured in this repository with limits raised:
+**78.6 req/s, zero failures, p95 22 ms, p99 47 ms** — see `docs/OPERATIONS.md` for the k6 install and
+the full table. Throttling is **per client IP** and fully env-driven (`RATE_LIMIT_BURST` 30/s,
+`RATE_LIMIT_SUSTAINED` 1200/min); `GET /api/health` is exempt so monitoring never eats a player's
+budget. A limiter-bound load run fails its own threshold instead of pretending to be a capacity
+result.
 
 ### Design system — "daylight arcade"
 
