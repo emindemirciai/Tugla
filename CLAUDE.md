@@ -68,6 +68,17 @@ halde DI metadata'sı silinir. ESLint bu klasörde`consistent-type-imports` kura
    korunur.
 3. Gizli anahtar repoya yazılmaz; her şey `.env` üzerinden (`.env.example` tek referans).
 4. Küçük ve anlamlı commit'ler. Kapı yeşil olmadan commit yok.
+   **Commit mesajı biçimi (Türkçe, tek satır başlık):**
+
+   ```
+   <tip>: <kısa konu> — <ayrıntı> (<dokunulan alanlar>) · v<sürüm>
+   ```
+
+   Örnek: `feat: topluluk bölümleri — oyuncu editörü ve inceleme akışı (API, web, smoke) · v1.4`
+   Tipler: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`. Sürüm numarası kökteki
+   `package.json` ile aynıdır (`pnpm release:version 1.5.0` ile yükseltilir).
+   / Commit subject in Turkish, same shape, version suffix must match package.json.
+
 5. Marka/isim tek komutla değişir: `pnpm rename-project "New Name" newslug` (`--dry-run` destekler).
 
 ## Doğrulanmış durum / Verified state

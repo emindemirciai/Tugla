@@ -1482,3 +1482,106 @@ a {
   align-items: center;
   gap: 12px;
 }
+
+/* ----- community level editor ------------------------------------------------ */
+.brush-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.brush {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 190, 235, 0.3);
+  background: rgba(10, 24, 40, 0.9);
+  color: #cfe6f7;
+  font-weight: 700;
+  cursor: pointer;
+}
+.brush-erase {
+  width: auto;
+  padding: 0 12px;
+  font-weight: 500;
+}
+.brush.active {
+  border-color: #37d4ff;
+  box-shadow: 0 0 0 1px #37d4ff inset;
+}
+.brush-normal {
+  color: #8fe6ff;
+}
+.brush-tough {
+  color: #ffce8f;
+}
+.brush-armored {
+  color: #d0d7e2;
+}
+.brush-explosive {
+  color: #ff9db4;
+}
+.brush-ice {
+  color: #a8f0ff;
+}
+.brush-bonus {
+  color: #6dffc4;
+}
+.editor-grid {
+  display: grid;
+  gap: 3px;
+  background: rgba(4, 12, 22, 0.7);
+  border: 1px solid rgba(110, 190, 235, 0.18);
+  border-radius: 14px;
+  padding: 8px;
+  touch-action: manipulation;
+}
+.editor-cell {
+  aspect-ratio: 1.6 / 1;
+  border-radius: 5px;
+  border: 1px solid rgba(110, 190, 235, 0.12);
+  background: rgba(14, 30, 48, 0.6);
+  cursor: pointer;
+  padding: 0;
+}
+.editor-cell.filled {
+  border-color: transparent;
+}
+.cell-normal {
+  background: #2b7fa8;
+}
+.cell-tough {
+  background: #b8791f;
+}
+.cell-armored {
+  background: #6d7789;
+}
+.cell-explosive {
+  background: #b83a5c;
+}
+.cell-ice {
+  background: #4aa9c9;
+}
+.cell-bonus {
+  background: #21a978;
+}
+.tag-review {
+  background: rgba(255, 184, 92, 0.14);
+  border: 1px solid rgba(255, 184, 92, 0.5);
+  color: #ffce8f;
+}
+.tag-draft {
+  background: rgba(140, 150, 170, 0.14);
+  border: 1px solid rgba(140, 150, 170, 0.4);
+  color: #aab6c8;
+}
+.tag-published {
+  background: rgba(69, 241, 172, 0.14);
+  border: 1px solid rgba(69, 241, 172, 0.5);
+  color: #6dffc4;
+}
+.tag-rejected {
+  background: rgba(255, 84, 120, 0.14);
+  border: 1px solid rgba(255, 84, 120, 0.5);
+  color: #ff9db4;
+}

@@ -277,6 +277,54 @@ export const gameApi = {
     }>('/game/sessions/complete', { method: 'POST', body: result }),
   replays: () => api<{ items: Record<string, unknown>[] }>('/game/replays'),
   replay: (sessionId: string) => api<Record<string, unknown>>(`/game/replays/${sessionId}`),
+  communityLevels: () =>
+    api<{
+      items: {
+        id: string;
+        name: string;
+        theme: string;
+        difficulty: number;
+        estimatedSeconds: number;
+        publishedAt: string;
+        author: { username: string; displayName: string } | null;
+      }[];
+    }>('/game/community/levels', { auth: false }),
+  myCommunityLevels: () =>
+    api<{
+      items: {
+        id: string;
+        name: string;
+        slug: string;
+        index: number;
+        theme: string;
+        status: string;
+        difficulty: number;
+        publishedAt: string | null;
+        updatedAt: string;
+      }[];
+      limit: number;
+    }>('/game/community/levels/mine'),
+  communityLevel: (id: string) =>
+    api<{ id: string; name: string; status: string; theme: string; definition: unknown }>(
+      `/game/community/levels/${id}`,
+    ),
+  createCommunityLevel: (body: { name: string; description?: string; definition: unknown }) =>
+    api<{ id: string; name: string; status: string; index: number }>('/game/community/levels', {
+      method: 'POST',
+      body,
+    }),
+  updateCommunityLevel: (
+    id: string,
+    body: { name: string; description?: string; definition: unknown },
+  ) =>
+    api<{ id: string; name: string; status: string }>(`/game/community/levels/${id}`, {
+      method: 'PATCH',
+      body,
+    }),
+  submitCommunityLevel: (id: string) =>
+    api<{ id: string; status: string }>(`/game/community/levels/${id}/submit`, { method: 'POST' }),
+  deleteCommunityLevel: (id: string) =>
+    api<{ deleted: boolean }>(`/game/community/levels/${id}`, { method: 'DELETE' }),
   shareReplay: (sessionId: string, shared: boolean) =>
     api(`/game/replays/${sessionId}/share`, { method: 'POST', body: { shared } }),
 };
