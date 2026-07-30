@@ -286,9 +286,23 @@ export const gameApi = {
         difficulty: number;
         estimatedSeconds: number;
         publishedAt: string;
-        author: { username: string; displayName: string } | null;
+        author: { id: string; username: string; displayName: string } | null;
+        likes: number;
+        dislikes: number;
+        myRating: boolean | null;
+        isMine: boolean;
       }[];
-    }>('/game/community/levels', { auth: false }),
+    }>('/game/community/levels'),
+  rateCommunityLevel: (id: string, liked: boolean) =>
+    api<{ levelId: string; likes: number; dislikes: number; myRating: boolean | null }>(
+      `/game/community/levels/${id}/rate`,
+      { method: 'POST', body: { liked } },
+    ),
+  clearCommunityRating: (id: string) =>
+    api<{ levelId: string; likes: number; dislikes: number; myRating: boolean | null }>(
+      `/game/community/levels/${id}/rate`,
+      { method: 'DELETE' },
+    ),
   myCommunityLevels: () =>
     api<{
       items: {
@@ -432,6 +446,16 @@ export const platformApi = {
         body: input,
       },
     ),
+  report: (input: {
+    targetType: 'USER' | 'LEVEL' | 'REPLAY';
+    targetId: string;
+    reason: 'CHEATING' | 'ABUSE' | 'SPAM' | 'INAPPROPRIATE' | 'OTHER';
+    details?: string;
+  }) =>
+    api<{ id: string; status: string; duplicate?: boolean }>('/reports', {
+      method: 'POST',
+      body: input,
+    }),
   support: (input: Record<string, unknown>) =>
     api('/support', { method: 'POST', body: input, auth: false }),
   shop: () =>

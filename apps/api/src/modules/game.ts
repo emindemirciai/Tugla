@@ -451,8 +451,9 @@ export class CommunityService {
     return { items, limit: CommunityService.MAX_PER_AUTHOR };
   }
 
-  async published(limit: number) {
-    const items = await this.db.level.findMany({
+  /** Published community levels with their like/dislike tallies. */
+  async published(limit: number, viewerId?: string) {
+    const levels = await this.db.level.findMany({
       where: { type: 'COMMUNITY', status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
       take: limit,
@@ -463,10 +464,56 @@ export class CommunityService {
         difficulty: true,
         estimatedSeconds: true,
         publishedAt: true,
-        author: { select: { username: true, displayName: true } },
+        author: { select: { id: true, username: true, displayName: true } },
+        ratings: { select: { liked: true, userId: true } },
       },
     });
+
+    const items = levels
+      .map(({ ratings, ...level }) => ({
+        ...level,
+        likes: ratings.filter((rating) => rating.liked).length,
+        dislikes: ratings.filter((rating) => !rating.liked).length,
+        myRating: viewerId
+          ? (ratings.find((rating) => rating.userId === viewerId)?.liked ?? null)
+          : null,
+        isMine: viewerId ? level.author?.id === viewerId : false,
+      }))
+      .sort((a, b) => b.likes - a.likes);
+
     return { items };
+  }
+
+  /** Thumbs up/down on someone else's published level. */
+  async rate(userId: string, levelId: string, liked: boolean) {
+    const level = await this.db.level.findFirst({
+      where: { id: levelId, type: 'COMMUNITY', status: 'PUBLISHED' },
+      select: { id: true, authorId: true },
+    });
+    if (!level) throw new NotFoundException('Level not found');
+    if (level.authorId === userId) throw new BadRequestException('You cannot rate your own level');
+
+    await this.db.levelRating.upsert({
+      where: { levelId_userId: { levelId, userId } },
+      update: { liked },
+      create: { levelId, userId, liked },
+    });
+    return this.tally(levelId, liked);
+  }
+
+  async unrate(userId: string, levelId: string) {
+    await this.db.levelRating
+      .delete({ where: { levelId_userId: { levelId, userId } } })
+      .catch(() => undefined);
+    return this.tally(levelId, null);
+  }
+
+  private async tally(levelId: string, myRating: boolean | null) {
+    const [likes, dislikes] = await Promise.all([
+      this.db.levelRating.count({ where: { levelId, liked: true } }),
+      this.db.levelRating.count({ where: { levelId, liked: false } }),
+    ]);
+    return { levelId, likes, dislikes, myRating };
   }
 
   async detail(userId: string, id: string) {
@@ -655,9 +702,25 @@ export class GameController {
 
   @Get('community/levels')
   @Public()
-  communityLevels(@Query() query: unknown) {
+  communityLevels(@Req() request: AuthenticatedRequest, @Query() query: unknown) {
     const page = pageSchema.parse(query);
-    return this.community.published(page.limit);
+    // Signed-in visitors also get their own rating back; anonymous ones do not.
+    return this.community.published(page.limit, request.user?.sub);
+  }
+
+  @Post('community/levels/:id/rate')
+  rateCommunityLevel(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    const data = z.object({ liked: z.boolean() }).parse(body);
+    return this.community.rate(request.user.sub, id, data.liked);
+  }
+
+  @Delete('community/levels/:id/rate')
+  clearCommunityRating(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.community.unrate(request.user.sub, id);
   }
 
   @Get('community/levels/mine')

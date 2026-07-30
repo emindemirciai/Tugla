@@ -325,6 +325,21 @@ const tr = {
   'create.by': 'yapan',
   'create.play': 'Oyna',
   'create.edit': 'Düzenle',
+  'create.like': 'Beğen',
+  'create.dislike': 'Beğenme',
+  'create.rated': 'Değerlendirmen kaydedildi.',
+  'create.rateOwn': 'Kendi bölümünü değerlendiremezsin.',
+  'create.report': 'Bildir',
+  'create.reportReason': 'Bildirme sebebi',
+  'create.reportSent': 'Bildirimin moderasyona iletildi.',
+  'create.reportDuplicate': 'Bu bölümü zaten bildirmişsin.',
+  'create.reason.ABUSE': 'Taciz / kötüye kullanım',
+  'create.reason.SPAM': 'Spam',
+  'create.reason.INAPPROPRIATE': 'Uygunsuz içerik',
+  'create.reason.CHEATING': 'Hile / bozuk bölüm',
+  'create.reason.OTHER': 'Diğer',
+  'create.autoHidden': 'Yeterli bildirim toplandı; bölüm incelemeye alındı.',
+  'create.mine': 'senin bölümün',
 } as const;
 
 export type TranslationKey = keyof typeof tr;
@@ -621,6 +636,21 @@ const en: Record<TranslationKey, string> = {
   'create.by': 'by',
   'create.play': 'Play',
   'create.edit': 'Edit',
+  'create.like': 'Like',
+  'create.dislike': 'Dislike',
+  'create.rated': 'Your rating was saved.',
+  'create.rateOwn': 'You cannot rate your own level.',
+  'create.report': 'Report',
+  'create.reportReason': 'Report reason',
+  'create.reportSent': 'Your report was sent to moderation.',
+  'create.reportDuplicate': 'You already reported this level.',
+  'create.reason.ABUSE': 'Harassment / abuse',
+  'create.reason.SPAM': 'Spam',
+  'create.reason.INAPPROPRIATE': 'Inappropriate content',
+  'create.reason.CHEATING': 'Cheating / broken level',
+  'create.reason.OTHER': 'Other',
+  'create.autoHidden': 'Enough reports were gathered; the level went back to review.',
+  'create.mine': 'your level',
 };
 
 export const dictionaries: Record<Locale, Record<TranslationKey, string>> = { tr, en };

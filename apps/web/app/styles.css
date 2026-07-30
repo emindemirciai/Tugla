@@ -1585,3 +1585,34 @@ a {
   border: 1px solid rgba(255, 84, 120, 0.5);
   color: #ff9db4;
 }
+.rating-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.rating {
+  background: rgba(45, 217, 255, 0.06);
+  border: 1px solid rgba(110, 190, 235, 0.25);
+  color: #9fc4dc;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.rating.active {
+  border-color: #37d4ff;
+  color: #46dcff;
+  background: rgba(45, 217, 255, 0.16);
+}
+.rating:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.report-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(110, 190, 235, 0.12);
+  padding-top: 10px;
+}

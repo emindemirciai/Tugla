@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { BlockKind, LevelDefinition } from '@tugla/shared';
 import { GameCanvas } from '../../components/GameCanvas';
 import { HubStatus, PlayerShell } from '../../components/PlayerNav';
-import { gameApi, type SessionStart } from '../../lib/api';
+import { gameApi, platformApi, type SessionStart } from '../../lib/api';
 import { useRequirePlayer } from '../../lib/guard';
 import { useI18n, type TranslationKey } from '../../lib/i18n';
 
@@ -96,6 +96,7 @@ export default function CreatePage() {
   const [theme, setTheme] = useState<string>(THEMES[0] ?? 'neon-grid');
   const [brush, setBrush] = useState(0);
   const [session, setSession] = useState<SessionStart | null>(null);
+  const [reporting, setReporting] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -191,6 +192,40 @@ export default function CreatePage() {
       await load();
     } catch (actionError) {
       setNotice(actionError instanceof Error ? actionError.message : t('create.failed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const rate = async (levelId: string, liked: boolean, current: boolean | null) => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      // Tapping the active thumb clears the rating.
+      if (current === liked) await gameApi.clearCommunityRating(levelId);
+      else await gameApi.rateCommunityLevel(levelId, liked);
+      setNotice(t('create.rated'));
+      await load();
+    } catch (rateError) {
+      setNotice(rateError instanceof Error ? rateError.message : t('create.failed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const report = async (
+    levelId: string,
+    reason: 'ABUSE' | 'SPAM' | 'INAPPROPRIATE' | 'CHEATING' | 'OTHER',
+  ) => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const result = await platformApi.report({ targetType: 'LEVEL', targetId: levelId, reason });
+      setNotice(result.duplicate ? t('create.reportDuplicate') : t('create.reportSent'));
+      setReporting(null);
+      await load();
+    } catch (reportError) {
+      setNotice(reportError instanceof Error ? reportError.message : t('create.failed'));
     } finally {
       setBusy(false);
     }
@@ -389,22 +424,72 @@ export default function CreatePage() {
           ) : (
             <ul className="card-list">
               {community.map((level) => (
-                <li key={level.id} className="card card-row">
-                  <div>
+                <li key={level.id} className="card">
+                  <div className="card-head">
                     <strong>{level.name}</strong>
                     <span className="muted">
-                      {' '}
                       {t('create.by')} @{level.author?.username ?? '-'}
+                      {level.isMine ? ` · ${t('create.mine')}` : ''}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    className="button"
-                    disabled={busy}
-                    onClick={() => void testPlay(level.id)}
-                  >
-                    {t('create.play')}
-                  </button>
+                  <div className="card-foot">
+                    <div className="rating-row">
+                      <button
+                        type="button"
+                        className={`rating ${level.myRating === true ? 'active' : ''}`}
+                        disabled={busy || level.isMine}
+                        title={level.isMine ? t('create.rateOwn') : t('create.like')}
+                        aria-label={t('create.like')}
+                        onClick={() => void rate(level.id, true, level.myRating)}
+                      >
+                        ▲ {level.likes}
+                      </button>
+                      <button
+                        type="button"
+                        className={`rating ${level.myRating === false ? 'active' : ''}`}
+                        disabled={busy || level.isMine}
+                        title={level.isMine ? t('create.rateOwn') : t('create.dislike')}
+                        aria-label={t('create.dislike')}
+                        onClick={() => void rate(level.id, false, level.myRating)}
+                      >
+                        ▼ {level.dislikes}
+                      </button>
+                      {!level.isMine && (
+                        <button
+                          type="button"
+                          className="button-quiet"
+                          onClick={() => setReporting(reporting === level.id ? null : level.id)}
+                        >
+                          {t('create.report')}
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="button"
+                      disabled={busy}
+                      onClick={() => void testPlay(level.id)}
+                    >
+                      {t('create.play')}
+                    </button>
+                  </div>
+                  {reporting === level.id && (
+                    <div className="report-row" role="group" aria-label={t('create.reportReason')}>
+                      {(['ABUSE', 'SPAM', 'INAPPROPRIATE', 'CHEATING', 'OTHER'] as const).map(
+                        (reason) => (
+                          <button
+                            key={reason}
+                            type="button"
+                            className="button-quiet"
+                            disabled={busy}
+                            onClick={() => void report(level.id, reason)}
+                          >
+                            {t(`create.reason.${reason}` as TranslationKey)}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
