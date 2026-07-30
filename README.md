@@ -93,7 +93,7 @@ pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
 pnpm test            # 52 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 48 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 58 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 ```
 
 CI (`.github/workflows/ci.yml`) aynı kapıyı Postgres+Redis servisleriyle çalıştırır; `main`'e başarılı
@@ -134,13 +134,31 @@ npx cap open android   # / ios
 
 Kabuk çevrim dışıyken `apps/mobile/www` açılış ekranını gösterir; bağlantı gelince canlı PWA yüklenir.
 
+### Depoyu uzak sunucuya bağlama (Claude Code)
+
+Depo temiz ve tüm işler commit'lenmiş halde teslim edilir; uzak depo bağlı değildir. Bağlamak ve
+`main` dalını yüklemek için:
+
+```bash
+bash scripts/first-push.sh git@github.com:<owner>/<repo>.git
+```
+
+Betik çalışma ağacının temiz olduğunu doğrular, `origin`'i ekler/günceller ve force push yapmadan
+gönderir. Ayrıca kökteki **`CLAUDE.md`**, Claude Code'un depoyu bağlam kaybı olmadan devralması için
+komutları, tuzakları (API yalnızca `dist`'ten çalışır, `apps/api` içinde `import type` kullanılmaz)
+ve TR/EN kuralını özetler.
+
 ### Proje adını değiştirme
 
 ```bash
-pnpm rename-project -- --name "YeniAd" --slug yeniad --domain yeniad.com
+pnpm rename-project "Yeni Ad" yeniad --dry-run   # önce ne değişeceğini gör
+pnpm rename-project "Yeni Ad" yeniad             # uygula (temiz çalışma ağacı ister)
 ```
 
-Komut; paket adlarını, env varsayılanlarını, manifest/meta'ları ve Capacitor kimliğini tek seferde günceller.
+Paket adlarını (`@pulse/*`), görünen adı, slug'ı (veritabanı kullanıcısı, çerez öneki, depolama
+anahtarları, Capacitor app id), Dockerfile'ları ve yedek betiklerini tek seferde günceller.
+**Doğrulandı:** temiz bir kopyada 76 dosya değişti, geriye tek bir `pulse` izi kalmadı ve
+`pnpm install` sorunsuz tamamlandı. Sonrasında: `pnpm install && pnpm db:generate && pnpm build`.
 
 ---
 
@@ -174,7 +192,7 @@ emitted decorator metadata.
 ### Verification gate
 
 `pnpm lint` · `pnpm typecheck` · `pnpm test` (52 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (48-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm test:e2e:api` (58-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -229,7 +247,16 @@ variables from `.env.example`, deploy (the `migrate` service runs `prisma migrat
 attach domains in Traefik — nothing in the code hard-codes a domain. Add the
 `DOKPLOY_PRODUCTION_WEBHOOK` repo secret for push-to-deploy.
 
-### Mobile & renaming
+### Handoff & renaming
+
+The repo ships clean and fully committed with no remote. Connect and push with
+`bash scripts/first-push.sh <remote-url>` (clean-tree check, no force push). **`CLAUDE.md`** captures
+the commands, gotchas and rules for Claude Code.
+
+`pnpm rename-project "New Name" newslug` rebrands everything in one command (`--dry-run` first);
+verified on a pristine copy: 76 files rewritten, zero leftovers, `pnpm install` still succeeds.
+
+### Mobile
 
 `npx cap add android && npx cap add ios` on a dev machine, then `npx cap sync` with
 `CAPACITOR_SERVER_URL` set. Rename everything with `pnpm rename-project -- --name "NewName" --slug newname`.
