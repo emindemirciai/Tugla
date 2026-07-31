@@ -5,11 +5,11 @@ import { seoConfig } from '../../lib/seo';
 const config = seoConfig();
 const tr = {
   title: 'Oyuncu desteği',
-  description: 'Pulse destek formu: hesap, oynanış, satın alma ve şikâyet talepleri.',
+  description: 'Tuğla destek formu: hesap, oynanış, satın alma ve şikâyet talepleri.',
 };
 const en = {
   title: 'Player support',
-  description: 'Pulse support form: account, gameplay, purchase and report requests.',
+  description: 'Tuğla support form: account, gameplay, purchase and report requests.',
 };
 const copy = config.defaultLocale === 'tr' ? tr : en;
 

@@ -6,11 +6,11 @@ const config = seoConfig();
 const tr = {
   title: 'Gizlilik bildirimi',
   description:
-    'Pulse gizlilik bildirimi: toplanan veriler, saklama süreleri, KVKK ve GDPR hakları.',
+    'Tuğla gizlilik bildirimi: toplanan veriler, saklama süreleri, KVKK ve GDPR hakları.',
 };
 const en = {
   title: 'Privacy notice',
-  description: 'Pulse privacy notice: data collected, retention windows, GDPR and KVKK rights.',
+  description: 'Tuğla privacy notice: data collected, retention windows, GDPR and KVKK rights.',
 };
 const copy = config.defaultLocale === 'tr' ? tr : en;
 

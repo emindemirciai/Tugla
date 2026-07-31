@@ -7,7 +7,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
-import { createDemoLevel } from '@pulse/game-engine';
+import { createDemoLevel } from '@tugla/game-engine';
 import { adminApi } from '../lib/api';
 import { t } from '../lib/i18n';
 import {
@@ -16,7 +16,7 @@ import {
   worldThemes,
   type BlockKind,
   type LevelDefinition,
-} from '@pulse/shared';
+} from '@tugla/shared';
 
 type EditorBlock = LevelDefinition['blocks'][number];
 

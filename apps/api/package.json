@@ -1,5 +1,5 @@
 {
-  "name": "@pulse/api",
+  "name": "@tugla/api",
   "version": "1.9.1",
   "private": true,
   "scripts": {
@@ -19,9 +19,9 @@
     "@nestjs/schedule": "6.0.0",
     "@nestjs/swagger": "11.2.0",
     "@nestjs/throttler": "6.4.0",
-    "@pulse/database": "workspace:*",
-    "@pulse/game-engine": "workspace:*",
-    "@pulse/shared": "workspace:*",
+    "@tugla/database": "workspace:*",
+    "@tugla/game-engine": "workspace:*",
+    "@tugla/shared": "workspace:*",
     "bcrypt": "6.0.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.2",

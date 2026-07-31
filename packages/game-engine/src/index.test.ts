@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { APP_DEFAULTS, decodeReplay, sessionChecksum } from '@pulse/shared';
-import { createDemoLevel, generateCampaignLevel, PulseEngine, runReplay } from './index';
-import type { LevelDefinition } from '@pulse/shared';
+import { APP_DEFAULTS, decodeReplay, sessionChecksum } from '@tugla/shared';
+import { createDemoLevel, generateCampaignLevel, TuğlaEngine, runReplay } from './index';
+import type { LevelDefinition } from '@tugla/shared';
 
 const simpleLevel = (
   overrides: Partial<LevelDefinition['blocks'][number]> = {},
@@ -31,16 +31,16 @@ const simpleLevel = (
   ],
 });
 
-describe('PulseEngine basics', () => {
+describe('TuğlaEngine basics', () => {
   it('starts with five lives and one attached ball', () => {
-    const engine = new PulseEngine(createDemoLevel());
+    const engine = new TuğlaEngine(createDemoLevel());
     expect(engine.snapshot.lives).toBe(APP_DEFAULTS.livesPerLevel);
     expect(engine.snapshot.balls).toHaveLength(1);
     expect(engine.snapshot.status).toBe('READY');
   });
 
   it('uses paddle movement to aim the first launch', () => {
-    const engine = new PulseEngine(createDemoLevel());
+    const engine = new TuğlaEngine(createDemoLevel());
     engine.setPaddleTarget(engine.width);
     engine.update(1 / 30);
     engine.launch();
@@ -49,7 +49,7 @@ describe('PulseEngine basics', () => {
   });
 
   it('deflects toward the edge the ball lands on', () => {
-    const engine = new PulseEngine(simpleLevel());
+    const engine = new TuğlaEngine(simpleLevel());
     engine.launch();
     const ball = engine.snapshot.balls[0]!;
     ball.position.x = engine.snapshot.paddle.x + engine.snapshot.paddle.width / 2 - 0.01;
@@ -63,7 +63,7 @@ describe('PulseEngine basics', () => {
 
 describe('multiball and Overcharge', () => {
   it('caps active balls and converts the surplus into Overcharge damage', () => {
-    const engine = new PulseEngine(createDemoLevel(), { maxBalls: 3 });
+    const engine = new TuğlaEngine(createDemoLevel(), { maxBalls: 3 });
     engine.launch();
     expect(engine.addBalls(10)).toBe(2);
     expect(engine.snapshot.balls).toHaveLength(3);
@@ -71,7 +71,7 @@ describe('multiball and Overcharge', () => {
   });
 
   it('never exceeds the configured 500 ball cap', () => {
-    const engine = new PulseEngine(createDemoLevel(), { maxBalls: APP_DEFAULTS.maxBalls });
+    const engine = new TuğlaEngine(createDemoLevel(), { maxBalls: APP_DEFAULTS.maxBalls });
     engine.launch();
     for (let index = 0; index < 40; index += 1) engine.addBalls(50);
     expect(engine.snapshot.balls.length).toBeLessThanOrEqual(APP_DEFAULTS.maxBalls);
@@ -80,7 +80,7 @@ describe('multiball and Overcharge', () => {
   });
 
   it('emits an OVERCHARGE event when the cap is exceeded', () => {
-    const engine = new PulseEngine(createDemoLevel(), { maxBalls: 2 });
+    const engine = new TuğlaEngine(createDemoLevel(), { maxBalls: 2 });
     engine.launch();
     engine.drainEvents();
     engine.addBalls(20);
@@ -90,7 +90,7 @@ describe('multiball and Overcharge', () => {
 
 describe('block behaviours', () => {
   it('destroys a normal block and counts it', () => {
-    const engine = new PulseEngine(simpleLevel());
+    const engine = new TuğlaEngine(simpleLevel());
     engine.launch();
     const ball = engine.snapshot.balls[0]!;
     ball.position.x = engine.snapshot.blocks[0]!.position.x;
@@ -100,7 +100,7 @@ describe('block behaviours', () => {
   });
 
   it('regenerates a REGENERATING block after its cooldown', () => {
-    const engine = new PulseEngine(
+    const engine = new TuğlaEngine(
       simpleLevel({ kind: 'REGENERATING', hitPoints: 1, required: false }),
     );
     engine.launch();
@@ -115,7 +115,7 @@ describe('block behaviours', () => {
   });
 
   it('absorbs the first hit on a SHIELDED block', () => {
-    const engine = new PulseEngine(simpleLevel({ kind: 'SHIELDED', hitPoints: 1 }));
+    const engine = new TuğlaEngine(simpleLevel({ kind: 'SHIELDED', hitPoints: 1 }));
     engine.launch();
     const block = engine.snapshot.blocks[0]!;
     const ball = engine.snapshot.balls[0]!;
@@ -127,7 +127,7 @@ describe('block behaviours', () => {
   });
 
   it('marks the boss defeated when a BOSS_CORE is destroyed', () => {
-    const engine = new PulseEngine(simpleLevel({ kind: 'BOSS_CORE', hitPoints: 1 }));
+    const engine = new TuğlaEngine(simpleLevel({ kind: 'BOSS_CORE', hitPoints: 1 }));
     engine.launch();
     const block = engine.snapshot.blocks[0]!;
     const ball = engine.snapshot.balls[0]!;
@@ -140,7 +140,7 @@ describe('block behaviours', () => {
 
 describe('lives and completion', () => {
   it('loses a life when the last ball drops and resets to READY', () => {
-    const engine = new PulseEngine(simpleLevel());
+    const engine = new TuğlaEngine(simpleLevel());
     engine.launch();
     const ball = engine.snapshot.balls[0]!;
     ball.position.y = -2;
@@ -151,7 +151,7 @@ describe('lives and completion', () => {
   });
 
   it('fails the level after five lost lives', () => {
-    const engine = new PulseEngine(simpleLevel());
+    const engine = new TuğlaEngine(simpleLevel());
     for (let life = 0; life < APP_DEFAULTS.livesPerLevel; life += 1) {
       engine.launch();
       const ball = engine.snapshot.balls[0]!;
@@ -164,7 +164,7 @@ describe('lives and completion', () => {
   });
 
   it('completes the level once every required block is cleared', () => {
-    const engine = new PulseEngine(simpleLevel());
+    const engine = new TuğlaEngine(simpleLevel());
     engine.launch();
     const block = engine.snapshot.blocks[0]!;
     const ball = engine.snapshot.balls[0]!;
@@ -177,7 +177,7 @@ describe('lives and completion', () => {
 
 describe('determinism and replay', () => {
   const play = (seed: number) => {
-    const engine = new PulseEngine(generateCampaignLevel(3), { seed, recordReplay: true });
+    const engine = new TuğlaEngine(generateCampaignLevel(3), { seed, recordReplay: true });
     engine.setPaddleTarget(5.2);
     engine.launch();
     for (let tick = 0; tick < 2400; tick += 1) {
@@ -197,7 +197,7 @@ describe('determinism and replay', () => {
 
   it('reproduces the original score when the replay is re-simulated', () => {
     const level = generateCampaignLevel(4);
-    const engine = new PulseEngine(level, { seed: 4242, recordReplay: true });
+    const engine = new TuğlaEngine(level, { seed: 4242, recordReplay: true });
     engine.setPaddleTarget(4.4);
     engine.launch();
     for (let tick = 0; tick < 3000; tick += 1) {
@@ -212,7 +212,7 @@ describe('determinism and replay', () => {
   });
 
   it('builds a result whose checksum matches the shared implementation', () => {
-    const engine = new PulseEngine(createDemoLevel(), { seed: 7 });
+    const engine = new TuğlaEngine(createDemoLevel(), { seed: 7 });
     engine.launch();
     for (let tick = 0; tick < 600; tick += 1) engine.step();
     const session = { sessionId: '11111111-2222-4333-8444-555555555555', nonce: 'test-nonce' };

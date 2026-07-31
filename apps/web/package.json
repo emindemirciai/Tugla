@@ -1,5 +1,5 @@
 {
-  "name": "@pulse/web",
+  "name": "@tugla/web",
   "version": "1.9.1",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pulse/game-engine": "workspace:*",
-    "@pulse/shared": "workspace:*",
+    "@tugla/game-engine": "workspace:*",
+    "@tugla/shared": "workspace:*",
     "@react-three/fiber": "9.1.2",
     "next": "15.3.3",
     "react": "19.1.0",

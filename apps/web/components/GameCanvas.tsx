@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PulseEngine, type EngineSnapshot } from '@pulse/game-engine';
-import { levelDefinitionSchema, type LevelDefinition } from '@pulse/shared';
+import { TuğlaEngine, type EngineSnapshot } from '@tugla/game-engine';
+import { levelDefinitionSchema, type LevelDefinition } from '@tugla/shared';
 import { gameApi, type SessionStart } from '../lib/api';
 import { GameAudio } from '../lib/audio';
 import { loadSettings, resolveQuality, saveSettings, type GameSettings } from '../lib/settings';
@@ -54,7 +54,7 @@ export function GameCanvas({
 }) {
   const { t, locale } = useI18n();
   const mountRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<PulseEngine | null>(null);
+  const engineRef = useRef<TuğlaEngine | null>(null);
   const submittedRef = useRef(false);
   const [view, setView] = useState(initialView);
   const [settings, setSettings] = useState<GameSettings>(() => loadSettings());
@@ -109,7 +109,7 @@ export function GameCanvas({
       return;
     }
 
-    const engine = new PulseEngine(definition, {
+    const engine = new TuğlaEngine(definition, {
       seed: session.seed,
       maxBalls: session.maxBalls,
       lives: session.lives,

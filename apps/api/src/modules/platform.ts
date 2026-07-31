@@ -1,7 +1,7 @@
 import { SkipThrottle } from '@nestjs/throttler';
 import { Body, Controller, Get, Injectable, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { type Prisma } from '@pulse/database';
+import { type Prisma } from '@tugla/database';
 import {
   APP_DEFAULTS,
   moderationReportSchema,
@@ -9,7 +9,7 @@ import {
   purchaseIntentSchema,
   qualityLevels,
   supportTicketSchema,
-} from '@pulse/shared';
+} from '@tugla/shared';
 import { z } from 'zod';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { env, providerStatus } from '../config/env';

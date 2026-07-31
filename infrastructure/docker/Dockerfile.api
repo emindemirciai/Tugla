@@ -17,11 +17,11 @@ COPY apps/api apps/api
 COPY packages/database packages/database
 COPY packages/shared packages/shared
 COPY packages/game-engine packages/game-engine
-RUN pnpm --filter @pulse/database generate \
- && pnpm --filter @pulse/shared build \
- && pnpm --filter @pulse/game-engine build \
- && pnpm --filter @pulse/database build \
- && pnpm --filter @pulse/api build
+RUN pnpm --filter @tugla/database generate \
+ && pnpm --filter @tugla/shared build \
+ && pnpm --filter @tugla/game-engine build \
+ && pnpm --filter @tugla/database build \
+ && pnpm --filter @tugla/api build
 
 FROM base AS runtime
 ENV NODE_ENV=production

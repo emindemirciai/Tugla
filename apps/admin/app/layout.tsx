@@ -4,7 +4,7 @@ import { themeBootstrapScript } from '../lib/theme';
 import './admin.css';
 
 export const metadata: Metadata = {
-  title: `Control Center | ${process.env.APP_NAME ?? 'Pulse'}`,
+  title: `Control Center | ${process.env.APP_NAME ?? 'Tuğla'}`,
   robots: { index: false, follow: false },
 };
 

@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { TooManyRequestsException } from '../services/errors';
 import { ApiTags } from '@nestjs/swagger';
-import { AuthProvider, type UserRole, UserStatus, type User } from '@pulse/database';
+import { AuthProvider, type UserRole, UserStatus, type User } from '@tugla/database';
 import {
   changePasswordSchema,
   confirmPasswordResetSchema,
@@ -29,7 +29,7 @@ import {
   requestEmailVerificationSchema,
   requestPasswordResetSchema,
   updateProfileSchema,
-} from '@pulse/shared';
+} from '@tugla/shared';
 import bcrypt from 'bcrypt';
 import type { Response } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';

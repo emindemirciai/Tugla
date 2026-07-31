@@ -12,12 +12,12 @@ for (const path of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../.
 import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
-import { worldThemes } from '@pulse/shared';
+import { worldThemes } from '@tugla/shared';
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({
     connectionString:
-      process.env.DATABASE_URL ?? 'postgresql://pulse:pulse@localhost:5432/pulse?schema=public',
+      process.env.DATABASE_URL ?? 'postgresql://tugla:tugla@localhost:5432/tugla?schema=public',
   }),
 });
 
@@ -58,13 +58,13 @@ async function seed() {
     const type = index % 50 === 0 ? 'WORLD_BOSS' : index % 10 === 0 ? 'MINI_BOSS' : 'NORMAL';
     const definition = {
       version: 1,
-      name: `Pulse ${index}`,
+      name: `Tuğla ${index}`,
       type,
       world,
       index,
       theme: worldThemes[(world - 1) % worldThemes.length] ?? 'neon-grid',
       seed: Number.parseInt(
-        createHash('sha256').update(`pulse:${index}`).digest('hex').slice(0, 7),
+        createHash('sha256').update(`tugla:${index}`).digest('hex').slice(0, 7),
         16,
       ),
       blocks: makeBlocks(index),
@@ -105,8 +105,8 @@ async function seed() {
       update: { role: UserRole.SUPER_ADMIN, passwordHash },
       create: {
         email: adminEmail.toLowerCase(),
-        username: 'pulse-admin',
-        displayName: 'Pulse Admin',
+        username: 'tugla-admin',
+        displayName: 'Tuğla Admin',
         passwordHash,
         role: UserRole.SUPER_ADMIN,
         emailVerifiedAt: new Date(),

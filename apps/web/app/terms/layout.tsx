@@ -6,11 +6,11 @@ const config = seoConfig();
 const tr = {
   title: 'Kullanım koşulları',
   description:
-    'Pulse kullanım koşulları: hesap kuralları, dijital ürünler ve hizmet değişiklikleri.',
+    'Tuğla kullanım koşulları: hesap kuralları, dijital ürünler ve hizmet değişiklikleri.',
 };
 const en = {
   title: 'Terms of service',
-  description: 'Pulse terms of service: account rules, digital goods and service changes.',
+  description: 'Tuğla terms of service: account rules, digital goods and service changes.',
 };
 const copy = config.defaultLocale === 'tr' ? tr : en;
 

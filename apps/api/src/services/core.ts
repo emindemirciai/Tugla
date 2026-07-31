@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { createPrismaClient, type Prisma, type UserRole, type PrismaClient } from '@pulse/database';
+import { createPrismaClient, type Prisma, type UserRole, type PrismaClient } from '@tugla/database';
 import type { Request } from 'express';
 import Redis from 'ioredis';
 import { env } from '../config/env';

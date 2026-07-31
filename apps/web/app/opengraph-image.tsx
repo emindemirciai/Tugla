@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { localizedShortDescription, seoConfig } from '../lib/seo';
 
-export const alt = 'Pulse';
+export const alt = 'Tuğla';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 

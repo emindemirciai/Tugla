@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Pulse design system — "daylight arcade"
+   Tuğla design system — "daylight arcade"
    The interface is daylight: warm lilac paper, deep plum ink, one electric
    indigo for action and a coral for energy. Only the playfield stays a lit
    stage, because a 3D game needs a dark room — everything around it does not.
@@ -250,7 +250,7 @@ code {
   padding: 18px 2px;
 }
 
-/* Signature: the pulse chip — a status badge with a breathing dot. */
+/* Signature: the tugla chip — a status badge with a breathing dot. */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -272,7 +272,7 @@ code {
   height: 6px;
   border-radius: 999px;
   background: currentColor;
-  animation: pulse-dot 2.4s ease-in-out infinite;
+  animation: tugla-dot 2.4s ease-in-out infinite;
 }
 .tag-ok,
 .tag-published,
@@ -299,7 +299,7 @@ code {
   border-color: var(--line-strong);
   color: var(--ink-3);
 }
-@keyframes pulse-dot {
+@keyframes tugla-dot {
   0%,
   100% {
     opacity: 1;

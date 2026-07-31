@@ -1,8 +1,8 @@
 import { Controller, Get, Injectable, Logger, Param, Post, Query, Req } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ApiTags } from '@nestjs/swagger';
-import { type Currency, type Prisma, type TaskCadence, type GameMode } from '@pulse/database';
-import { pageSchema } from '@pulse/shared';
+import { type Currency, type Prisma, type TaskCadence, type GameMode } from '@tugla/database';
+import { pageSchema } from '@tugla/shared';
 import { BadRequestException } from '@nestjs/common';
 import { DatabaseService, Public, RedisService, type AuthenticatedRequest } from '../services/core';
 

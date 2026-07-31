@@ -30,7 +30,7 @@ export const seoConfig = (env: NodeJS.ProcessEnv = process.env): SeoConfig => {
   const webUrl = (clean(env.WEB_URL) ?? 'http://localhost:3000').replace(/\/+$/, '');
   const defaultLocale: Locale = clean(env.DEFAULT_LOCALE) === 'en' ? 'en' : 'tr';
   return {
-    appName: clean(env.APP_NAME) ?? clean(env.NEXT_PUBLIC_APP_NAME) ?? 'Pulse',
+    appName: clean(env.APP_NAME) ?? clean(env.NEXT_PUBLIC_APP_NAME) ?? 'Tuğla',
     tagline: clean(env.APP_TAGLINE) ?? 'Break the grid',
     webUrl,
     defaultLocale,
@@ -86,8 +86,8 @@ export const AI_CRAWLERS = [
 ] as const;
 
 export const localizedDescription: Record<Locale, string> = {
-  tr: 'Pulse; 10 dünya ve 500 el yapımı bölümden oluşan, boss savaşları, günlük görevler, haftalık ligler ve topluluk bölümleri içeren modern bir tuğla kırma oyunudur. Tarayıcıda, PWA olarak, Android ve iOS üzerinde oynanır; her skor sunucuda yeniden simüle edilerek doğrulanır.',
-  en: 'Pulse is a modern brick breaker with 10 worlds and 500 handcrafted levels, boss fights, daily tasks, weekly leagues and community levels. It runs in the browser, as a PWA and on Android and iOS, and every score is verified by re-simulating the run on the server.',
+  tr: 'Tuğla; 10 dünya ve 500 el yapımı bölümden oluşan, boss savaşları, günlük görevler, haftalık ligler ve topluluk bölümleri içeren modern bir tuğla kırma oyunudur. Tarayıcıda, PWA olarak, Android ve iOS üzerinde oynanır; her skor sunucuda yeniden simüle edilerek doğrulanır.',
+  en: 'Tuğla is a modern brick breaker with 10 worlds and 500 handcrafted levels, boss fights, daily tasks, weekly leagues and community levels. It runs in the browser, as a PWA and on Android and iOS, and every score is verified by re-simulating the run on the server.',
 };
 
 export const localizedShortDescription: Record<Locale, string> = {
@@ -103,12 +103,12 @@ export const localizedShortDescription: Record<Locale, string> = {
 export const faq: Record<Locale, { question: string; answer: string }[]> = {
   tr: [
     {
-      question: 'Pulse nedir?',
+      question: 'Tuğla nedir?',
       answer:
-        'Pulse, mobil öncelikli dikey ekran için tasarlanmış modern bir tuğla kırma oyunudur. Görüntü Three.js ile üç boyutludur, fizik ise sabit 120 Hz deterministik 2B düzlemde çalışır.',
+        'Tuğla, mobil öncelikli dikey ekran için tasarlanmış modern bir tuğla kırma oyunudur. Görüntü Three.js ile üç boyutludur, fizik ise sabit 120 Hz deterministik 2B düzlemde çalışır.',
     },
     {
-      question: 'Pulse ücretsiz mi?',
+      question: 'Tuğla ücretsiz mi?',
       answer:
         'Evet, oyunun tamamı ücretsiz oynanır. Mağazada yalnızca görsel öğeler bulunur ve rekabet modlarında satın alınabilir güç avantajı yoktur.',
     },
@@ -135,12 +135,12 @@ export const faq: Record<Locale, { question: string; answer: string }[]> = {
   ],
   en: [
     {
-      question: 'What is Pulse?',
+      question: 'What is Tuğla?',
       answer:
-        'Pulse is a modern brick breaker built for portrait, one-handed play. The presentation is 3D via Three.js while the physics runs on a fixed 120 Hz deterministic 2D plane.',
+        'Tuğla is a modern brick breaker built for portrait, one-handed play. The presentation is 3D via Three.js while the physics runs on a fixed 120 Hz deterministic 2D plane.',
     },
     {
-      question: 'Is Pulse free to play?',
+      question: 'Is Tuğla free to play?',
       answer:
         'Yes, the whole game is free. The shop sells cosmetics only and competitive modes never sell power advantages.',
     },

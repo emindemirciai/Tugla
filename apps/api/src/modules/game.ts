@@ -15,8 +15,8 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { type Prisma, type GameMode } from '@pulse/database';
-import { runReplay, type ReplayResult } from '@pulse/game-engine';
+import { type Prisma, type GameMode } from '@tugla/database';
+import { runReplay, type ReplayResult } from '@tugla/game-engine';
 import {
   APP_DEFAULTS,
   decodeReplay,
@@ -26,7 +26,7 @@ import {
   pageSchema,
   sessionChecksum,
   type LevelDefinition,
-} from '@pulse/shared';
+} from '@tugla/shared';
 import { z } from 'zod';
 
 const communityLevelSchema = z.object({

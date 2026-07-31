@@ -1,5 +1,5 @@
 {
-  "name": "@pulse/game-engine",
+  "name": "@tugla/game-engine",
   "version": "1.9.1",
   "private": true,
   "main": "./dist/index.js",
@@ -10,7 +10,7 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@pulse/shared": "workspace:*"
+    "@tugla/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.8.3",

@@ -11,7 +11,7 @@
 export type ThemePreference = 'system' | 'day' | 'night';
 export type ResolvedTheme = 'day' | 'night';
 
-export const THEME_STORAGE_KEY = 'pulse.theme';
+export const THEME_STORAGE_KEY = 'tugla.theme';
 
 /** Chooses the effective theme from the stored preference and the device. */
 export const resolveTheme = (

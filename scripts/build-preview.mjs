@@ -34,7 +34,7 @@ const readCss = async (app) => {
 
 const webCss = await readCss('web');
 const adminCss = await readCss('admin');
-const appName = process.env.APP_NAME ?? 'Pulse';
+const appName = process.env.APP_NAME ?? 'Tuğla';
 
 const screens = `[
   {

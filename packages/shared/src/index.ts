@@ -5,8 +5,8 @@ export * from './checksum';
 export * from './replay';
 
 export const APP_DEFAULTS = {
-  name: process.env.APP_NAME ?? 'Pulse',
-  slug: process.env.APP_SLUG ?? 'pulse',
+  name: process.env.APP_NAME ?? 'Tuğla',
+  slug: process.env.APP_SLUG ?? 'tugla',
   livesPerLevel: 5,
   maxBalls: 500,
   worlds: 10,

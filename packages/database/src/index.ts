@@ -10,7 +10,7 @@ export const createPrismaClient = (options: CreateClientOptions = {}) => {
   const connectionString =
     options.connectionString ??
     process.env.DATABASE_URL ??
-    'postgresql://pulse:pulse@localhost:5432/pulse?schema=public';
+    'postgresql://tugla:tugla@localhost:5432/tugla?schema=public';
   const adapter = new PrismaPg({ connectionString, max: options.max ?? 10 });
   return new PrismaClient({
     adapter,

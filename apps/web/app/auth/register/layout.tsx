@@ -8,11 +8,11 @@ const copy =
     ? {
         title: 'Hesap oluştur',
         description:
-          '500 bölüm, haftalık ligler ve bulut kayıt için ücretsiz Pulse hesabı oluştur.',
+          '500 bölüm, haftalık ligler ve bulut kayıt için ücretsiz Tuğla hesabı oluştur.',
       }
     : {
         title: 'Create account',
-        description: 'Create a free Pulse account for 500 levels, weekly leagues and cloud saves.',
+        description: 'Create a free Tuğla account for 500 levels, weekly leagues and cloud saves.',
       };
 
 export const metadata: Metadata = {

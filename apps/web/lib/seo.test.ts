@@ -12,7 +12,7 @@ import {
 } from './seo';
 
 const base = {
-  APP_NAME: 'Pulse',
+  APP_NAME: 'Tuğla',
   APP_TAGLINE: 'Break the grid',
   WEB_URL: 'https://play.example.com/',
   NODE_ENV: 'production',
@@ -69,7 +69,7 @@ describe('llms.txt', () => {
     const config = seoConfig(base);
     const tr = llmsTxt(config, 'tr');
     const en = llmsTxt(config, 'en');
-    expect(tr.startsWith('# Pulse')).toBe(true);
+    expect(tr.startsWith('# Tuğla')).toBe(true);
     expect(tr).toContain(localizedDescription.tr);
     expect(en).toContain('https://play.example.com/auth/register');
     expect(tr).not.toContain('undefined');

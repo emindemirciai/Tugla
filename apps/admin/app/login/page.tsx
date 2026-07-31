@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
         <div className="admin-brand">
           <span className="brand-mark">◇</span>
           <div>
-            <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}</strong>
+            <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}</strong>
             <span>{t('login.panel')}</span>
           </div>
         </div>

@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: process.env.MOBILE_APP_ID ?? 'com.example.pulse',
-  appName: process.env.APP_NAME ?? 'Pulse',
+  appId: process.env.MOBILE_APP_ID ?? 'fun.tugla.app',
+  appName: process.env.APP_NAME ?? 'Tuğla',
   webDir: 'www',
   server: process.env.CAPACITOR_SERVER_URL
     ? {

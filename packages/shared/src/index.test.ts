@@ -74,7 +74,7 @@ describe('brand configuration', () => {
 
 describe('session checksum', () => {
   it('matches the Node crypto implementation byte for byte', () => {
-    const message = 'pulse|deterministic|payload';
+    const message = 'tugla|deterministic|payload';
     expect(sha256Hex(message)).toBe(createHash('sha256').update(message).digest('hex'));
   });
 

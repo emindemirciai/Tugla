@@ -5,7 +5,7 @@
  *   pnpm rename-project "Nova Break" novabreak            # apply
  *   pnpm rename-project "Nova Break" novabreak --dry-run  # preview only
  *
- * Rewrites every tracked text file: workspace package names (@pulse/* ),
+ * Rewrites every tracked text file: workspace package names (@tugla/* ),
  * display names, slugs (database user, cookie prefix, storage keys, Capacitor
  * app id) and package.json names. Binary assets and generated folders are
  * skipped. Afterwards run: pnpm install && pnpm db:generate && pnpm build.
@@ -78,7 +78,7 @@ const textExtensions = new Set([
 ]);
 
 // Extension-less or oddly-suffixed files that still contain the brand
-// (Dockerfile.web references `pnpm --filter @pulse/web`, so missing these would
+// (Dockerfile.web references `pnpm --filter @tugla/web`, so missing these would
 // break the image builds after a rename).
 const textFilePrefixes = ['Dockerfile', 'Makefile', '.dockerignore', '.gitignore'];
 const isTextFile = (name) =>
@@ -101,10 +101,10 @@ await walk(root);
 /** The one place that defines what a rebrand means. */
 export const applyRename = (text, { name, slug }) =>
   text
-    .replaceAll('@pulse/', `@${slug}/`)
-    .replaceAll('PULSE', name.toUpperCase())
-    .replaceAll('Pulse', name)
-    .replaceAll('pulse', slug);
+    .replaceAll('@tugla/', `@${slug}/`)
+    .replaceAll('TUĞLA', name.toUpperCase())
+    .replaceAll('Tuğla', name)
+    .replaceAll('tugla', slug);
 
 const changedFiles = [];
 for (const file of files) {
@@ -118,7 +118,7 @@ for (const file of files) {
 if (!dryRun) {
   for (const file of files.filter((entry) => entry.endsWith('package.json'))) {
     const manifest = JSON.parse(await readFile(file, 'utf8'));
-    if (manifest.name === 'pulse') {
+    if (manifest.name === 'tugla') {
       manifest.name = newSlug;
       await writeFile(file, `${JSON.stringify(manifest, null, 2)}\n`);
     }

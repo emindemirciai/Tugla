@@ -10,7 +10,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { pageSchema } from '@pulse/shared';
+import { pageSchema } from '@tugla/shared';
 import { z } from 'zod';
 import { type AuthenticatedRequest, DatabaseService } from '../services/core';
 

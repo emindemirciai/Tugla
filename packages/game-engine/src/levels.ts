@@ -5,7 +5,7 @@ import {
   type BlockKind,
   type BonusKind,
   type LevelDefinition,
-} from '@pulse/shared';
+} from '@tugla/shared';
 
 /** Small deterministic PRNG so generated levels are stable across runs. */
 const rng = (seed: number) => {

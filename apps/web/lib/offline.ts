@@ -11,8 +11,8 @@
 import type { SessionStart } from './api';
 import { platformApi } from './api';
 
-const LEVEL_CACHE_KEY = 'pulse.level-cache.v1';
-const QUEUE_KEY = 'pulse.offline-queue.v1';
+const LEVEL_CACHE_KEY = 'tugla.level-cache.v1';
+const QUEUE_KEY = 'tugla.offline-queue.v1';
 const MAX_CACHED_LEVELS = 12;
 
 interface CachedLevel {

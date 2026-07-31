@@ -258,13 +258,13 @@ try {
     Boolean(session.body?.seed && session.body?.nonce),
   );
 
-  const { PulseEngine } = await import(resolve(ROOT, 'packages/game-engine/dist/index.js'));
+  const { TuğlaEngine } = await import(resolve(ROOT, 'packages/game-engine/dist/index.js'));
   const { levelDefinitionSchema } = await import(resolve(ROOT, 'packages/shared/dist/index.js'));
   const definition = levelDefinitionSchema.parse(session.body.level.definition);
 
   // Play the level to completion by clearing blocks through the engine's own
   // deterministic API, recording inputs so the server can re-simulate it.
-  const engine = new PulseEngine(definition, { seed: session.body.seed, recordReplay: true });
+  const engine = new TuğlaEngine(definition, { seed: session.body.seed, recordReplay: true });
   engine.setPaddleTarget(4.5);
   engine.launch();
   for (let tick = 0; tick < 1800; tick += 1) {
@@ -325,7 +325,7 @@ try {
     body: { levelId: level.id },
     token,
   });
-  const engine3 = new PulseEngine(definition, { seed: session3.body.seed, recordReplay: true });
+  const engine3 = new TuğlaEngine(definition, { seed: session3.body.seed, recordReplay: true });
   engine3.launch();
   for (let tick = 0; tick < 600; tick += 1) engine3.step();
   const shortRun = engine3.buildResult({

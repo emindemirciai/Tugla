@@ -1,7 +1,7 @@
-# Pulse
+# Tuğla
 
-> Kod adı **Pulse** — tüm marka/isim ayarları tek merkezden (`.env` + `pnpm rename-project`) değiştirilebilir.
-> Codename **Pulse** — every brand/name setting is driven from one place (`.env` + `pnpm rename-project`).
+> Kod adı **Tuğla** — tüm marka/isim ayarları tek merkezden (`.env` + `pnpm rename-project`) değiştirilebilir.
+> Codename **Tuğla** — every brand/name setting is driven from one place (`.env` + `pnpm rename-project`).
 
 Modern, mobil öncelikli 2.5D brick-breaker: Three.js ile 3B görünüm, sabit 120 Hz deterministik 2D fizik,
 sunucuda yeniden simülasyonla doğrulanan skorlar, 10 dünya / 500 bölüm, boss savaşları, günlük görevler,
@@ -36,14 +36,14 @@ pnpm db:generate                     # Prisma client
 pnpm build:packages                  # shared + game-engine + database dist
 pnpm db:migrate                      # prisma migrate deploy
 pnpm db:seed                         # 10 dünya / 500 bölüm + katalog + admin hesabı
-pnpm --filter @pulse/api build && node apps/api/dist/main.js   # API :4000
-pnpm --filter @pulse/web dev         # oyuncu uygulaması :3000
-pnpm --filter @pulse/admin dev       # yönetim paneli :3001
+pnpm --filter @tugla/api build && node apps/api/dist/main.js   # API :4000
+pnpm --filter @tugla/web dev         # oyuncu uygulaması :3000
+pnpm --filter @tugla/admin dev       # yönetim paneli :3001
 ```
 
 Önemli: Build adımlarında `NODE_ENV` ayarlama — `next build` zaten `production` kullanır ve farklı
 bir değer `/404` üretimini kırar (`scripts/assert-build-env.mjs` bunu erkenden ve anlaşılır biçimde
-durdurur). Ayrıca `apps/*` paketleri `@pulse/*` paketlerini **derlenmiş `dist`** üzerinden tüketir; paketlerde
+durdurur). Ayrıca `apps/*` paketleri `@tugla/*` paketlerini **derlenmiş `dist`** üzerinden tüketir; paketlerde
 değişiklik yaptıysan `pnpm build:packages` çalıştır. API, NestJS decorator metadata gereksinimi nedeniyle
 yalnızca `tsc` çıktısından (`apps/api/dist`) çalıştırılır.
 
@@ -103,7 +103,7 @@ Gece modu siyah değil, oyun sahnesiyle aynı menekşe-erik tonlarını kullanı
 
 Ayrım bilinçli: **arayüz gün ışığı, oyun alanı sahne.** 3B blokların parlaması için koyu bir zemin
 gerekir; menüler, hesap ekranı ve yönetim paneli için gerekmez. Her dünya kendi rengini taşır
-(`--card-hue`), böylece bölüm seçimi tek renkli değil. Durum rozetleri "pulse chip": nefes alan bir
+(`--card-hue`), böylece bölüm seçimi tek renkli değil. Durum rozetleri "tugla chip": nefes alan bir
 nokta + etiket. `prefers-reduced-motion` tüm animasyonları kapatır.
 
 ### Topluluk içeriği güvenliği
@@ -228,9 +228,9 @@ pnpm rename-project "Yeni Ad" yeniad --dry-run   # önce ne değişeceğini gör
 pnpm rename-project "Yeni Ad" yeniad             # uygula (temiz çalışma ağacı ister)
 ```
 
-Paket adlarını (`@pulse/*`), görünen adı, slug'ı (veritabanı kullanıcısı, çerez öneki, depolama
+Paket adlarını (`@tugla/*`), görünen adı, slug'ı (veritabanı kullanıcısı, çerez öneki, depolama
 anahtarları, Capacitor app id), Dockerfile'ları ve yedek betiklerini tek seferde günceller.
-**Doğrulandı:** temiz bir kopyada 76 dosya değişti, geriye tek bir `pulse` izi kalmadı ve
+**Doğrulandı:** temiz bir kopyada 76 dosya değişti, geriye tek bir `tugla` izi kalmadı ve
 `pnpm install` sorunsuz tamamlandı. Sonrasında: `pnpm install && pnpm db:generate && pnpm build`.
 
 ---
@@ -252,11 +252,11 @@ Requirements: Node 24+, pnpm 10+, PostgreSQL 16+, Redis 7+ (or `docker compose u
 cp .env.example .env                 # fill secrets: node scripts/generate-secrets.mjs
 pnpm install
 pnpm db:generate
-pnpm build:packages                  # apps consume @pulse/* from built dist
+pnpm build:packages                  # apps consume @tugla/* from built dist
 pnpm db:migrate && pnpm db:seed      # 10 worlds / 500 levels + catalogue + admin user
-pnpm --filter @pulse/api build && node apps/api/dist/main.js
-pnpm --filter @pulse/web dev         # :3000
-pnpm --filter @pulse/admin dev       # :3001
+pnpm --filter @tugla/api build && node apps/api/dist/main.js
+pnpm --filter @tugla/web dev         # :3000
+pnpm --filter @tugla/admin dev       # :3001
 ```
 
 The API must run from compiled output (`apps/api/dist`) because NestJS dependency injection relies on
@@ -312,7 +312,7 @@ One token set drives both apps (`:root` in `apps/web/app/styles.css` and `apps/a
 no component hardcodes a colour. Paper `#f6f3ff`, ink `#1b1533`, one electric indigo `#5b4be1` for
 action and a coral `#ff7a45` for energy, with mint/amber/rose for state. The playfield keeps a lit
 violet stage (`#2a2154` → `#171034`) because 3D blocks need a dark room — the rest of the product
-does not. Each world carries its own hue, status badges are "pulse chips" with a breathing dot, and
+does not. Each world carries its own hue, status badges are "tugla chips" with a breathing dot, and
 `prefers-reduced-motion` disables every animation. Three appearances ship — Day, Night and Device
 (follows the system) — chosen from the account screen or the in-game settings panel and applied
 before first paint, so there is no theme flash. Night is plum, not black.

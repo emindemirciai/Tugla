@@ -76,7 +76,7 @@ export function AuthForm({
         <div className="auth-card-top">
           <Link href="/" className="brand">
             <span className="brand-mark">◇</span>
-            {process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}
+            {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}
           </Link>
           <LanguageSwitcher compact />
         </div>

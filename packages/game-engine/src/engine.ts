@@ -6,7 +6,7 @@ import {
   type LevelDefinition,
   type ReplayDocument,
   type ReplayInput,
-} from '@pulse/shared';
+} from '@tugla/shared';
 import type {
   Ball,
   EngineOptions,
@@ -72,7 +72,7 @@ const circleAabb = (ball: Ball, block: RuntimeBlock) => {
  * Given the same seed, level and input list, two runs produce identical results
  * on any machine, which is what lets the server verify a reported score.
  */
-export class PulseEngine {
+export class TuğlaEngine {
   readonly width: number;
   readonly height: number;
   readonly fixedStep: number;

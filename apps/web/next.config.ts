@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
-  transpilePackages: ['@pulse/game-engine', '@pulse/shared'],
+  transpilePackages: ['@tugla/game-engine', '@tugla/shared'],
   experimental: {
     optimizePackageImports: ['three'],
   },

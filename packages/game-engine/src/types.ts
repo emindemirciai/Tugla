@@ -1,4 +1,4 @@
-import type { BlockKind, BonusKind, LevelDefinition } from '@pulse/shared';
+import type { BlockKind, BonusKind, LevelDefinition } from '@tugla/shared';
 
 export interface Vec2 {
   x: number;

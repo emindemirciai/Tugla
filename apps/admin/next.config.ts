@@ -3,7 +3,7 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
-  transpilePackages: ['@pulse/game-engine', '@pulse/shared'],
+  transpilePackages: ['@tugla/game-engine', '@tugla/shared'],
 };
 
 export default config;

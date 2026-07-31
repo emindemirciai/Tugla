@@ -17,12 +17,12 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: pulse
-          POSTGRES_PASSWORD: pulse
-          POSTGRES_DB: pulse
+          POSTGRES_USER: tugla
+          POSTGRES_PASSWORD: tugla
+          POSTGRES_DB: tugla
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U pulse"
+          --health-cmd "pg_isready -U tugla"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -36,7 +36,7 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://pulse:pulse@localhost:5432/pulse?schema=public
+      DATABASE_URL: postgresql://tugla:tugla@localhost:5432/tugla?schema=public
       REDIS_URL: redis://localhost:6379
       # NODE_ENV is deliberately unset: `next build` sets production itself, and
       # a non-standard value breaks the /404 export (scripts/assert-build-env.mjs).
@@ -79,10 +79,10 @@ jobs:
         run: pnpm db:seed
 
       - name: Build API
-        run: pnpm --filter @pulse/api build
+        run: pnpm --filter @tugla/api build
 
       - name: API end-to-end smoke (register -> play -> verified score -> admin)
         run: pnpm test:e2e:api
 
       - name: Build web + admin
-        run: pnpm --filter @pulse/web --filter @pulse/admin build
+        run: pnpm --filter @tugla/web --filter @tugla/admin build

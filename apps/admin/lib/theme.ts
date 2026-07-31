@@ -7,7 +7,7 @@
  */
 export type ThemePreference = 'system' | 'day' | 'night';
 
-export const THEME_STORAGE_KEY = 'pulse.admin.theme';
+export const THEME_STORAGE_KEY = 'tugla.admin.theme';
 
 export const resolveTheme = (preference: ThemePreference, systemPrefersDark: boolean) =>
   preference === 'day'

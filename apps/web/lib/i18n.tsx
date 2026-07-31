@@ -12,7 +12,7 @@ import {
 
 export type Locale = 'tr' | 'en';
 
-const STORAGE_KEY = 'pulse.locale';
+const STORAGE_KEY = 'tugla.locale';
 
 /**
  * Turkish is the source dictionary; the English dictionary is typed against it

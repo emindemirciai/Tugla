@@ -19,11 +19,11 @@ const schema = z.object({
   RATE_LIMIT_SUSTAINED: z.coerce.number().int().min(1).max(1000000).default(1200),
   RATE_LIMIT_SUSTAINED_SECONDS: z.coerce.number().int().min(1).max(86400).default(60),
 
-  APP_NAME: z.string().min(1).default('Pulse'),
+  APP_NAME: z.string().min(1).default('Tuğla'),
   APP_SLUG: z
     .string()
     .regex(/^[a-z][a-z0-9-]*$/)
-    .default('pulse'),
+    .default('tugla'),
   ROOT_DOMAIN: z.string().min(1).default('localhost'),
   WEB_URL: z.string().url().default('http://localhost:3000'),
   ADMIN_URL: z.string().url().default('http://localhost:3001'),
@@ -56,7 +56,7 @@ const schema = z.object({
     .transform((value) => value === 'true'),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
-  MAIL_FROM: z.string().default('Pulse <no-reply@localhost>'),
+  MAIL_FROM: z.string().default('Tuğla <no-reply@localhost>'),
 
   STORAGE_PROVIDER: z.enum(['s3', 'database']).default('database'),
   S3_ENDPOINT: z.string().optional(),
@@ -90,7 +90,7 @@ const schema = z.object({
 export type AppEnv = z.infer<typeof schema>;
 
 const developmentFallbacks: Record<string, string> = {
-  DATABASE_URL: 'postgresql://pulse:pulse@localhost:5432/pulse?schema=public',
+  DATABASE_URL: 'postgresql://tugla:tugla@localhost:5432/tugla?schema=public',
   JWT_ACCESS_SECRET: 'development-access-secret-development-access-secret',
   JWT_REFRESH_SECRET: 'development-refresh-secret-development-refresh-secret',
   SESSION_ENCRYPTION_KEY: 'development-session-secret-development-session-key',

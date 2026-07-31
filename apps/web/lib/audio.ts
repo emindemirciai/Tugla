@@ -1,6 +1,6 @@
 'use client';
 
-import type { GameEvent } from '@pulse/game-engine';
+import type { GameEvent } from '@tugla/game-engine';
 
 /**
  * Tiny WebAudio synthesiser for gameplay feedback.

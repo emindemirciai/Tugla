@@ -1,4 +1,4 @@
-const CACHE = 'pulse-shell-v1';
+const CACHE = 'tugla-shell-v1';
 const SHELL = ['/', '/play', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', (event) => {

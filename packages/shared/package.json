@@ -1,5 +1,5 @@
 {
-  "name": "@pulse/shared",
+  "name": "@tugla/shared",
   "version": "1.9.1",
   "private": true,
   "main": "./dist/index.js",

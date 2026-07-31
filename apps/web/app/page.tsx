@@ -7,7 +7,7 @@ import { LanguageSwitcher, useI18n } from '../lib/i18n';
 /** Marketing landing page; every visible string flows through the dictionary. */
 export default function HomePage() {
   const { t } = useI18n();
-  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla';
 
   const stats = [
     { number: '10', label: t('landing.stats.worlds') },

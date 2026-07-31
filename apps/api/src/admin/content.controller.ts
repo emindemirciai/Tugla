@@ -12,9 +12,9 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { type Prisma, UserRole } from '@pulse/database';
-import { generateCampaignLevel } from '@pulse/game-engine';
-import { levelDefinitionSchema, levelStatuses, pageSchema } from '@pulse/shared';
+import { type Prisma, UserRole } from '@tugla/database';
+import { generateCampaignLevel } from '@tugla/game-engine';
+import { levelDefinitionSchema, levelStatuses, pageSchema } from '@tugla/shared';
 import { z } from 'zod';
 import {
   AuditService,

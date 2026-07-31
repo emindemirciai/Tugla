@@ -17,7 +17,7 @@ The script verifies a clean tree, adds/updates `origin` and pushes `main`. It ne
 
 ## Ne olduğu / What this is
 
-Pulse: mobil öncelikli, dikey ekran brick-breaker. Three.js ile 3B görünüm, **sabit 120 Hz
+Tuğla: mobil öncelikli, dikey ekran brick-breaker. Three.js ile 3B görünüm, **sabit 120 Hz
 deterministik 2B fizik**, sunucuda yeniden simülasyonla doğrulanan skorlar. pnpm monorepo:
 
 | Yol                    | İçerik                                                         |
@@ -35,11 +35,11 @@ deterministik 2B fizik**, sunucuda yeniden simülasyonla doğrulanan skorlar. pn
 ```bash
 pnpm install
 pnpm db:generate            # binaries.prisma.sh erişimi gerekir
-pnpm build:packages         # apps, @pulse/* paketlerini dist üzerinden tüketir
+pnpm build:packages         # apps, @tugla/* paketlerini dist üzerinden tüketir
 pnpm db:migrate && pnpm db:seed
-pnpm --filter @pulse/api build && node apps/api/dist/main.js   # :4000
-pnpm --filter @pulse/web dev        # :3000
-pnpm --filter @pulse/admin dev      # :3001
+pnpm --filter @tugla/api build && node apps/api/dist/main.js   # :4000
+pnpm --filter @tugla/web dev        # :3000
+pnpm --filter @tugla/admin dev      # :3001
 
 # Kapı / gate — hepsi yeşil olmadan iş bitmiş sayılmaz
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
@@ -53,7 +53,7 @@ pnpm build:preview          # preview/ui-preview.html (pnpm build sonrası)
   metadata'sını (`emitDecoratorMetadata`) üretmez ve uygulama açılmaz.
 - **`apps/api/**`içinde`import type`kullanma.** Servis importları runtime import olmalı, aksi
 halde DI metadata'sı silinir. ESLint bu klasörde`consistent-type-imports` kuralını kapatır.
-- `apps/web` ve `apps/admin`, `@pulse/*` paketlerini **dist**'ten okur → paket değişiminden sonra
+- `apps/web` ve `apps/admin`, `@tugla/*` paketlerini **dist**'ten okur → paket değişiminden sonra
   `pnpm build:packages`.
 - Prisma migration'ları `prisma migrate deploy` ile uygulanır (`db push` değil).
 - **`NODE_ENV` ile build alma.** `next build` zaten production'a ayarlar; farklı bir değer

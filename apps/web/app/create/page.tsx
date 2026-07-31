@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { BlockKind, LevelDefinition } from '@pulse/shared';
+import type { BlockKind, LevelDefinition } from '@tugla/shared';
 import { GameCanvas } from '../../components/GameCanvas';
 import { HubStatus, PlayerShell } from '../../components/PlayerNav';
 import { gameApi, platformApi, type SessionStart } from '../../lib/api';

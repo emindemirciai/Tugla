@@ -1,4 +1,4 @@
-import type { EngineSnapshot, GameEvent, PulseEngine } from '@pulse/game-engine';
+import type { EngineSnapshot, GameEvent, TuğlaEngine } from '@tugla/game-engine';
 import * as THREE from 'three';
 import type { ResolvedQuality } from '../lib/settings';
 
@@ -60,7 +60,7 @@ export class GameRenderer {
 
   constructor(
     private readonly mount: HTMLElement,
-    private readonly engine: PulseEngine,
+    private readonly engine: TuğlaEngine,
     private quality: ResolvedQuality,
   ) {
     this.renderer = new THREE.WebGLRenderer({

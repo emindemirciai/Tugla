@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { LevelDefinition } from '@pulse/shared';
+import type { LevelDefinition } from '@tugla/shared';
 import { AdminShell } from '../../components/AdminShell';
 import { LevelEditor } from '../../components/LevelEditor';
 import {

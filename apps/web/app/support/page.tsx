@@ -75,7 +75,7 @@ export default function SupportPage() {
     <main className="legal">
       <div className="legal-top">
         <Link className="brand" href="/">
-          <span className="brand-mark" /> {process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}
+          <span className="brand-mark" /> {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}
         </Link>
         <LanguageSwitcher compact />
       </div>

@@ -5,10 +5,10 @@ import { seoConfig } from '../../../lib/seo';
 const config = seoConfig();
 const copy =
   config.defaultLocale === 'tr'
-    ? { title: 'Giriş yap', description: 'Pulse hesabına giriş yap ve kaldığın bölümden devam et.' }
+    ? { title: 'Giriş yap', description: 'Tuğla hesabına giriş yap ve kaldığın bölümden devam et.' }
     : {
         title: 'Sign in',
-        description: 'Sign in to your Pulse account and continue where you left off.',
+        description: 'Sign in to your Tuğla account and continue where you left off.',
       };
 
 export const metadata: Metadata = {

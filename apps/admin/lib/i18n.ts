@@ -8,7 +8,7 @@
  */
 export type Locale = 'tr' | 'en';
 
-const STORAGE_KEY = 'pulse.admin.locale';
+const STORAGE_KEY = 'tugla.admin.locale';
 
 const detect = (): Locale => {
   if (typeof window === 'undefined') return 'tr';

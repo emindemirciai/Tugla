@@ -1,5 +1,5 @@
-import { decodeReplay, type LevelDefinition, type ReplayDocument } from '@pulse/shared';
-import { PulseEngine } from './engine';
+import { decodeReplay, type LevelDefinition, type ReplayDocument } from '@tugla/shared';
+import { TuğlaEngine } from './engine';
 import type { EngineSnapshot } from './types';
 
 export interface ReplayResult {
@@ -24,7 +24,7 @@ export const runReplay = (
   document: ReplayDocument,
   options: { maxTicks?: number } = {},
 ): ReplayResult => {
-  const engine = new PulseEngine(level, {
+  const engine = new TuğlaEngine(level, {
     width: document.width,
     height: document.height,
     fixedStep: document.fixedStep,

@@ -15,11 +15,11 @@ COPY apps/web apps/web
 COPY packages/shared packages/shared
 COPY packages/game-engine packages/game-engine
 ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_APP_NAME=Pulse
+ARG NEXT_PUBLIC_APP_NAME=Tuğla
 ARG NEXT_PUBLIC_ENVIRONMENT=production
 # Metadata (canonical URLs, JSON-LD, OG image) is baked while building the
 # static pages, so branding and the site URL are build arguments as well.
-ARG APP_NAME=Pulse
+ARG APP_NAME=Tuğla
 ARG APP_TAGLINE=Break the grid
 ARG WEB_URL=http://localhost:3000
 ARG DEFAULT_LOCALE=tr
@@ -30,9 +30,9 @@ ENV APP_NAME=$APP_NAME
 ENV APP_TAGLINE=$APP_TAGLINE
 ENV WEB_URL=$WEB_URL
 ENV DEFAULT_LOCALE=$DEFAULT_LOCALE
-RUN pnpm --filter @pulse/shared build \
- && pnpm --filter @pulse/game-engine build \
- && pnpm --filter @pulse/web build
+RUN pnpm --filter @tugla/shared build \
+ && pnpm --filter @tugla/game-engine build \
+ && pnpm --filter @tugla/web build
 
 FROM node:24-alpine AS runtime
 ENV NODE_ENV=production

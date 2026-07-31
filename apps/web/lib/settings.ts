@@ -1,6 +1,6 @@
 'use client';
 
-import type { QualityLevel } from '@pulse/shared';
+import type { QualityLevel } from '@tugla/shared';
 
 export interface GameSettings {
   quality: QualityLevel;
@@ -10,7 +10,7 @@ export interface GameSettings {
   showTrails: boolean;
 }
 
-const STORAGE_KEY = 'pulse.settings.v1';
+const STORAGE_KEY = 'tugla.settings.v1';
 
 export const defaultSettings: GameSettings = {
   quality: 'AUTO',

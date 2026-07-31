@@ -100,7 +100,7 @@ function PlayInner() {
       <header className="nav">
         <Link href="/" className="brand">
           <span className="brand-mark">◇</span>
-          {process.env.NEXT_PUBLIC_APP_NAME ?? 'Pulse'}
+          {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}
         </Link>
         <nav className="nav-links">
           <Link href="/account">{user?.displayName ?? t('hub.account')}</Link>

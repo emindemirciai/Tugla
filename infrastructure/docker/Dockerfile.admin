@@ -15,14 +15,14 @@ COPY apps/admin apps/admin
 COPY packages/shared packages/shared
 COPY packages/game-engine packages/game-engine
 ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_APP_NAME=Pulse
+ARG NEXT_PUBLIC_APP_NAME=Tuğla
 ARG NEXT_PUBLIC_ENVIRONMENT=production
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 ENV NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT
-RUN pnpm --filter @pulse/shared build \
- && pnpm --filter @pulse/game-engine build \
- && pnpm --filter @pulse/admin build
+RUN pnpm --filter @tugla/shared build \
+ && pnpm --filter @tugla/game-engine build \
+ && pnpm --filter @tugla/admin build
 
 FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
