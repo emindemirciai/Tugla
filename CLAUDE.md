@@ -15,6 +15,16 @@ Betik; çalışma ağacının temiz olduğunu doğrular, `origin`'i ekler (varsa
 `main` dalını yükler. Force push yapmaz, geçmişi yeniden yazmaz.
 The script verifies a clean tree, adds/updates `origin` and pushes `main`. It never force-pushes.
 
+## Commit kimliği / Commit identity
+
+Depodaki tüm commit'ler `Emin DEMİRCİ <289519189+emindemirciai@users.noreply.github.com>`
+kimliğiyle yazılır (GitHub bu adresi hesaba bağlar). Yeni bir ortamda çalışmaya başlarken:
+
+```bash
+git config user.name "Emin DEMİRCİ"
+git config user.email "289519189+emindemirciai@users.noreply.github.com"
+```
+
 ## Ne olduğu / What this is
 
 Tuğla: mobil öncelikli, dikey ekran brick-breaker. Three.js ile 3B görünüm, **sabit 120 Hz
