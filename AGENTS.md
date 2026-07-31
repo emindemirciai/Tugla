@@ -55,7 +55,10 @@ pnpm build:preview          # preview/ui-preview.html
 2. **Her metin TR ve EN olmalı** (`apps/web/lib/i18n.tsx`, `apps/admin/lib/i18n.ts`,
    `apps/api/src/services/mail.ts`). Sözlük eşliği birim testiyle korunur.
 3. Gizli anahtar repoya yazılmaz; her şey `.env` üzerinden (`.env.example` tek referans).
-4. Küçük ve anlamlı commit'ler; kapı yeşil olmadan commit yok.
+4. Küçük ve anlamlı commit'ler; **kapı yeşil olmadan commit yok** — komutu çalıştırmak yetmez,
+   çıktısı okunmalı. (Bir kez `pnpm test:e2e:api` çıktısı okunmadan commit atıldı ve kırmızıydı.)
+   Uçtan uca smoke kendi sürecinde hız sınırını yükseltir; bu kasıtlıdır, sınırı ölçen yer
+   `tests/load/smoke.js`'tir.
 5. Marka tek komutla değişir: `pnpm rename-project "Yeni Ad" yeniad` (`--dry-run` destekler).
 
 ## Commit ve push

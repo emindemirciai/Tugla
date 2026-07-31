@@ -67,7 +67,17 @@ async function waitForHealth(timeoutMs = 60_000) {
 // production does.
 const api = spawn('node', ['dist/main.js'], {
   cwd: resolve(ROOT, 'apps/api'),
-  env: { ...process.env, PORT, NODE_ENV: 'development' },
+  env: {
+    ...process.env,
+    PORT,
+    NODE_ENV: 'development',
+    // The suite drives ~100 requests from one address as fast as it can, which
+    // is exactly what the per-IP throttler is built to stop. Raise the limits
+    // for this process so the run measures behaviour, not rate limiting; the
+    // limiter itself is covered by tests/load/smoke.js.
+    RATE_LIMIT_BURST: '5000',
+    RATE_LIMIT_SUSTAINED: '200000',
+  },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 let apiLog = '';
