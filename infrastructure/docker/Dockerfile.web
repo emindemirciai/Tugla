@@ -47,9 +47,9 @@ ENV PORT=3000
 WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 COPY --from=build --chown=nextjs:nodejs /repo/apps/web/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /repo/apps/web/.next/static ./.next/static
-COPY --from=build --chown=nextjs:nodejs /repo/apps/web/public ./public
+COPY --from=build --chown=nextjs:nodejs /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=nextjs:nodejs /repo/apps/web/public ./apps/web/public
+RUN test -f /app/apps/web/server.js
 USER nextjs
 EXPOSE 3000
-CMD ["node", "server.js"]
-
+CMD ["node", "apps/web/server.js"]
