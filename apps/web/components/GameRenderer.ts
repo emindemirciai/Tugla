@@ -1,5 +1,6 @@
 import type { EngineSnapshot, GameEvent, TuğlaEngine } from '@tugla/game-engine';
 import * as THREE from 'three';
+import { fitGameCamera } from '../lib/game-camera';
 import type { ResolvedQuality } from '../lib/settings';
 
 const BLOCK_COLORS: Record<string, number> = {
@@ -63,13 +64,15 @@ export class GameRenderer {
     private readonly engine: TuğlaEngine,
     private quality: ResolvedQuality,
   ) {
+    const viewportWidth = mount.clientWidth;
+    const viewportHeight = mount.clientHeight;
     this.renderer = new THREE.WebGLRenderer({
       antialias: quality.antialias,
       alpha: false,
       powerPreference: 'high-performance',
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.pixelRatio));
-    this.renderer.setSize(mount.clientWidth, mount.clientHeight);
+    this.renderer.setSize(viewportWidth, viewportHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.2;
@@ -78,9 +81,13 @@ export class GameRenderer {
     mount.appendChild(this.renderer.domElement);
 
     this.scene.fog = new THREE.FogExp2(0x171034, 0.026);
-    this.camera = new THREE.PerspectiveCamera(35, mount.clientWidth / mount.clientHeight, 0.1, 100);
-    this.camera.position.set(engine.width / 2, engine.height * 0.46, 22);
-    this.camera.lookAt(engine.width / 2, engine.height * 0.5, 0);
+    this.camera = new THREE.PerspectiveCamera();
+    fitGameCamera(this.camera, {
+      boardWidth: engine.width,
+      boardHeight: engine.height,
+      viewportWidth,
+      viewportHeight,
+    });
 
     this.buildLighting();
     this.buildBoard();
@@ -389,8 +396,12 @@ export class GameRenderer {
     const width = this.mount.clientWidth;
     const height = this.mount.clientHeight;
     if (!width || !height) return;
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
+    fitGameCamera(this.camera, {
+      boardWidth: this.engine.width,
+      boardHeight: this.engine.height,
+      viewportWidth: width,
+      viewportHeight: height,
+    });
     this.renderer.setSize(width, height);
   }
 
