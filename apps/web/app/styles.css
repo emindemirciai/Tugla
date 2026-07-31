@@ -1746,3 +1746,40 @@ textarea:focus {
 .daily-card .hub-table {
   margin-top: 4px;
 }
+
+/* ----- federated sign-in & verification code -------------------------------- */
+.oauth-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+}
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.oauth-button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
+}
+.code-input {
+  font-size: 1.6rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding-left: 0.5em;
+}

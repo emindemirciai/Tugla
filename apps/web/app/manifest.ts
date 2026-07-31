@@ -24,8 +24,17 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: config.defaultLocale,
     dir: 'ltr',
     categories: ['games', 'entertainment'],
+    screenshots: [
+      {
+        src: '/brand/cover-1280x720.png',
+        sizes: '1280x720',
+        type: 'image/png',
+        form_factor: 'wide',
+      },
+    ],
     icons: [
-      { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/brand/logo.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+      { src: '/brand/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
       { src: '/icon-maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
     ],
     shortcuts: [

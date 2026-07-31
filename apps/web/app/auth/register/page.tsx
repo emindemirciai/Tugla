@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthForm } from '../../../components/AuthForm';
+import { GoogleSignIn } from '../../../components/GoogleSignIn';
 import { authApi } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
 import { useI18n } from '../../../lib/i18n';
@@ -62,8 +63,14 @@ export default function RegisterPage() {
           locale,
         });
         setUser(result.user);
-        router.push(result.verificationEmailSent ? '/play?verify=sent' : '/play');
+        // Verification is a code now: send the player straight to the code screen.
+        router.push(
+          result.verificationEmailSent
+            ? `/auth/verify?email=${encodeURIComponent(String(values.email).toLowerCase())}`
+            : '/play',
+        );
       }}
+      afterForm={<GoogleSignIn onDone={() => router.push('/play')} />}
       footer={
         <span>
           {t('auth.register.haveAccount')}{' '}

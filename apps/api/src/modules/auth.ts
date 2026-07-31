@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomInt } from 'node:crypto';
 import {
   BadRequestException,
   Body,
@@ -20,7 +20,8 @@ import { AuthProvider, type UserRole, UserStatus, type User } from '@tugla/datab
 import {
   changePasswordSchema,
   confirmPasswordResetSchema,
-  confirmTokenSchema,
+  confirmVerificationSchema,
+  VERIFICATION_CODE_LENGTH,
   cookieNames,
   linkProviderSchema,
   loginSchema,
@@ -52,6 +53,9 @@ const googleKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2
 const appleKeys = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
+// A short code needs a short life; players can always request a new one.
+const VERIFY_CODE_TTL_MS = 30 * 60 * 1000;
+const MAX_VERIFICATION_ATTEMPTS = 5;
 const RESET_TTL_MS = 60 * 60 * 1000;
 
 interface RequestMeta {
@@ -109,6 +113,39 @@ export class AuthService {
       sid: session.id,
     };
     return { accessToken: await this.jwt.sign(claims), refreshToken, expiresIn: 900 };
+  }
+
+  /**
+   * Six-digit verification code.
+   *
+   * Stored the same way as a link token — as a salted hash — but scoped to the
+   * user so a short code cannot be guessed globally. Brute force is bounded on
+   * three sides: a 30 minute lifetime, a per-address attempt limit, and the
+   * token being burned after too many wrong tries (the player simply asks for a
+   * new one).
+   */
+  private async createVerificationCode(userId: string) {
+    const code = String(randomInt(0, 10 ** VERIFICATION_CODE_LENGTH)).padStart(
+      VERIFICATION_CODE_LENGTH,
+      '0',
+    );
+    await this.db.actionToken.updateMany({
+      where: { userId, type: 'EMAIL_VERIFY', usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    await this.db.actionToken.create({
+      data: {
+        userId,
+        type: 'EMAIL_VERIFY',
+        tokenHash: this.hashVerificationCode(userId, code),
+        expiresAt: new Date(Date.now() + VERIFY_CODE_TTL_MS),
+      },
+    });
+    return code;
+  }
+
+  private hashVerificationCode(userId: string, code: string) {
+    return createHash('sha256').update(`${userId}:${code}`).digest('hex');
   }
 
   private async createActionToken(userId: string, type: 'EMAIL_VERIFY' | 'PASSWORD_RESET') {
@@ -178,10 +215,10 @@ export class AuthService {
       },
     });
 
-    const token = await this.createActionToken(user.id, 'EMAIL_VERIFY');
+    const code = await this.createVerificationCode(user.id);
     const delivery = await this.mail.sendVerification(
       user.email,
-      token,
+      code,
       user.locale === 'tr' ? 'tr' : 'en',
     );
     return {
@@ -392,20 +429,59 @@ export class AuthService {
     await this.guardRate('verify', data.email, 5, 3600);
     const user = await this.db.user.findUnique({ where: { email: data.email } });
     if (!user || user.emailVerifiedAt) return { sent: this.mail.enabled };
-    const token = await this.createActionToken(user.id, 'EMAIL_VERIFY');
+    const code = await this.createVerificationCode(user.id);
     const delivery = await this.mail.sendVerification(
       user.email,
-      token,
+      code,
       user.locale === 'tr' ? 'tr' : 'en',
     );
     return { sent: delivery.delivered };
   }
 
   async confirmEmail(input: unknown) {
-    const data = confirmTokenSchema.parse(input);
-    const user = await this.consumeActionToken(data.token, 'EMAIL_VERIFY');
+    const data = confirmVerificationSchema.parse(input);
+    const user =
+      'token' in data
+        ? await this.consumeActionToken(data.token, 'EMAIL_VERIFY')
+        : await this.consumeVerificationCode(data.email, data.code);
     await this.db.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } });
     return { verified: true };
+  }
+
+  /**
+   * Redeems a six-digit code. Wrong guesses are counted per address; once the
+   * budget is spent the outstanding code is burned so an attacker cannot keep
+   * trying against the same credential, and the player asks for a new one.
+   */
+  private async consumeVerificationCode(email: string, code: string) {
+    await this.guardRate('verify-code', email, 10, 900);
+    const user = await this.db.user.findUnique({ where: { email } });
+    if (!user || user.status === UserStatus.DELETED)
+      throw new BadRequestException('Verification code is invalid or expired');
+
+    const token = await this.db.actionToken.findFirst({
+      where: {
+        userId: user.id,
+        type: 'EMAIL_VERIFY',
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+        tokenHash: this.hashVerificationCode(user.id, code),
+      },
+    });
+
+    if (!token) {
+      const attempts = await this.redis.increment(`verify-attempts:${user.id}`, 1800);
+      if (attempts !== null && attempts >= MAX_VERIFICATION_ATTEMPTS) {
+        await this.db.actionToken.updateMany({
+          where: { userId: user.id, type: 'EMAIL_VERIFY', usedAt: null },
+          data: { usedAt: new Date() },
+        });
+      }
+      throw new BadRequestException('Verification code is invalid or expired');
+    }
+
+    await this.db.actionToken.update({ where: { id: token.id }, data: { usedAt: new Date() } });
+    return user;
   }
 
   async requestPasswordReset(input: unknown) {

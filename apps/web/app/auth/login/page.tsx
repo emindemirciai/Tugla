@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthForm } from '../../../components/AuthForm';
+import { GoogleSignIn } from '../../../components/GoogleSignIn';
 import { authApi } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
 import { useI18n } from '../../../lib/i18n';
@@ -42,6 +43,7 @@ export default function LoginPage() {
         setUser(result.user);
         router.push('/play');
       }}
+      afterForm={<GoogleSignIn onDone={() => router.push('/play')} />}
       footer={
         <>
           <Link href="/auth/forgot">{t('auth.login.forgot')}</Link>

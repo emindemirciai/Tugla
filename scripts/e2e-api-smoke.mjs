@@ -456,6 +456,63 @@ try {
   const friends = await call('/social/friends', { token });
   check('friend list responds', Array.isArray(friends.body?.items));
 
+  console.log('\nEmail verification code');
+  const codeEmail = `verify-${Date.now()}@example.com`;
+  const codeAccount = await call('/auth/register', {
+    method: 'POST',
+    body: {
+      email: codeEmail,
+      password: 'smoke-password-1',
+      displayName: 'Code Tester',
+      acceptedTerms: true,
+      locale: 'tr',
+    },
+  });
+  check('sign-up reports the verification email', codeAccount.body?.verificationEmailSent === true);
+  check('new accounts start unverified', codeAccount.body?.user?.emailVerified === false);
+
+  // The development mail provider logs the message, so the smoke run can read
+  // the very code a player would receive.
+  const mailed = apiLog.match(/(?:Doğrulama kodu|Verification code): (\d{6})/g) ?? [];
+  const sentCode = mailed.at(-1)?.match(/(\d{6})/)?.[1];
+  check('a six digit code reaches the mail provider', Boolean(sentCode), sentCode);
+
+  const wrongCode = await call('/auth/email/verify/confirm', {
+    method: 'POST',
+    body: { email: codeEmail, code: '000000' },
+  });
+  check('a wrong code is rejected', wrongCode.status === 400, `status ${wrongCode.status}`);
+
+  if (sentCode) {
+    const confirmed = await call('/auth/email/verify/confirm', {
+      method: 'POST',
+      body: { email: codeEmail, code: sentCode },
+    });
+    check('the emailed code verifies the address', confirmed.body?.verified === true);
+
+    const replay = await call('/auth/email/verify/confirm', {
+      method: 'POST',
+      body: { email: codeEmail, code: sentCode },
+    });
+    check('a used code cannot be replayed', replay.status === 400, `status ${replay.status}`);
+  }
+
+  const badFormat = await call('/auth/email/verify/confirm', {
+    method: 'POST',
+    body: { email: codeEmail, code: '12' },
+  });
+  check('malformed codes are rejected by the schema', badFormat.status === 400);
+
+  const oauthOff = await call('/auth/oauth', {
+    method: 'POST',
+    body: { provider: 'google', identityToken: 'not-a-real-token' },
+  });
+  check(
+    'Google sign-in refuses unverifiable tokens',
+    oauthOff.status >= 400,
+    `status ${oauthOff.status}`,
+  );
+
   console.log('\nDaily challenge');
   const daily = await call('/game/daily', { token });
   check('daily challenge responds', daily.status === 200, `status ${daily.status}`);

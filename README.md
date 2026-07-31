@@ -57,6 +57,26 @@ gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi 
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Hesap açma ve Google ile giriş
+
+E-posta ile kayıtta adrese **6 haneli doğrulama kodu** gönderilir (30 dakika geçerli). Kod tek
+kullanımlıktır, adres başına deneme sınırı vardır ve 5 hatalı denemeden sonra kod yakılır — oyuncu
+yeni kod ister. Aynı e-postadaki bağlantı kodu önceden doldurur, yani tek tıkla da doğrulanır.
+
+Google ile kayıt/giriş tek düğmededir: tarayıcı Google Identity Services'ten imzalı bir kimlik
+belirteci alır, API bunu Google'ın JWKS'ine karşı doğrular ve e-posta zaten kayıtlıysa hesabı
+birleştirir. Düğme yalnızca `NEXT_PUBLIC_GOOGLE_CLIENT_ID` **ve** sunucudaki `GOOGLE_CLIENT_ID`
+doluyken görünür; aksi halde arayüz sağlayıcının kapalı olduğunu dürüstçe söyler.
+
+### Marka varlıkları ve paylaşım görseli
+
+Logo ve tanıtım görselleri `apps/web/public/brand/` altındadır ve yayındayken doğrudan servis edilir:
+`logo.svg`, `logo-512.png`, `logo-wordmark.svg|png`, `cover-1200x630.svg|png`,
+`cover-1280x720.svg|png`. Open Graph, Twitter kartı, PWA manifesti ve JSON-LD bu dosyaları
+kullanır. Oyun listeleme siteleri için doğrudan bağlantı:
+`https://tugla.fun/brand/cover-1200x630.png` (1200×630) ve `https://tugla.fun/brand/logo-512.png`.
+Ayrıntı: `apps/web/public/brand/README.md`.
+
 ### Günün bölümü
 
 Her UTC gününde yayınlanmış kampanya bölümlerinden biri **tarihin hash'iyle** seçilir: herkes aynı
@@ -173,7 +193,7 @@ pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
 pnpm test            # 58 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 89 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 97 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
 ```
 
@@ -288,7 +308,7 @@ emitted decorator metadata.
 ### Verification gate
 
 `pnpm lint` · `pnpm typecheck` · `pnpm test` (58 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (89-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm test:e2e:api` (97-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -309,6 +329,22 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Sign-up and Google sign-in
+
+Email sign-up sends a **six digit verification code** (valid 30 minutes, single use, attempt-limited;
+five wrong guesses burn the code and the player requests a new one). The emailed link prefills the
+code, so one click also works. Google sign-in/sign-up is one button: the browser obtains a signed ID
+token from Google Identity Services, the API verifies it against Google's JWKS and merges the account
+when the verified address already exists. The button only appears when both `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+and the server-side `GOOGLE_CLIENT_ID` are configured.
+
+### Brand assets
+
+Logo and promotional artwork live in `apps/web/public/brand/` and are served straight from the site:
+`logo.svg`, `logo-512.png`, `logo-wordmark.svg|png`, `cover-1200x630.svg|png`,
+`cover-1280x720.svg|png`. Open Graph, the Twitter card, the PWA manifest and the JSON-LD graph all
+point at them, so a listing site can link `https://tugla.fun/brand/cover-1200x630.png` directly.
 
 ### Daily challenge
 

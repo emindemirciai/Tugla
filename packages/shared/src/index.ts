@@ -130,6 +130,24 @@ export const registerSchema = z.object({
 
 export const requestEmailVerificationSchema = z.object({ email: emailField });
 export const confirmTokenSchema = z.object({ token: z.string().min(20).max(200) });
+
+/** Length of the e-mail verification code sent on sign-up. */
+export const VERIFICATION_CODE_LENGTH = 6;
+
+/**
+ * E-mail verification accepts either the one-click link token or the short code
+ * from the same message; both resolve to the same single-use credential.
+ */
+export const confirmVerificationSchema = z.union([
+  confirmTokenSchema,
+  z.object({
+    email: z.string().email().max(254).toLowerCase(),
+    code: z
+      .string()
+      .trim()
+      .regex(new RegExp(`^\\d{${VERIFICATION_CODE_LENGTH}}$`), 'Code must be 6 digits'),
+  }),
+]);
 export const requestPasswordResetSchema = z.object({ email: emailField });
 export const confirmPasswordResetSchema = z.object({
   token: z.string().min(20).max(200),

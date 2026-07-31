@@ -62,6 +62,7 @@ export const PRIVATE_ROUTES = [
   '/shop',
   '/inbox',
   '/replays',
+  '/create',
   '/account',
   '/auth/reset',
   '/auth/verify',
@@ -130,7 +131,17 @@ export const faq: Record<Locale, { question: string; answer: string }[]> = {
     {
       question: 'Kendi bölümümü tasarlayabilir miyim?',
       answer:
-        'Evet. Görsel bölüm editörüyle kendi bölümlerini hazırlayıp doğrulattıktan sonra paylaşabilirsin; topluluk bölümleri moderasyondan geçer.',
+        'Evet. Görsel bölüm editörüyle kendi bölümlerini hazırlayıp test edebilir, incelemeye gönderdikten sonra paylaşabilirsin; topluluk bölümleri moderasyondan geçer, yayınlananlar beğeni alır ve bildirilebilir.',
+    },
+    {
+      question: 'Günün bölümü nedir?',
+      answer:
+        'Her gün yayınlanmış kampanya bölümlerinden biri tarihe göre seçilir ve herkes aynı bölümü oynar. Günlük skor tablosu her gece sıfırlanır.',
+    },
+    {
+      question: 'Nasıl hesap açılır?',
+      answer:
+        'E-posta ve parolayla ya da Google hesabınla saniyeler içinde. E-posta ile kayıtta adresine 6 haneli bir doğrulama kodu gönderilir; misafir hesap yoktur, böylece ilerlemen tüm cihazlarında saklanır.',
     },
   ],
   en: [
@@ -162,7 +173,17 @@ export const faq: Record<Locale, { question: string; answer: string }[]> = {
     {
       question: 'Can I build my own levels?',
       answer:
-        'Yes. The visual level editor lets you design levels, validate them and share them; community levels pass through moderation.',
+        'Yes. The visual level editor lets you design and test levels, then submit them for review; community levels pass through moderation, and published ones can be rated and reported.',
+    },
+    {
+      question: 'What is the daily challenge?',
+      answer:
+        'Each day one published campaign level is selected from the date, so everyone plays the same level. The daily leaderboard resets every night.',
+    },
+    {
+      question: 'How do I create an account?',
+      answer:
+        'With an email address and password, or with your Google account. Email sign-up sends a six digit verification code; there are no guest accounts, so your progress is kept across all your devices.',
     },
   ],
 };

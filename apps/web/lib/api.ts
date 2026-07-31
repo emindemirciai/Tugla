@@ -159,6 +159,12 @@ export const authApi = {
     setAccessToken(null);
   },
   me: () => api<PublicUser & { progress: unknown; balances: unknown[] }>('/auth/me'),
+  confirmVerificationCode: (email: string, code: string) =>
+    api<{ verified: boolean }>('/auth/email/verify/confirm', {
+      method: 'POST',
+      body: { email, code },
+      auth: false,
+    }),
   requestVerification: (email: string) =>
     api<{ sent: boolean }>('/auth/email/verify/request', {
       method: 'POST',

@@ -33,15 +33,23 @@ const MAIL_COPY: Record<
   MailLocale,
   Record<
     'verification' | 'reset' | 'deleted',
-    { subject: string; title: string; body: string; expiry: string; action: string }
+    {
+      subject: string;
+      title: string;
+      body: string;
+      expiry: string;
+      action: string;
+      codeLabel?: string;
+    }
   >
 > = {
   en: {
     verification: {
-      subject: 'verify your email',
+      subject: 'your verification code',
       title: 'Verify your email',
-      body: 'Confirm your email address to finish creating your account:',
-      expiry: 'The link expires in 24 hours.',
+      body: 'Enter this code to finish creating your account:',
+      codeLabel: 'Verification code',
+      expiry: 'The code expires in 30 minutes.',
       action: 'Verify email',
     },
     reset: {
@@ -61,10 +69,11 @@ const MAIL_COPY: Record<
   },
   tr: {
     verification: {
-      subject: 'e-postanı doğrula',
+      subject: 'doğrulama kodun',
       title: 'E-postanı doğrula',
-      body: 'Hesabını tamamlamak için e-posta adresini doğrula:',
-      expiry: 'Bağlantı 24 saat geçerlidir.',
+      body: 'Hesabını tamamlamak için bu kodu gir:',
+      codeLabel: 'Doğrulama kodu',
+      expiry: 'Kod 30 dakika geçerlidir.',
       action: 'E-postayı doğrula',
     },
     reset: {
@@ -152,14 +161,23 @@ export class MailService {
 <p style="color:#5d7186;font-size:12px;margin-top:40px">${config.APP_NAME} · ${config.ROOT_DOMAIN}</p></body></html>`;
   }
 
-  sendVerification(to: string, token: string, locale: MailLocale = 'en') {
-    const url = `${env().WEB_URL}/auth/verify?token=${encodeURIComponent(token)}`;
+  /**
+   * Sign-up verification. The message carries a six-digit code the player can
+   * type on any device plus a prefilled link for one-click confirmation — both
+   * redeem the same single-use credential.
+   */
+  sendVerification(to: string, code: string, locale: MailLocale = 'en') {
+    const url = `${env().WEB_URL}/auth/verify?email=${encodeURIComponent(to)}&code=${encodeURIComponent(code)}`;
     const copy = MAIL_COPY[locale].verification;
     return this.send({
       to,
       subject: `${env().APP_NAME} — ${copy.subject}`,
-      text: `${copy.body}\n${url}\n\n${copy.expiry}`,
-      html: this.layout(copy.title, `${copy.body} ${copy.expiry}`, { label: copy.action, url }),
+      text: `${copy.body}\n\n${copy.codeLabel}: ${code}\n\n${url}\n\n${copy.expiry}`,
+      html: this.layout(
+        copy.title,
+        `${copy.body}<br><br><span style="display:inline-block;font-size:30px;letter-spacing:10px;font-weight:700;background:#ece8ff;color:#3f31b5;border-radius:12px;padding:14px 22px">${code}</span><br><br>${copy.expiry}`,
+        { label: copy.action, url },
+      ),
     });
   }
 

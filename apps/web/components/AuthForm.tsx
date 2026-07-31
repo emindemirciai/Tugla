@@ -25,6 +25,7 @@ export function AuthForm({
   submitLabel,
   onSubmit,
   footer,
+  afterForm,
   children,
 }: {
   title: string;
@@ -33,6 +34,7 @@ export function AuthForm({
   submitLabel: string;
   onSubmit: (values: Record<string, string | boolean>) => Promise<void>;
   footer?: ReactNode;
+  afterForm?: ReactNode;
   children?: ReactNode;
 }) {
   const { t } = useI18n();
@@ -127,6 +129,7 @@ export function AuthForm({
           </button>
         </form>
 
+        {afterForm}
         {footer && <div className="auth-footer">{footer}</div>}
       </div>
     </main>

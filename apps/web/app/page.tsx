@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { LanguageSwitcher, useI18n } from '../lib/i18n';
@@ -26,7 +27,7 @@ export default function HomePage() {
     <main className="landing">
       <nav className="nav shell">
         <Link className="brand" href="/" aria-label={appName}>
-          <span className="brand-mark" />
+          <Image src="/brand/logo.svg" alt="" width={30} height={30} priority />
           {appName.toUpperCase()}
         </Link>
         <div className="nav-links">
@@ -113,7 +114,7 @@ export default function HomePage() {
 
       <footer className="footer shell">
         <div className="brand">
-          <span className="brand-mark" />
+          <Image src="/brand/logo.svg" alt="" width={26} height={26} />
           {appName.toUpperCase()}
         </div>
         <p>

@@ -49,12 +49,21 @@ export const metadata: Metadata = {
     url: config.webUrl,
     siteName: config.appName,
     locale: config.defaultLocale === 'tr' ? 'tr_TR' : 'en_US',
+    images: [
+      {
+        url: '/brand/cover-1200x630.png',
+        width: 1200,
+        height: 630,
+        alt: `${config.appName} — ${config.tagline}`,
+      },
+    ],
     alternateLocale: config.defaultLocale === 'tr' ? 'en_US' : 'tr_TR',
   },
   twitter: {
     card: 'summary_large_image',
     title: `${config.appName} — ${config.tagline}`,
     description: localizedShortDescription[config.defaultLocale],
+    images: ['/brand/cover-1200x630.png'],
     ...(config.twitter ? { site: config.twitter, creator: config.twitter } : {}),
   },
   robots: config.indexable
@@ -117,7 +126,7 @@ function structuredData() {
     '@id': `${config.webUrl}/#publisher`,
     name: config.appName,
     url: config.webUrl,
-    logo: absolute(config, '/icon.svg'),
+    logo: absolute(config, '/brand/logo.svg'),
   };
 
   const website = {
