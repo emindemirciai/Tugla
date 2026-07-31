@@ -1,6 +1,6 @@
 {
   "name": "@tugla/game-engine",
-  "version": "1.9.1",
+  "version": "2.0.0",
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

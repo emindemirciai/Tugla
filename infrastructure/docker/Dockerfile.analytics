@@ -1,0 +1,33 @@
+# Analyze.Your.Site — the project's own site-analytics dashboard.
+#
+# The upstream repository ships no Dockerfile, so this image clones a pinned ref
+# and builds it. Events are stored as JSON on disk (ANALYZE_DATA_DIR), which is
+# why the compose file mounts a volume there.
+#
+#   Repo: https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-
+FROM node:24-alpine AS build
+ARG ANALYTICS_REPO=https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git
+ARG ANALYTICS_REF=main
+RUN apk add --no-cache git
+WORKDIR /src
+RUN git clone --depth 1 --branch "$ANALYTICS_REF" "$ANALYTICS_REPO" .
+RUN npm ci --no-audit --no-fund
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+FROM node:24-alpine AS runtime
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    ANALYZE_DATA_DIR=/data
+WORKDIR /app
+COPY --from=build /src/package.json /src/package-lock.json ./
+COPY --from=build /src/node_modules ./node_modules
+COPY --from=build /src/.next ./.next
+COPY --from=build /src/public ./public
+RUN mkdir -p /data && addgroup -g 1001 -S app && adduser -S -u 1001 -G app app && chown -R app:app /app /data
+USER app
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 || exit 1
+CMD ["npx", "next", "start", "-p", "3000"]

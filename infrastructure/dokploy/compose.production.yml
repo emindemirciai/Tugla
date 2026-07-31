@@ -49,6 +49,8 @@ services:
         APP_TAGLINE: ${APP_TAGLINE:-Break the grid}
         WEB_URL: https://${ROOT_DOMAIN}
         DEFAULT_LOCALE: ${DEFAULT_LOCALE:-tr}
+        NEXT_PUBLIC_ANALYTICS_URL: ${NEXT_PUBLIC_ANALYTICS_URL:-}
+        NEXT_PUBLIC_ANALYTICS_SITE: ${NEXT_PUBLIC_ANALYTICS_SITE:-${ROOT_DOMAIN}}
     environment:
       NODE_ENV: production
       APP_NAME: ${APP_NAME:-Tuğla}
@@ -130,7 +132,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../postgres/init.sql:/docker-entrypoint-initdb.d/10-umami.sql:ro
     restart: unless-stopped
     shm_size: 256mb
     healthcheck:
@@ -190,26 +191,34 @@ services:
           memory: 768M
     networks: [private]
 
-  umami:
-    image: ghcr.io/umami-software/umami:postgresql-latest
+  # Site analytics: the project's own Analyze.Your.Site dashboard.
+  # Give it its own domain (e.g. analiz.${ROOT_DOMAIN}) in Dokploy.
+  analytics:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.analytics
+      args:
+        ANALYTICS_REPO: ${ANALYTICS_REPO:-https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git}
+        ANALYTICS_REF: ${ANALYTICS_REF:-main}
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/umami
-      DATABASE_TYPE: postgresql
-      APP_SECRET: ${UMAMI_APP_SECRET}
+      # Only the player site may post events; the tracker script is public.
+      ANALYZE_ALLOWED_ORIGIN: ${WEB_URL:-https://${ROOT_DOMAIN}}
+      ANALYZE_DATA_DIR: /data
+      ANALYZE_MAX_EVENTS: ${ANALYTICS_MAX_EVENTS:-20000}
+    volumes:
+      - analytics_data:/data
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     deploy:
       resources:
         limits:
           memory: 512M
-    networks: [public, private]
+    networks: [public]
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  analytics_data:
 
 networks:
   public:
