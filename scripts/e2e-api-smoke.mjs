@@ -456,6 +456,40 @@ try {
   const friends = await call('/social/friends', { token });
   check('friend list responds', Array.isArray(friends.body?.items));
 
+  console.log('\nDaily challenge');
+  const daily = await call('/game/daily', { token });
+  check('daily challenge responds', daily.status === 200, `status ${daily.status}`);
+  check('a level is scheduled for today', Boolean(daily.body?.level?.id));
+  check(
+    'the day key is the current UTC date',
+    daily.body?.day === new Date().toISOString().slice(0, 10),
+    daily.body?.day,
+  );
+
+  const dailyAgain = await call('/game/daily');
+  check(
+    'the pick is deterministic within the day',
+    dailyAgain.body?.level?.id === daily.body?.level?.id,
+  );
+  check(
+    'the daily challenge is public (no token needed)',
+    dailyAgain.status === 200,
+    `status ${dailyAgain.status}`,
+  );
+
+  if (daily.body?.level?.id) {
+    const dailySession = await call('/game/sessions', {
+      method: 'POST',
+      token,
+      body: { levelId: daily.body.level.id, mode: 'DAILY' },
+    });
+    check(
+      'a daily-mode session can be started',
+      dailySession.status === 201 || dailySession.status === 200,
+      `status ${dailySession.status}`,
+    );
+  }
+
   console.log('\nCommunity levels');
   const communityDefinition = {
     version: 1,

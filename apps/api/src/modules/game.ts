@@ -624,6 +624,84 @@ export class CommunityService {
   }
 }
 
+/**
+ * Daily challenge — "günün bölümü".
+ *
+ * One published campaign level is chosen per UTC day from a hash of the date, so
+ * every player gets the same level without anyone storing a schedule, and the
+ * pick is reproducible for support. Runs submitted in DAILY mode land on the
+ * `daily:<date>` leaderboard next to the usual rewards.
+ */
+@Injectable()
+export class DailyChallengeService {
+  constructor(private readonly database: DatabaseService) {}
+
+  private get db() {
+    return this.database.client;
+  }
+
+  /** Deterministic day key → offset, stable for the whole UTC day. */
+  static offsetForDay(dayKey: string, count: number) {
+    if (count <= 0) return 0;
+    let hash = 2166136261;
+    for (const character of dayKey) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619) >>> 0;
+    }
+    return hash % count;
+  }
+
+  static dayKey(date = new Date()) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  async today(userId?: string) {
+    const day = DailyChallengeService.dayKey();
+    const where = {
+      status: 'PUBLISHED' as const,
+      type: { in: ['NORMAL', 'MINI_BOSS'] } as Prisma.LevelWhereInput['type'],
+    };
+    const count = await this.db.level.count({ where });
+    if (!count) return { day, level: null, board: [], mine: null };
+
+    const [level] = await this.db.level.findMany({
+      where,
+      orderBy: [{ world: 'asc' }, { index: 'asc' }],
+      skip: DailyChallengeService.offsetForDay(day, count),
+      take: 1,
+      select: {
+        id: true,
+        name: true,
+        world: true,
+        index: true,
+        theme: true,
+        difficulty: true,
+        estimatedSeconds: true,
+      },
+    });
+
+    const boardKey = `daily:${day}`;
+    const board = await this.db.leaderboardEntry.findMany({
+      where: { boardKey },
+      orderBy: { score: 'desc' },
+      take: 20,
+      select: {
+        score: true,
+        user: { select: { id: true, username: true, displayName: true } },
+      },
+    });
+
+    const mine = userId
+      ? await this.db.leaderboardEntry.findUnique({
+          where: { boardKey_userId: { boardKey, userId } },
+          select: { score: true, updatedAt: true },
+        })
+      : null;
+
+    return { day, level: level ?? null, board, mine };
+  }
+}
+
 @ApiTags('game')
 @Controller('game')
 export class GameController {
@@ -631,6 +709,7 @@ export class GameController {
     private readonly games: GameService,
     private readonly database: DatabaseService,
     private readonly community: CommunityService,
+    private readonly daily: DailyChallengeService,
   ) {}
 
   /** Public catalogue so the landing page can show worlds before sign-in. */
@@ -698,6 +777,12 @@ export class GameController {
     });
     if (!level) throw new NotFoundException('Level not found');
     return level;
+  }
+
+  @Get('daily')
+  @Public()
+  dailyChallenge(@Req() request: AuthenticatedRequest) {
+    return this.daily.today(request.user?.sub);
   }
 
   @Get('community/levels')

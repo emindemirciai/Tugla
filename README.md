@@ -57,6 +57,13 @@ gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi 
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Günün bölümü
+
+Her UTC gününde yayınlanmış kampanya bölümlerinden biri **tarihin hash'iyle** seçilir: herkes aynı
+bölümü oynar, hiçbir yerde takvim tutulmaz ve seçim destek için tekrar üretilebilir. `DAILY` modunda
+gönderilen doğrulanmış skorlar `daily:<tarih>` tablosuna yazılır (günün en iyisi), bölüm seçimi ve
+tablo `/play` ekranının en üstünde görünür. Uç nokta herkese açıktır: `GET /api/game/daily`.
+
 ### Site analitiği
 
 Ziyaretçi istatistikleri üçüncü taraf bir servisle değil, projenin kendi panosuyla toplanır:
@@ -166,7 +173,7 @@ pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
 pnpm test            # 58 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 83 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 89 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
 ```
 
@@ -217,7 +224,13 @@ Commit başlıkları Türkçe ve şu biçimdedir:
 feat: topluluk bölümleri — oyuncu editörü ve inceleme akışı (API, web, smoke) · v1.4
 ```
 
-### Depoyu uzak sunucuya bağlama (Claude Code)
+### Ajanlar için talimatlar (Antigravity, Cursor, Claude Code…)
+
+Kurallar, komutlar, tuzaklar ve commit biçimi araç bağımsız **`AGENTS.md`** dosyasındadır;
+`CLAUDE.md` yalnızca oraya işaret eder. Yeni bir ajanla çalışmaya başlarken tek okuması gereken dosya
+budur.
+
+### Depoyu uzak sunucuya bağlama
 
 Depo temiz ve tüm işler commit'lenmiş halde teslim edilir; uzak depo bağlı değildir. Bağlamak ve
 `main` dalını yüklemek için:
@@ -275,7 +288,7 @@ emitted decorator metadata.
 ### Verification gate
 
 `pnpm lint` · `pnpm typecheck` · `pnpm test` (58 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (83-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm test:e2e:api` (89-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -296,6 +309,13 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Daily challenge
+
+One published campaign level is picked per UTC day from a hash of the date, so everyone plays the
+same level, no schedule is stored anywhere and the pick is reproducible for support. Verified runs
+submitted in `DAILY` mode land on the `daily:<date>` board (best score of the day). Public endpoint:
+`GET /api/game/daily`.
 
 ### Site analytics
 

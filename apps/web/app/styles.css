@@ -1739,3 +1739,10 @@ textarea:focus {
   top: 12px;
   text-decoration: none;
 }
+.daily-card {
+  border-color: var(--brand);
+  background: linear-gradient(180deg, var(--brand-soft), var(--surface) 62%);
+}
+.daily-card .hub-table {
+  margin-top: 4px;
+}

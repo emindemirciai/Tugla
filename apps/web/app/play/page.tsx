@@ -21,7 +21,7 @@ const LEVEL_TYPE_KEYS: Record<string, TranslationKey | ''> = {
 function PlayInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { user, loading, signOut } = useSession();
 
   const [worlds, setWorlds] = useState<{ world: number; theme: string; levels: number }[]>([]);
@@ -35,6 +35,7 @@ function PlayInner() {
     params.get('verify') === 'sent' ? t('play.banner.verifySent') : null,
   );
   const [offlineQueued, setOfflineQueued] = useState(0);
+  const [daily, setDaily] = useState<Awaited<ReturnType<typeof gameApi.daily>> | null>(null);
 
   // No guest accounts: the game requires a signed-in player.
   useEffect(() => {
@@ -47,6 +48,10 @@ function PlayInner() {
       .worlds()
       .then((result) => setWorlds(result.items))
       .catch(() => setError(t('play.error.worlds')));
+    void gameApi
+      .daily()
+      .then(setDaily)
+      .catch(() => undefined);
     setOfflineQueued(pendingOfflineRuns());
     void flushOfflineRuns(0).then((count) => {
       if (count > 0) setBanner(t('play.banner.offlineSynced', { count }));
@@ -64,11 +69,11 @@ function PlayInner() {
       .finally(() => setLevelsLoading(false));
   }, [user, world]);
 
-  const startLevel = useCallback(async (levelId: string) => {
+  const startLevel = useCallback(async (levelId: string, mode?: 'DAILY') => {
     setStarting(levelId);
     setError(null);
     try {
-      const start = await gameApi.startSession(levelId);
+      const start = await gameApi.startSession(levelId, mode);
       cacheLevel(start.level);
       setSession(start);
     } catch (startError) {
@@ -131,6 +136,55 @@ function PlayInner() {
       {error && <div className="banner banner-error">{error}</div>}
 
       <HubTabs />
+
+      {daily?.level && (
+        <section className="card daily-card" aria-label={t('daily.title')}>
+          <div className="card-head">
+            <strong>{t('daily.title')}</strong>
+            <span className="tag">{daily.day}</span>
+          </div>
+          <p className="muted">{t('daily.subtitle')}</p>
+          <div className="card-foot">
+            <span className="muted">
+              {daily.level.world}-{daily.level.index} · {daily.level.name} ·{' '}
+              {daily.mine
+                ? `${t('daily.myBest')}: ${daily.mine.score.toLocaleString(locale)}`
+                : t('daily.notPlayed')}
+            </span>
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={starting !== null}
+              onClick={() => void startLevel(daily.level!.id, 'DAILY')}
+            >
+              {t('daily.play')}
+            </button>
+          </div>
+          {daily.board.length > 0 && (
+            <table className="hub-table">
+              <thead>
+                <tr>
+                  <th>{t('daily.rank')}</th>
+                  <th>{t('daily.player')}</th>
+                  <th>{t('daily.score')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {daily.board.slice(0, 5).map((row, index) => (
+                  <tr key={row.user.id}>
+                    <td>{index + 1}</td>
+                    <td>
+                      {row.user.displayName}
+                      <span className="muted"> @{row.user.username}</span>
+                    </td>
+                    <td>{row.score.toLocaleString(locale)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
 
       <section className="world-strip" aria-label={t('play.worldsAria')}>
         {worlds.map((entry) => (

@@ -1,4 +1,8 @@
-# CLAUDE.md — working agreement for Claude Code
+# CLAUDE.md
+
+> Bu depo araç bağımsız **[AGENTS.md](./AGENTS.md)** dosyasını kullanır; kurallar, komutlar,
+> tuzaklar ve commit biçimi orada. Claude Code bu dosyayı okuduğunda AGENTS.md'yi de okumalıdır.
+> This repository keeps its instructions in tool-agnostic **AGENTS.md**.
 
 > Bu dosya Claude Code tarafından otomatik okunur. / This file is read automatically by Claude Code.
 

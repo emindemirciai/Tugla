@@ -277,6 +277,21 @@ export const gameApi = {
     }>('/game/sessions/complete', { method: 'POST', body: result }),
   replays: () => api<{ items: Record<string, unknown>[] }>('/game/replays'),
   replay: (sessionId: string) => api<Record<string, unknown>>(`/game/replays/${sessionId}`),
+  daily: () =>
+    api<{
+      day: string;
+      level: {
+        id: string;
+        name: string;
+        world: number;
+        index: number;
+        theme: string;
+        difficulty: number;
+        estimatedSeconds: number;
+      } | null;
+      board: { score: number; user: { id: string; username: string; displayName: string } }[];
+      mine: { score: number; updatedAt: string } | null;
+    }>('/game/daily'),
   communityLevels: () =>
     api<{
       items: {

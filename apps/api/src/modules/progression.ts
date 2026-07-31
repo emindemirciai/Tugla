@@ -179,6 +179,21 @@ export class ProgressionService {
         create: { boardKey: globalKey, userId, score: session.score },
       });
 
+      // The daily challenge keeps its own board: best score of the day wins.
+      if (session.mode === 'DAILY') {
+        const dailyKey = `daily:${dayKey()}`;
+        const previous = await tx.leaderboardEntry.findUnique({
+          where: { boardKey_userId: { boardKey: dailyKey, userId } },
+        });
+        if (!previous || session.score > previous.score) {
+          await tx.leaderboardEntry.upsert({
+            where: { boardKey_userId: { boardKey: dailyKey, userId } },
+            update: { score: session.score },
+            create: { boardKey: dailyKey, userId, score: session.score },
+          });
+        }
+      }
+
       // Season standing accumulates across the whole season window so the
       // rollover job has something concrete to rank and reward.
       const season = await tx.season.findFirst({ where: { active: true } });
