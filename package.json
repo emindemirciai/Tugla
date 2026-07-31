@@ -1,6 +1,6 @@
 {
   "name": "tugla",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "packageManager": "pnpm@11.10.0",
   "engines": {
@@ -24,7 +24,8 @@
     "test:e2e:api": "node scripts/e2e-api-smoke.mjs",
     "build:packages": "pnpm --filter @tugla/shared --filter @tugla/game-engine --filter @tugla/database build",
     "build:preview": "node scripts/build-preview.mjs",
-    "release:version": "node scripts/set-version.mjs"
+    "release:version": "node scripts/set-version.mjs",
+    "check:docker": "node scripts/check-docker-context.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.28.0",

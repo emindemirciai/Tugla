@@ -11,6 +11,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS build
 COPY tsconfig.base.json ./
+# The app build scripts call ../../scripts/assert-build-env.mjs, so the folder
+# has to exist inside the image as well.
+COPY scripts scripts
 COPY apps/web apps/web
 COPY packages/shared packages/shared
 COPY packages/game-engine packages/game-engine

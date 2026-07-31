@@ -40,6 +40,8 @@ pnpm build:preview          # preview/ui-preview.html
 - **Build sırasında `NODE_ENV` ayarlama.** `next build` zaten production kullanır; farklı bir değer
   `/404` üretimini kırar. `scripts/assert-build-env.mjs` bunu erken durdurur.
 - Migration'lar `prisma migrate deploy` ile uygulanır (`db push` değil).
+- **Bir build script'i `../../scripts/...` çağırıyorsa ilgili Dockerfile o klasörü `COPY` etmeli.**
+  Yerelde görünmez, yalnızca imaj derlemesinde patlar; `pnpm check:docker` bunu CI'da yakalar.
 - `WEB_URL`, `APP_NAME`, `APP_TAGLINE`, `DEFAULT_LOCALE`, `NEXT_PUBLIC_ANALYTICS_URL` metadata'ya
   build sırasında gömülür → Docker **build argümanıdır**.
 

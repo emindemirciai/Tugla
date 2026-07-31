@@ -18,6 +18,13 @@ Use `infrastructure/dokploy/compose.production.yml`. Assign public domains to `w
 statistics, `analytics` (`analiz.tugla.fun`). PostgreSQL, Redis and MinIO stay on the internal
 network.
 
+### Verifying an image build
+
+`pnpm check:docker` asserts that every path a workspace build script needs (for example
+`scripts/assert-build-env.mjs`) is actually copied into the image, and that both Next.js apps still
+emit `output: 'standalone'` — the runtime stages copy `.next/standalone`. It runs in CI before the
+image builds so a missing `COPY` fails there instead of on the deployment host.
+
 ### Build arguments matter
 
 Next.js bakes metadata (canonical URLs, hreflang, JSON-LD, the Open Graph image) while it builds the
