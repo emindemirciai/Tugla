@@ -666,6 +666,32 @@ try {
     );
   }
 
+  console.log('\nInbox is fed by real events');
+  const beforeInbox = await call('/notifications', { token });
+  const beforeCount = (beforeInbox.body?.items ?? []).length;
+
+  const friendRequest = await call('/social/friends', {
+    method: 'POST',
+    token: adminToken,
+    body: { userId: profile.body?.id },
+  });
+  check(
+    'friend request is accepted by the API',
+    friendRequest.status < 400,
+    `status ${friendRequest.status}`,
+  );
+
+  const afterInbox = await call('/notifications', { token });
+  const requestNotice = (afterInbox.body?.items ?? []).find(
+    (item) => item.type === 'FRIEND_REQUEST',
+  );
+  check('friend request lands in the addressee inbox', Boolean(requestNotice));
+  check(
+    'inbox grew by the new notification',
+    (afterInbox.body?.items ?? []).length > beforeCount,
+    `${beforeCount} -> ${(afterInbox.body?.items ?? []).length}`,
+  );
+
   console.log('\nAdmin authorisation');
   const forbidden = await call('/admin/system/overview', { token });
   check(

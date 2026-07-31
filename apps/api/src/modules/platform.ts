@@ -333,10 +333,21 @@ export class PlatformController {
       if (open >= PlatformController.AUTO_REVIEW_THRESHOLD) {
         const level = await this.db.level.findFirst({
           where: { id: data.targetId, type: 'COMMUNITY', status: 'PUBLISHED' },
-          select: { id: true, name: true },
+          select: { id: true, name: true, authorId: true },
         });
         if (level) {
           await this.db.level.update({ where: { id: level.id }, data: { status: 'REVIEW' } });
+          if (level.authorId) {
+            await this.db.notification.create({
+              data: {
+                userId: level.authorId,
+                type: 'LEVEL_AUTO_REVIEW',
+                title: level.name,
+                body: 'Your level was hidden pending review after several player reports.',
+                data: { levelId: level.id, reports: open },
+              },
+            });
+          }
           await this.db.auditLog.create({
             data: {
               actorId: null,

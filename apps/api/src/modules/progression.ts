@@ -18,6 +18,29 @@ export interface RewardBreakdown {
   personalBest: boolean;
 }
 
+/**
+ * Reads reward tiers from a season's free-form JSON.
+ * Accepted shape: `{ "top1": { "crystals": 500 }, "top10": { "crystals": 150 } }`
+ * Unknown keys are ignored rather than crashing the scheduled job.
+ */
+export const seasonRewardTiers = (rewards: unknown) => {
+  if (!rewards || typeof rewards !== 'object') return [];
+  return Object.entries(rewards as Record<string, unknown>)
+    .map(([key, value]) => {
+      const match = /^top(\d+)$/i.exec(key);
+      if (!match || typeof value !== 'object' || value === null) return null;
+      const payout: Record<string, number> = {};
+      for (const [currency, amount] of Object.entries(value as Record<string, unknown>)) {
+        if (typeof amount === 'number' && Number.isFinite(amount) && amount > 0) {
+          payout[currency] = Math.floor(amount);
+        }
+      }
+      return Object.keys(payout).length ? { maxRank: Number(match[1]), payout } : null;
+    })
+    .filter((tier): tier is { maxRank: number; payout: Record<string, number> } => tier !== null)
+    .sort((a, b) => a.maxRank - b.maxRank);
+};
+
 /** ISO week key, used to bucket weekly tasks and league seasons. */
 export const weekKey = (date = new Date()) => {
   const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -150,15 +173,23 @@ export class ProgressionService {
       }
 
       const globalKey = `global:${weekKey()}`;
-      const globalEntry = await tx.leaderboardEntry.findUnique({
-        where: { boardKey_userId: { boardKey: globalKey, userId } },
-      });
       await tx.leaderboardEntry.upsert({
         where: { boardKey_userId: { boardKey: globalKey, userId } },
         update: { score: { increment: session.score } },
         create: { boardKey: globalKey, userId, score: session.score },
       });
-      void globalEntry;
+
+      // Season standing accumulates across the whole season window so the
+      // rollover job has something concrete to rank and reward.
+      const season = await tx.season.findFirst({ where: { active: true } });
+      if (season) {
+        const seasonKey = `season:${season.key}`;
+        await tx.leaderboardEntry.upsert({
+          where: { boardKey_userId: { boardKey: seasonKey, userId } },
+          update: { score: { increment: session.score } },
+          create: { boardKey: seasonKey, userId, score: session.score },
+        });
+      }
 
       return { playerLevel, unlockedLevel, personalBest };
     });
@@ -433,6 +464,82 @@ export class ProgressionService {
       }
     }
     this.logger.log(`Settled ${finished.length} league(s)`);
+  }
+
+  /**
+   * Closes finished seasons.
+   *
+   * Runs hourly: ranks the season board, pays the reward tiers declared on the
+   * season, tells each winner in their inbox, then activates the next season by
+   * number if one is scheduled. Everything happens in one transaction so a
+   * season can never be paid twice.
+   */
+  @Cron(CronExpression.EVERY_HOUR)
+  async settleFinishedSeasons() {
+    const now = new Date();
+    const finished = await this.db.season.findMany({
+      where: { active: true, endsAt: { lt: now } },
+    });
+
+    for (const season of finished) {
+      const standings = await this.db.leaderboardEntry.findMany({
+        where: { boardKey: `season:${season.key}` },
+        orderBy: { score: 'desc' },
+        take: 100,
+        select: { userId: true, score: true },
+      });
+
+      const tiers = seasonRewardTiers(season.rewards);
+      await this.db.$transaction(async (tx) => {
+        for (const [index, entry] of standings.entries()) {
+          const rank = index + 1;
+          const reward = tiers.find((tier) => rank <= tier.maxRank);
+          if (!reward) continue;
+
+          for (const [currency, amount] of Object.entries(reward.payout)) {
+            if (!amount) continue;
+            await this.adjustWallet(
+              tx,
+              entry.userId,
+              currency.toUpperCase() === 'CRYSTALS' ? 'CRYSTALS' : 'CREDITS',
+              amount,
+              'SEASON_REWARD',
+              season.id,
+            );
+          }
+
+          await tx.notification.create({
+            data: {
+              userId: entry.userId,
+              type: 'SEASON_RESULT',
+              title: `${season.name}`,
+              body: `Season closed — you finished #${rank} with ${entry.score.toLocaleString('en-US')} points.`,
+              data: { seasonKey: season.key, rank, score: entry.score },
+            },
+          });
+        }
+
+        await tx.season.update({ where: { id: season.id }, data: { active: false } });
+
+        const next = await tx.season.findFirst({
+          where: { number: { gt: season.number }, endsAt: { gt: now } },
+          orderBy: { number: 'asc' },
+        });
+        if (next) await tx.season.update({ where: { id: next.id }, data: { active: true } });
+
+        await tx.auditLog.create({
+          data: {
+            actorId: null,
+            action: 'SEASON_SETTLED',
+            targetType: 'SEASON',
+            targetId: season.id,
+            after: { ranked: standings.length, next: next?.key ?? null },
+          },
+        });
+      });
+
+      this.logger.log(`Season ${season.key} settled for ${standings.length} players`);
+    }
   }
 
   /** Expires replays past their retention window. */

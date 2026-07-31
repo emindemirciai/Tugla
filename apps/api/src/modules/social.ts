@@ -42,20 +42,51 @@ export class SocialService {
 
   async requestFriend(userId: string, targetId: string) {
     if (userId === targetId) throw new BadRequestException('Cannot friend yourself');
-    return this.database.client.friendship.upsert({
+    const friendship = await this.database.client.friendship.upsert({
       where: {
         requesterId_addresseeId: { requesterId: userId, addresseeId: targetId },
       },
       update: { status: 'PENDING' },
       create: { requesterId: userId, addresseeId: targetId },
     });
+
+    // Without an inbox entry the addressee would never learn about the request.
+    const requester = await this.database.client.user.findUnique({
+      where: { id: userId },
+      select: { displayName: true, username: true },
+    });
+    await this.database.client.notification.create({
+      data: {
+        userId: targetId,
+        type: 'FRIEND_REQUEST',
+        title: requester?.displayName ?? 'New friend request',
+        body: `@${requester?.username ?? 'a player'} wants to be friends.`,
+        data: { friendshipId: friendship.id, requesterId: userId },
+      },
+    });
+    return friendship;
   }
 
   async acceptFriend(userId: string, friendshipId: string) {
-    return this.database.client.friendship.update({
+    const friendship = await this.database.client.friendship.update({
       where: { id: friendshipId, addresseeId: userId },
       data: { status: 'ACCEPTED' },
     });
+
+    const accepter = await this.database.client.user.findUnique({
+      where: { id: userId },
+      select: { displayName: true, username: true },
+    });
+    await this.database.client.notification.create({
+      data: {
+        userId: friendship.requesterId,
+        type: 'FRIEND_ACCEPTED',
+        title: accepter?.displayName ?? 'Friend request accepted',
+        body: `@${accepter?.username ?? 'a player'} accepted your friend request.`,
+        data: { friendshipId: friendship.id },
+      },
+    });
+    return friendship;
   }
 }
 
