@@ -11,12 +11,26 @@ interface Analytics {
   economy: { reason: string; total: number }[];
 }
 
+const analyticsUrl = process.env.NEXT_PUBLIC_ANALYTICS_URL?.trim();
+
 export default function AnalyticsPage() {
   const { data, loading, error } = useAdminData<Analytics>('/admin/system/analytics?days=14');
 
   return (
     <AdminShell title={t('analytics.title')}>
       <StatusNote loading={loading} error={error} />
+
+      <section className="card-note">
+        <h2 className="admin-section-title">{t('analytics.siteTitle')}</h2>
+        <p className="admin-note">{t('analytics.siteBody')}</p>
+        {analyticsUrl ? (
+          <a className="admin-env" href={analyticsUrl} target="_blank" rel="noreferrer noopener">
+            {t('analytics.siteOpen')} ↗
+          </a>
+        ) : (
+          <p className="admin-note">{t('analytics.siteOff')}</p>
+        )}
+      </section>
       {data && (
         <>
           <h2 className="admin-section-title">{t('analytics.daily')}</h2>

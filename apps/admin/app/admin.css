@@ -748,3 +748,17 @@ button.primary:hover {
   gap: 8px;
   align-items: flex-start;
 }
+.card-note {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  box-shadow: var(--shadow-sm);
+}
+.card-note a.admin-env {
+  text-decoration: none;
+}

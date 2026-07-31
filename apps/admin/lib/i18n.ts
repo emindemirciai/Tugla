@@ -223,6 +223,12 @@ const tr = {
   'analytics.economy': 'Ekonomi akışı (kaynak bazında)',
   'analytics.source': 'Kaynak',
   'analytics.net': 'Net hareket',
+  'analytics.siteTitle': 'Site trafiği',
+  'analytics.siteBody':
+    'Ziyaretçi, sayfa ve ülke kırılımı ayrı bir panelde (Analyze.Your.Site) tutulur. Buradaki tablolar oyun verisidir.',
+  'analytics.siteOpen': 'Trafik panelini aç',
+  'analytics.siteOff':
+    'Site analitiği yapılandırılmadı: NEXT_PUBLIC_ANALYTICS_URL boş olduğu sürece izleme betiği hiçbir sayfaya eklenmez.',
   // audit
   'audit.title': 'Audit log',
   'audit.filterPlaceholder': 'Eylem filtrele (ör. LEVEL, USER_BAN)',
@@ -458,6 +464,12 @@ const en: Record<AdminTranslationKey, string> = {
   'analytics.economy': 'Economy flow (by source)',
   'analytics.source': 'Source',
   'analytics.net': 'Net movement',
+  'analytics.siteTitle': 'Site traffic',
+  'analytics.siteBody':
+    'Visitors, pages and countries live in a separate dashboard (Analyze.Your.Site). The tables here are game data.',
+  'analytics.siteOpen': 'Open the traffic dashboard',
+  'analytics.siteOff':
+    'Site analytics is not configured: while NEXT_PUBLIC_ANALYTICS_URL is empty no tracking script is added to any page.',
   'audit.title': 'Audit log',
   'audit.filterPlaceholder': 'Filter action (e.g. LEVEL, USER_BAN)',
   'audit.action': 'Action',

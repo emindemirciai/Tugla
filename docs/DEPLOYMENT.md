@@ -4,17 +4,19 @@
 
 Point the following records at the VPS:
 
-- `example.com` → web
-- `api.example.com` → API
-- `admin.example.com` → admin
-- `analytics.example.com` → Umami (optional)
+- `tugla.fun` → web
+- `api.tugla.fun` → API
+- `admin.tugla.fun` → admin
+- `analiz.tugla.fun` → site analytics (optional)
 
-Replace `example.com` with `ROOT_DOMAIN`.
+The domain is never hardcoded: everything follows `ROOT_DOMAIN` and the URL variables.
 
 ## 2. Create the Dokploy compose application
 
-Use `infrastructure/dokploy/compose.production.yml`. Assign public domains only to `web`, `api`,
-`admin` and optionally `umami`. PostgreSQL, Redis and MinIO stay on the internal network.
+Use `infrastructure/dokploy/compose.production.yml`. Assign public domains to `web`
+(`tugla.fun`), `api` (`api.tugla.fun`), `admin` (`admin.tugla.fun`) and, if you want site traffic
+statistics, `analytics` (`analiz.tugla.fun`). PostgreSQL, Redis and MinIO stay on the internal
+network.
 
 ### Build arguments matter
 
@@ -90,3 +92,21 @@ checks and retain the previous healthy deployment for rollback.
 Mount a backup directory and run `infrastructure/backups/backup.sh` daily. A backup on the same VPS
 is not disaster recovery. Configure a second S3/R2/B2 destination before launch, encrypt every
 archive and perform a quarterly restore drill.
+
+## 8. Site analytics (Analyze.Your.Site)
+
+Traffic statistics come from the project's own dashboard rather than a third-party service:
+<https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et->
+
+- The `analytics` service builds that repository from `ANALYTICS_REPO` at `ANALYTICS_REF` using
+  `infrastructure/docker/Dockerfile.analytics` (the upstream repo ships no Dockerfile).
+- Events are stored as JSON on the `analytics_data` volume (`ANALYZE_DATA_DIR=/data`,
+  capped by `ANALYTICS_MAX_EVENTS`). There is no database dependency.
+- `ANALYZE_ALLOWED_ORIGIN` is set to `WEB_URL`, so only the player site may post events.
+- The player app injects the tracker **only** when `NEXT_PUBLIC_ANALYTICS_URL` is set. Because Next.js
+  bakes public variables at build time, it is passed as a build argument as well — after changing it,
+  rebuild the web image.
+- The admin panel's Analytics screen links to the dashboard when configured and says plainly that it
+  is off when it is not.
+
+Pin `ANALYTICS_REF` to a tag or commit for reproducible deployments; `main` follows upstream.

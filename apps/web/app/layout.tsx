@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { PwaRegistration } from '../components/PwaRegistration';
+import { SiteAnalytics } from '../components/SiteAnalytics';
 import { LocaleProvider } from '../lib/i18n';
 import {
   absolute,
@@ -159,6 +160,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <SessionProvider>{children}</SessionProvider>
         </LocaleProvider>
         <PwaRegistration />
+        <SiteAnalytics />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData()) }}

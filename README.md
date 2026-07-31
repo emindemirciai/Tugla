@@ -57,6 +57,16 @@ gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi 
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Site analitiği
+
+Ziyaretçi istatistikleri üçüncü taraf bir servisle değil, projenin kendi panosuyla toplanır:
+[Analyze.Your.Site](https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-).
+`analytics` servisi bu depoyu `ANALYTICS_REF` sürümünden derler, olayları kendi biriminde JSON olarak
+saklar ve yalnızca `WEB_URL` kaynağından olay kabul eder. Oyuncu uygulaması izleme betiğini
+**yalnızca `NEXT_PUBLIC_ANALYTICS_URL` doluysa** ekler; boşsa hiçbir sayfada hiçbir izleyici yoktur.
+Yönetim panelindeki Analitik ekranı oyun verisini gösterir ve yapılandırılmışsa trafik panosuna
+bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
+
 ### Sezonlar ve bildirimler
 
 Sezonlar artık gerçekten kapanıyor: her saat çalışan görev, süresi dolan aktif sezonun
@@ -286,6 +296,14 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Site analytics
+
+Traffic statistics come from the project's own dashboard
+([Analyze.Your.Site](https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-)) instead of
+a third-party service. The `analytics` compose service builds it from a pinned ref, stores events as
+JSON on its own volume and accepts events only from `WEB_URL`. The player app injects the tracker
+**only** when `NEXT_PUBLIC_ANALYTICS_URL` is set — otherwise no page carries any tracker at all.
 
 ### Seasons and notifications
 
