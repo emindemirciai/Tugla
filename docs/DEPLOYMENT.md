@@ -116,4 +116,14 @@ Traffic statistics come from the project's own dashboard rather than a third-par
 - The admin panel's Analytics screen links to the dashboard when configured and says plainly that it
   is off when it is not.
 
-Pin `ANALYTICS_REF` to a tag or commit for reproducible deployments; `main` follows upstream.
+Pin `ANALYTICS_REF` to a tag or commit for reproducible deployments; `main` follows upstream — an
+upstream change can otherwise break a deployment that touched none of your own code.
+
+The image is built against a repository we do not control, so the Dockerfile only assumes what the
+upstream build guarantees: `package.json`, `package-lock.json`, `node_modules` and `.next`. The
+optional `public/` folder is created in the build stage, because upstream currently ships none and a
+missing directory would abort the whole compose build. `pnpm check:docker` enforces this rule for
+every cross-stage `COPY`.
+
+Its build downloads Google Fonts (`next/font/google`), so the builder needs outbound HTTPS to
+`fonts.googleapis.com`.

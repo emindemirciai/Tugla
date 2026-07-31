@@ -7,6 +7,7 @@
  * only on the deployment host with a confusing "Cannot find module" — this check
  * turns that into a red CI step instead.
  */
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
@@ -46,6 +47,56 @@ for (const target of targets) {
   }
 }
 
+// Every `COPY --from=<stage>` source must be guaranteed to exist, otherwise the
+// image build dies with "not found" only on the deployment host. Repository
+// paths are checked against the working tree; paths inside an externally cloned
+// source tree must be created explicitly (RUN mkdir -p) or be a build artifact.
+const BUILD_ARTIFACTS = ['.next', '/dist', 'node_modules'];
+
+/** Files whose existence is already proven by a command the stage runs. */
+const PROVEN_BY = [{ command: /npm ci/, files: ['package.json', 'package-lock.json'] }];
+
+for (const target of targets.concat([
+  { dockerfile: 'infrastructure/docker/Dockerfile.analytics' },
+])) {
+  const dockerfile = await readFile(join(root, target.dockerfile), 'utf8');
+  const created = [...dockerfile.matchAll(/RUN\s+mkdir\s+-p\s+([^\s&|]+)/g)].map(
+    (match) => match[1],
+  );
+
+  for (const match of dockerfile.matchAll(/^COPY\s+--from=\S+(?:\s+--chown=\S+)?\s+(.+)$/gm)) {
+    const parts = match[1].trim().split(/\s+/);
+    const sources = parts.slice(0, -1); // last token is the destination
+    for (const source of sources) {
+      if (BUILD_ARTIFACTS.some((artifact) => source.includes(artifact))) continue;
+      if (created.some((path) => source === path || source.startsWith(`${path}/`))) continue;
+      if (
+        PROVEN_BY.some(
+          (rule) =>
+            rule.command.test(dockerfile) && rule.files.some((file) => source.endsWith(`/${file}`)),
+        )
+      )
+        continue;
+
+      if (source.startsWith('/repo/')) {
+        const relative = source.slice('/repo/'.length);
+        if (!existsSync(join(root, relative))) {
+          failures.push(
+            `${target.dockerfile}: COPY --from references "${source}" but "${relative}" does not exist in the repository`,
+          );
+        }
+      } else if (!source.startsWith('/repo')) {
+        // External source tree (e.g. a cloned upstream project): we cannot see
+        // it, so it must be created explicitly in the build stage.
+        failures.push(
+          `${target.dockerfile}: COPY --from references "${source}" from an external source tree; ` +
+            `add "RUN mkdir -p ${source}" in the build stage so the copy cannot fail`,
+        );
+      }
+    }
+  }
+}
+
 // The runtime stages copy Next.js standalone output; that needs the config flag.
 for (const app of ['apps/web', 'apps/admin']) {
   const files = await readdir(join(root, app));
@@ -65,4 +116,4 @@ if (failures.length) {
   );
   process.exit(1);
 }
-console.log(`Docker build context OK (${targets.length} Dockerfiles checked).`);
+console.log(`Docker build context OK (${targets.length + 1} Dockerfiles checked).`);
