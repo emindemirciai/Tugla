@@ -41,7 +41,9 @@ pnpm --filter @tugla/web dev         # oyuncu uygulaması :3000
 pnpm --filter @tugla/admin dev       # yönetim paneli :3001
 ```
 
-Önemli: `apps/*` paketleri `@tugla/*` paketlerini **derlenmiş `dist`** üzerinden tüketir; paketlerde
+Önemli: Build adımlarında `NODE_ENV` ayarlama — `next build` zaten `production` kullanır ve farklı
+bir değer `/404` üretimini kırar (`scripts/assert-build-env.mjs` bunu erkenden ve anlaşılır biçimde
+durdurur). Ayrıca `apps/*` paketleri `@tugla/*` paketlerini **derlenmiş `dist`** üzerinden tüketir; paketlerde
 değişiklik yaptıysan `pnpm build:packages` çalıştır. API, NestJS decorator metadata gereksinimi nedeniyle
 yalnızca `tsc` çıktısından (`apps/api/dist`) çalıştırılır.
 

@@ -346,6 +346,14 @@ const tr = {
   'theme.system': 'Cihaz',
   'theme.note': 'Gece modu, oyun sahnesiyle aynı menekşe tonlarını arayüze taşır.',
   'a11y.skip': 'İçeriğe geç',
+  'notFound.title': 'Bu sayfa bulunamadı',
+  'notFound.body':
+    'Bağlantı eskimiş ya da yanlış yazılmış olabilir. Ana sayfadan devam edebilirsin.',
+  'notFound.home': 'Ana sayfaya dön',
+  'notFound.play': 'Oynamaya devam et',
+  'error.title': 'Bir şeyler ters gitti',
+  'error.body': 'Beklenmeyen bir hata oluştu. Tekrar deneyebilir ya da ana sayfaya dönebilirsin.',
+  'error.retry': 'Tekrar dene',
 } as const;
 
 export type TranslationKey = keyof typeof tr;
@@ -663,6 +671,13 @@ const en: Record<TranslationKey, string> = {
   'theme.system': 'Device',
   'theme.note': 'Night mode brings the playfield violets into the rest of the interface.',
   'a11y.skip': 'Skip to content',
+  'notFound.title': 'This page could not be found',
+  'notFound.body': 'The link may be outdated or mistyped. You can continue from the home page.',
+  'notFound.home': 'Back to home',
+  'notFound.play': 'Continue playing',
+  'error.title': 'Something went wrong',
+  'error.body': 'An unexpected error occurred. You can try again or head back to the home page.',
+  'error.retry': 'Try again',
 };
 
 export const dictionaries: Record<Locale, Record<TranslationKey, string>> = { tr, en };

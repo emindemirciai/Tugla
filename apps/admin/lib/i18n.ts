@@ -278,6 +278,9 @@ const tr = {
   'theme.day': 'Gündüz',
   'theme.night': 'Gece',
   'theme.system': 'Cihaz',
+  'notFound.title': 'Sayfa bulunamadı',
+  'notFound.body': 'Bu adres panelde tanımlı değil.',
+  'notFound.home': 'Genel bakışa dön',
 } as const;
 
 export type AdminTranslationKey = keyof typeof tr;
@@ -505,6 +508,9 @@ const en: Record<AdminTranslationKey, string> = {
   'theme.day': 'Day',
   'theme.night': 'Night',
   'theme.system': 'Device',
+  'notFound.title': 'Page not found',
+  'notFound.body': 'This address is not part of the control centre.',
+  'notFound.home': 'Back to overview',
 };
 
 export const dictionaries: Record<Locale, Record<AdminTranslationKey, string>> = { tr, en };

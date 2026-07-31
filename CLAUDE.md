@@ -56,6 +56,9 @@ halde DI metadata'sı silinir. ESLint bu klasörde`consistent-type-imports` kura
 - `apps/web` ve `apps/admin`, `@tugla/*` paketlerini **dist**'ten okur → paket değişiminden sonra
   `pnpm build:packages`.
 - Prisma migration'ları `prisma migrate deploy` ile uygulanır (`db push` değil).
+- **`NODE_ENV` ile build alma.** `next build` zaten production'a ayarlar; farklı bir değer
+  `/404` dışa aktarımını `<Html> should not be imported outside of pages/_document` hatasıyla
+  kırar. `scripts/assert-build-env.mjs` bunu tek satırlık anlaşılır bir hatayla durdurur.
 - Metadata build sırasında gömülür: `WEB_URL`, `APP_NAME`, `APP_TAGLINE`, `DEFAULT_LOCALE`
   Docker **build argümanıdır** (bkz. `infrastructure/docker/Dockerfile.web`).
 
