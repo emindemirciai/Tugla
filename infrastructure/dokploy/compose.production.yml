@@ -8,7 +8,7 @@ x-app-environment: &app-environment
   WEB_URL: https://${ROOT_DOMAIN}
   ADMIN_URL: https://admin.${ROOT_DOMAIN}
   API_URL: https://api.${ROOT_DOMAIN}
-  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@tugla-postgres:5432/${POSTGRES_DB}?schema=public
   REDIS_URL: redis://redis:6379
   JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
   JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
@@ -143,7 +143,10 @@ services:
       resources:
         limits:
           memory: 1800M
-    networks: [private]
+    networks:
+      private:
+        aliases:
+          - tugla-postgres
 
   redis:
     image: redis:8-alpine
