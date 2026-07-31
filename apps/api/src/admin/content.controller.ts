@@ -286,7 +286,9 @@ export class AdminContentController {
     @Body() body: unknown,
     @Req() request: AuthenticatedRequest,
   ) {
-    const data = z.object({ status: z.enum(levelStatuses) }).parse(body);
+    const data = z
+      .object({ status: z.enum(levelStatuses), note: z.string().max(280).optional() })
+      .parse(body);
     const level = await this.db.level.update({
       where: { id },
       data: {
@@ -294,6 +296,44 @@ export class AdminContentController {
         publishedAt: data.status === 'PUBLISHED' ? new Date() : undefined,
       },
     });
+
+    // A player who submitted a level must learn the outcome; silence here is
+    // what makes user-generated content feel broken.
+    if (level.authorId && level.type === 'COMMUNITY') {
+      const outcome =
+        data.status === 'PUBLISHED'
+          ? {
+              type: 'LEVEL_PUBLISHED',
+              title: level.name,
+              body: 'Your level passed moderation and is now playable by everyone.',
+            }
+          : data.status === 'REJECTED'
+            ? {
+                type: 'LEVEL_REJECTED',
+                title: level.name,
+                body: data.note ?? 'Your level was not approved. You can edit it and submit again.',
+              }
+            : data.status === 'ARCHIVED'
+              ? {
+                  type: 'LEVEL_ARCHIVED',
+                  title: level.name,
+                  body:
+                    data.note ?? 'Your level was removed from the community list by moderation.',
+                }
+              : null;
+      if (outcome) {
+        await this.db.notification.create({
+          data: {
+            userId: level.authorId,
+            type: outcome.type,
+            title: outcome.title,
+            body: outcome.body,
+            data: { levelId: level.id, status: data.status },
+          },
+        });
+      }
+    }
+
     await this.audit.fromRequest(request, 'LEVEL_STATUS', 'Level', id, null, data);
     return level;
   }

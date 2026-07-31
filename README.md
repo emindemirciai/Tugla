@@ -55,6 +55,18 @@ gönder; topluluk bölümlerini beğen/bildir** · `/shop` katalog ve oyun içi 
 dil, oturumlar, veri dışa aktarma, hesap silme. Tüm ekranlar aynı sekme şeridinden erişilebilir ve
 oturum yoksa girişe yönlendirir (misafir hesap yoktur).
 
+### Sezonlar ve bildirimler
+
+Sezonlar artık gerçekten kapanıyor: her saat çalışan görev, süresi dolan aktif sezonun
+`season:<key>` tablosunu sıralar, sezonda tanımlı ödül basamaklarını (`top1`, `top10`, …) dağıtır,
+kazananlara bildirim bırakır, sezonu pasifleştirir ve sırada bekleyen sezonu devreye alır. Tüm işlem
+tek transaction içinde olduğu için bir sezon iki kez ödenemez; sonuç audit log'a `SEASON_SETTLED`
+olarak yazılır.
+
+Bildirim kutusu de artık gerçek olaylarla besleniyor: arkadaşlık isteği ve kabulü, topluluk
+bölümünün yayınlanması/reddedilmesi/arşivlenmesi, çok bildirim sonrası otomatik incelemeye alınması
+ve sezon sonucu. Daha önce moderasyon kararı yazara hiçbir şekilde bildirilmiyordu.
+
 ### Kapasite ve hız sınırı
 
 `pnpm test:load` gerçek bir k6 senaryosudur: sağlık probu + dünya kataloğu + bölüm listesi +
@@ -140,9 +152,9 @@ admin kullanıcılar, SEO/GEO çıktıları) TR/EN anahtarıyla gösterir. İçi
 ```bash
 pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
-pnpm test            # 52 birim test (engine, shared, api, web, admin)
+pnpm test            # 58 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 80 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 83 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
 ```
 
@@ -250,8 +262,8 @@ emitted decorator metadata.
 
 ### Verification gate
 
-`pnpm lint` · `pnpm typecheck` · `pnpm test` (52 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (80-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (58 unit tests) · `pnpm build` · `pnpm build:preview` ·
+`pnpm test:e2e:api` (83-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -272,6 +284,15 @@ sharing · `/account` profile, language, sessions, data export, deletion.
 `pnpm build && pnpm build:preview` writes `preview/ui-preview.html`: a single self-contained file that
 renders ten screens with the **real compiled CSS** from the production build and a TR/EN switch. The
 data inside is sample data and no API calls are made.
+
+### Seasons and notifications
+
+Seasons now actually close: an hourly job ranks the `season:<key>` board of any expired active
+season, pays the reward tiers declared on it, notifies the winners, deactivates it and activates the
+next scheduled season — all in one transaction, recorded as `SEASON_SETTLED` in the audit log. The
+inbox is fed by real events too: friend requests and acceptances, community level published /
+rejected / archived / auto-hidden, and season results. Previously a moderation decision never
+reached the author.
 
 ### Capacity and rate limiting
 
