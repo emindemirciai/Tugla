@@ -38,7 +38,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://pulse:pulse@localhost:5432/pulse?schema=public
       REDIS_URL: redis://localhost:6379
-      NODE_ENV: development
+      # NODE_ENV is deliberately unset: `next build` sets production itself, and
+      # a non-standard value breaks the /404 export (scripts/assert-build-env.mjs).
       ADMIN_BOOTSTRAP_EMAIL: ci-admin@example.com
       ADMIN_BOOTSTRAP_PASSWORD: ci-admin-password-1
       NEXT_PUBLIC_API_URL: http://localhost:4000/api
