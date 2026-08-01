@@ -26,7 +26,9 @@ mürekkep `#1b1533`, sahne `#2a2154 → #171034`.
 İşaret, oyunun kendisidir: üç sıra tuğla, ortadaki sıra kırılmış ve top aradan geçiyor.
 The mark is the game itself — three courses of brick, the middle one broken open, ball punching through.
 
-4:3 görsel geniş kapaktan türetilmedi: 400 pikselde geniş yerleşim okunmaz hâle geldiği için ayrı
-kurgulandı — kırık duvar kahraman, metin ikiye indi, rozet genişlikleri etiketten hesaplanıyor.
+4:3 görsel, 1200×630 kapağın **küçültülmüş hâli değil**: aynı tasarım dili (leylak gün ışığı zemin,
+sol tarafta logo kilidi ve mesaj, sağda aydınlatılmış oyun alanı) 400 piksele göre yeniden
+yerleştirildi. Tüm metin genişlikleri render'ın kullandığı yazı tipiyle ölçülür ve sığmazsa görsel
+hiç üretilmez; başlık boyutu sütuna göre otomatik küçülür.
 
 SVG sürümlerdeki metin sistem yazı tipi yığınını kullanır; sabit sonuç gereken yerlerde PNG'yi tercih edin.

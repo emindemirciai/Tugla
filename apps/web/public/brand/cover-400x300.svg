@@ -1,69 +1,106 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Tuğla — modern tuğla kırma oyunu">
   <title>Tuğla — tugla.fun</title>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f4ff"/>
+      <stop offset="0.6" stop-color="#ece8ff"/>
+      <stop offset="1" stop-color="#ffe6d9"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#7b6bff"/>
-      <stop offset="0.52" stop-color="#5b4be1"/>
+      <stop offset="0.55" stop-color="#5b4be1"/>
       <stop offset="1" stop-color="#ff7a45"/>
     </linearGradient>
-    <linearGradient id="trail" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#ffd166" stop-opacity="0"/>
-      <stop offset="1" stop-color="#ffd166" stop-opacity="0.85"/>
+    <linearGradient id="stage" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2154"/>
+      <stop offset="1" stop-color="#171034"/>
     </linearGradient>
-    <radialGradient id="spark" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    <linearGradient id="paddle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff7a45"/>
+      <stop offset="1" stop-color="#ffb27a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#5b4be1" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#5b4be1" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="400" height="300" fill="url(#bg)"/>
-  <circle cx="288" cy="86" r="118" fill="url(#spark)"/>
+  <rect width="400" height="300" fill="url(#paper)"/>
+  <circle cx="70" cy="40" r="130" fill="url(#glow)"/>
 
+  <!-- lockup -->
+  <g transform="translate(20 26)">
+    <rect width="40" height="40" rx="11" fill="url(#mark)"/>
+    <g fill="#ffffff" transform="scale(0.4167)">
+      <rect x="18" y="24" width="26" height="11" rx="3.5" opacity="0.95"/>
+      <rect x="48" y="24" width="30" height="11" rx="3.5" opacity="0.95"/>
+      <rect x="18" y="41" width="14" height="11" rx="3.5" opacity="0.6"/>
+      <rect x="64" y="41" width="14" height="11" rx="3.5" opacity="0.6"/>
+      <rect x="30" y="72" width="36" height="8" rx="4" opacity="0.95"/>
+      <circle cx="48" cy="46.5" r="8.5" fill="#ffd166"/>
+    </g>
+    <text x="50" y="21" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="800" letter-spacing="-0.8" fill="#1b1533">Tuğla</text>
+    <text x="51" y="34" font-family="ui-sans-serif, system-ui, sans-serif" font-size="8" font-weight="700" letter-spacing="2.4" fill="#6a6390">TUGLA.FUN</text>
+  </g>
+
+  <!-- message -->
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <text x="20" y="140" font-size="26" font-weight="800" letter-spacing="-0.7" fill="#1b1533">Tuğlaları kır.</text>
+    <text x="20" y="175" font-size="26" font-weight="800" letter-spacing="-0.7" fill="#5b4be1">Fırtınayı çoğalt.</text>
+    <text x="20" y="199" font-size="12" fill="#423a63">Ücretsiz. Tarayıcıda oynanır.</text>
+    <g transform="translate(20.0 246)">
+      <rect width="121.2" height="21" rx="10.5" fill="#ffffff" stroke="#e2daf6"/>
+      <text x="60.6" y="14" text-anchor="middle" font-size="8" font-weight="700" letter-spacing="0.5" fill="#5b4be1">10 DÜNYA · 500 BÖLÜM</text>
+    </g>
+    <g transform="translate(147.2 246)">
+      <rect width="53.6" height="21" rx="10.5" fill="#ffffff" stroke="#e2daf6"/>
+      <text x="26.8" y="14" text-anchor="middle" font-size="8" font-weight="700" letter-spacing="0.5" fill="#5b4be1">500 TOP</text>
+    </g>
+  </g>
+
+  <!-- playfield -->
   <g>
-    <rect x="26.5" y="58.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="85.5" y="58.0" width="52" height="17" rx="6" fill="#ffd166" opacity="1"/>
-    <rect x="144.5" y="58.0" width="52" height="17" rx="6" fill="#ffe4d3" opacity="1"/>
-    <rect x="203.5" y="58.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="321.5" y="58.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="26.5" y="82.0" width="52" height="17" rx="6" fill="#ffd166" opacity="1"/>
-    <rect x="85.5" y="82.0" width="52" height="17" rx="6" fill="#ffe4d3" opacity="1"/>
-    <rect x="262.5" y="82.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="321.5" y="82.0" width="52" height="17" rx="6" fill="#ffd166" opacity="1"/>
-    <rect x="26.5" y="106.0" width="52" height="17" rx="6" fill="#ffe4d3" opacity="1"/>
-    <rect x="85.5" y="106.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="144.5" y="106.0" width="52" height="17" rx="6" fill="#d9d2ff" opacity="1"/>
-    <rect x="262.5" y="106.0" width="52" height="17" rx="6" fill="#ffd166" opacity="1"/>
-    <rect x="321.5" y="106.0" width="52" height="17" rx="6" fill="#ffe4d3" opacity="1"/>
-    <rect x="26.5" y="130.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="85.5" y="130.0" width="52" height="17" rx="6" fill="#d9d2ff" opacity="1"/>
-    <rect x="144.5" y="130.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
-    <rect x="203.5" y="130.0" width="52" height="17" rx="6" fill="#ffd166" opacity="1"/>
-    <rect x="262.5" y="130.0" width="52" height="17" rx="6" fill="#ffe4d3" opacity="1"/>
-    <rect x="321.5" y="130.0" width="52" height="17" rx="6" fill="#ffffff" opacity="0.95"/>
+    <rect x="260.0" y="32.0" width="122" height="236" rx="18" fill="url(#stage)"/>
+    <rect x="261.0" y="33.0" width="120" height="234" rx="17" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <text x="272.0" y="56.0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="7" font-weight="700" letter-spacing="1.2" fill="#efe9ff" opacity="0.75">DÜNYA 03</text>
+    <text x="370.0" y="56.0" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="7" font-weight="700" fill="#efe9ff" opacity="0.75">♥ 5</text>
+    <rect x="265.5" y="72.0" width="19" height="8" rx="3" fill="#6ad2ff"/>
+      <rect x="288.5" y="72.0" width="19" height="8" rx="3" fill="#8b7bff"/>
+      <rect x="311.5" y="72.0" width="19" height="8" rx="3" fill="#ff9a6b"/>
+      <rect x="334.5" y="72.0" width="19" height="8" rx="3" fill="#4fd6a8"/>
+      <rect x="265.5" y="84.0" width="19" height="8" rx="3" fill="#8b7bff"/>
+      <rect x="288.5" y="84.0" width="19" height="8" rx="3" fill="#ff9a6b"/>
+      <rect x="334.5" y="84.0" width="19" height="8" rx="3" fill="#ffd166"/>
+      <rect x="357.5" y="84.0" width="19" height="8" rx="3" fill="#6ad2ff"/>
+      <rect x="265.5" y="96.0" width="19" height="8" rx="3" fill="#ff9a6b"/>
+      <rect x="334.5" y="96.0" width="19" height="8" rx="3" fill="#6ad2ff"/>
+      <rect x="357.5" y="96.0" width="19" height="8" rx="3" fill="#8b7bff"/>
+      <rect x="265.5" y="108.0" width="19" height="8" rx="3" fill="#4fd6a8"/>
+      <rect x="288.5" y="108.0" width="19" height="8" rx="3" fill="#ffd166"/>
+      <rect x="311.5" y="108.0" width="19" height="8" rx="3" fill="#6ad2ff"/>
+      <rect x="334.5" y="108.0" width="19" height="8" rx="3" fill="#8b7bff"/>
+      <rect x="357.5" y="108.0" width="19" height="8" rx="3" fill="#ff9a6b"/>
+      <rect x="265.5" y="120.0" width="19" height="8" rx="3" fill="#ffd166"/>
+      <rect x="288.5" y="120.0" width="19" height="8" rx="3" fill="#6ad2ff"/>
+      <rect x="311.5" y="120.0" width="19" height="8" rx="3" fill="#8b7bff"/>
+      <rect x="334.5" y="120.0" width="19" height="8" rx="3" fill="#ff9a6b"/>
+      <rect x="357.5" y="120.0" width="19" height="8" rx="3" fill="#4fd6a8"/>
+    <circle cx="317.0" cy="179.7" r="3.3" fill="#ffffff" opacity="0.73"/>
+      <circle cx="321.7" cy="181.2" r="2.2" fill="#ffffff" opacity="0.76"/>
+      <circle cx="331.9" cy="192.7" r="2.0" fill="#ffffff" opacity="0.65"/>
+      <circle cx="286.6" cy="193.7" r="2.9" fill="#ffffff" opacity="0.52"/>
+      <circle cx="361.5" cy="202.3" r="2.9" fill="#ffffff" opacity="0.81"/>
+      <circle cx="292.2" cy="149.2" r="2.7" fill="#ffffff" opacity="0.53"/>
+      <circle cx="295.0" cy="161.9" r="1.9" fill="#ffffff" opacity="0.73"/>
+      <circle cx="316.0" cy="195.5" r="2.7" fill="#ffffff" opacity="0.82"/>
+      <circle cx="321.0" cy="185.4" r="2.6" fill="#ffffff" opacity="0.64"/>
+      <circle cx="362.8" cy="204.1" r="3.2" fill="#ffffff" opacity="0.85"/>
+      <circle cx="305.5" cy="161.2" r="2.3" fill="#ffffff" opacity="0.54"/>
+      <circle cx="343.4" cy="170.7" r="3.2" fill="#ffffff" opacity="0.69"/>
+      <circle cx="359.5" cy="195.8" r="1.9" fill="#ffffff" opacity="0.60"/>
+      <circle cx="355.5" cy="174.6" r="3.4" fill="#ffffff" opacity="0.70"/>
+      <circle cx="285.1" cy="183.6" r="3.1" fill="#ffffff" opacity="0.63"/>
+      <circle cx="286.3" cy="166.9" r="3.3" fill="#ffffff" opacity="0.88"/>
+    <rect x="299.0" y="246.0" width="43.9" height="5" rx="2.5" fill="url(#paddle)"/>
   </g>
-
-  <rect x="209" y="92" width="6" height="42" rx="3" fill="url(#trail)"/>
-  <circle cx="212" cy="144" r="11" fill="#ffd166"/>
-  <circle cx="212" cy="144" r="11" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.9"/>
-  <circle cx="148" cy="124" r="5" fill="#ffffff" opacity="0.75"/>
-  <circle cx="270" cy="114" r="4" fill="#ffffff" opacity="0.6"/>
-
-  <g font-family="ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif">
-    <text x="200.0" y="207" text-anchor="middle" font-size="52" font-weight="800" letter-spacing="-1.5" fill="#ffffff">Tuğla</text>
-    <text x="200.0" y="230" text-anchor="middle" font-size="13" font-weight="600" letter-spacing="0.6" fill="#ffffff" opacity="0.92">Modern tuğla kırma oyunu</text>
-    <g transform="translate(73.3 246)">
-      <rect width="81.4" height="24" rx="12.0" fill="#ffffff" opacity="0.18"/>
-      <text x="40.7" y="16" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" letter-spacing="0.4">TUGLA.FUN</text>
-    </g>
-    <g transform="translate(162.7 246)">
-      <rect width="81.4" height="24" rx="12.0" fill="#ffffff" opacity="0.18"/>
-      <text x="40.7" y="16" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" letter-spacing="0.4">500 BÖLÜM</text>
-    </g>
-    <g transform="translate(252.1 246)">
-      <rect width="74.6" height="24" rx="12.0" fill="#ffffff" opacity="0.18"/>
-      <text x="37.3" y="16" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" letter-spacing="0.4">ÜCRETSİZ</text>
-    </g>
-  </g>
-
-  <rect x="140" y="284" width="120" height="9" rx="4.5" fill="#ffffff"/>
 </svg>

@@ -33,6 +33,10 @@ const readCss = async (app) => {
 };
 
 const webCss = await readCss('web');
+// The preview must stay one portable file, so the listing artwork is inlined.
+const coverDataUri = await readFile(join(root, 'apps/web/public/brand/cover-400x300.png'), 'base64')
+  .then((data) => `data:image/png;base64,${data}`)
+  .catch(() => '');
 const adminCss = await readCss('admin');
 const appName = process.env.APP_NAME ?? 'Tuğla';
 
@@ -358,6 +362,7 @@ const html = `<!doctype html>
   body { margin:0; background:#f6f3ff; color:#1b1533; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
   header.page { padding:28px 20px 12px; max-width:1180px; margin:0 auto; display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; }
   header.page h1 { margin:0; font-size:1.5rem; }
+  header.page img.cover { width:200px; height:150px; border-radius:14px; border:1px solid #e2daf6; box-shadow:0 10px 30px rgba(43,25,96,.12); }
   header.page p { margin:6px 0 0; color:#6a6390; max-width:720px; line-height:1.55; font-size:.92rem; }
   .switch { display:inline-flex; gap:6px; }
   .switch button { background:#ffffff; border:1px solid #cec2ef; color:#423a63; border-radius:9px; padding:8px 14px; cursor:pointer; font-size:.8rem; letter-spacing:.08em; }
@@ -372,6 +377,7 @@ const html = `<!doctype html>
 </head>
 <body>
 <header class="page">
+  <img class="cover" src="${coverDataUri}" alt="Tuğla" />
   <div>
     <h1>${appName} — <span data-i18n="title"></span></h1>
     <p data-i18n="intro"></p>
