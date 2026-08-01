@@ -58,6 +58,7 @@ async function seed() {
     const type = index % 50 === 0 ? 'WORLD_BOSS' : index % 10 === 0 ? 'MINI_BOSS' : 'NORMAL';
     const definition = {
       version: 1,
+      // Level names stay short on purpose; the product name lives in APP_NAME.
       name: `Tuğla ${index}`,
       type,
       world,

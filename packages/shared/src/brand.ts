@@ -17,7 +17,7 @@ export interface BrandConfig {
 }
 
 const fallback = {
-  name: 'Tuğla',
+  name: 'Tuğla.fun',
   slug: 'tugla',
   rootDomain: 'localhost',
   themeColor: '#07111f',

@@ -30,7 +30,7 @@ export const seoConfig = (env: NodeJS.ProcessEnv = process.env): SeoConfig => {
   const webUrl = (clean(env.WEB_URL) ?? 'http://localhost:3000').replace(/\/+$/, '');
   const defaultLocale: Locale = clean(env.DEFAULT_LOCALE) === 'en' ? 'en' : 'tr';
   return {
-    appName: clean(env.APP_NAME) ?? clean(env.NEXT_PUBLIC_APP_NAME) ?? 'Tuğla',
+    appName: clean(env.APP_NAME) ?? clean(env.NEXT_PUBLIC_APP_NAME) ?? 'Tuğla.fun',
     tagline: clean(env.APP_TAGLINE) ?? 'Break the grid',
     webUrl,
     defaultLocale,

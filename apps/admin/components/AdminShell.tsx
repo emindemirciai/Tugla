@@ -58,7 +58,7 @@ export function AdminShell({ title, children }: { title: string; children: React
         <div className="admin-brand">
           <span className="brand-mark">◇</span>
           <div>
-            <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}</strong>
+            <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla.fun'}</strong>
             <span>{t('chrome.panel')}</span>
           </div>
         </div>

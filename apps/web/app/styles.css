@@ -321,31 +321,37 @@ code {
 }
 .hero {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 44px;
+  /* Equal columns: the message block matches the playfield card, so the two
+     halves read as one composition instead of a wide column beside a small one. */
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
   align-items: center;
+  justify-items: center;
   padding: 40px 20px 56px;
 }
 .hero-copy {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
+  width: min(330px, 100%);
 }
 .hero-copy p {
   color: var(--ink-2);
   font-size: 1.05rem;
-  max-width: 46ch;
 }
 .hero-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 .trust-row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: center;
   margin-top: 4px;
 }
 .trust-row span {
@@ -389,7 +395,7 @@ code {
 /* The playfield preview is the hero: a lit stage card floating on daylight. */
 .game-preview {
   position: relative;
-  width: min(330px, 84%);
+  width: min(330px, 100%);
   aspect-ratio: 9 / 15;
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -398,7 +404,7 @@ code {
   border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   overflow: hidden;
 }
 .preview-hud {
@@ -421,52 +427,123 @@ code {
 }
 .preview-block {
   height: 15px;
-  border-radius: 5px;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  /* Each brick pops once per rally, staggered along the row. */
+  animation: brick-pop 6s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
+  animation-delay: calc(var(--brick) * 0.06s);
+}
+@keyframes brick-pop {
+  0%,
+  62% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  92% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .tone-0 {
-  background: #6ad2ff;
+  background: linear-gradient(180deg, #8ee0ff, #46b8ef);
 }
 .tone-1 {
-  background: #8b7bff;
+  background: linear-gradient(180deg, #a99bff, #7a68f0);
 }
 .tone-2 {
-  background: #ff9a6b;
+  background: linear-gradient(180deg, #ffb894, #ff8a5c);
 }
 .tone-3 {
-  background: #4fd6a8;
+  background: linear-gradient(180deg, #7ee7c1, #34c99a);
 }
 .tone-4 {
-  background: #ffd166;
+  background: linear-gradient(180deg, #ffe08a, #ffc23f);
 }
-.preview-balls {
+
+/* The rally: ball and paddle run on the same 6s clock. */
+.preview-field {
   position: relative;
   flex: 1;
 }
-.preview-balls i {
+.preview-ball {
   position: absolute;
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-  left: calc(6% + (var(--i) * 5%));
-  top: calc(12% + (var(--i) * 4%));
-  opacity: 0.9;
-  animation: drift 3.4s ease-in-out infinite alternate;
-  animation-delay: calc(var(--i) * -0.16s);
+  background: radial-gradient(circle at 35% 32%, #ffffff, #d8d2ff 60%, #a08fff);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.75);
+  animation:
+    rally-x 3s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate,
+    rally-y 1.5s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate;
 }
-@keyframes drift {
+.preview-ball-two {
+  width: 8px;
+  height: 8px;
+  opacity: 0.75;
+  animation:
+    rally-x 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate-reverse,
+    rally-y 1.1s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate;
+}
+@keyframes rally-x {
+  from {
+    left: 6%;
+  }
   to {
-    transform: translate3d(6px, -18px, 0);
+    left: calc(94% - 11px);
+  }
+}
+@keyframes rally-y {
+  from {
+    top: 2%;
+  }
+  to {
+    /* Stops exactly on the paddle face, so the bounce looks like contact. */
+    top: calc(100% - 11px);
   }
 }
 .preview-paddle {
-  height: 10px;
-  width: 42%;
-  margin: 0 auto;
+  height: 11px;
+  width: 34%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--coral), #ffb27a);
-  box-shadow: 0 0 18px rgba(255, 122, 69, 0.6);
+  background: linear-gradient(180deg, #ffd0b4, var(--coral));
+  box-shadow:
+    0 0 18px rgba(255, 122, 69, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  /* Same 3s half-period as rally-x: the paddle meets the ball every bounce. */
+  animation: paddle-track 3s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  margin-left: 0;
+}
+@keyframes paddle-track {
+  from {
+    margin-left: 0%;
+  }
+  to {
+    margin-left: 66%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .preview-block,
+  .preview-ball,
+  .preview-paddle {
+    animation: none !important;
+  }
+  .preview-ball {
+    top: 40%;
+    left: 45%;
+  }
+  .preview-paddle {
+    margin-left: 33%;
+  }
 }
 
 .stats {
@@ -476,6 +553,7 @@ code {
   padding: 12px 20px 40px;
 }
 .stats article {
+  text-align: center;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -501,6 +579,8 @@ code {
   display: grid;
   gap: 22px;
   padding: 20px 20px 50px;
+  justify-items: center;
+  text-align: center;
 }
 .world-section h2 {
   font-size: clamp(1.3rem, 3vw, 2rem);
@@ -514,6 +594,8 @@ code {
   gap: 14px;
 }
 .world-card {
+  text-align: center;
+  align-items: center;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);

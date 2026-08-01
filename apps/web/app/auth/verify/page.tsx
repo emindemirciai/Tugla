@@ -109,7 +109,7 @@ function VerifyInner() {
         <div className="auth-card-top">
           <Link href="/" className="brand">
             <span className="brand-mark">◇</span>
-            {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}
+            {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla.fun'}
           </Link>
           <LanguageSwitcher compact />
         </div>

@@ -54,7 +54,7 @@ export function PlayerShell({ title, children }: { title: string; children: Reac
       <header className="nav">
         <Link href="/play" className="brand">
           <span className="brand-mark">◇</span>
-          {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla'}
+          {process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla.fun'}
         </Link>
         <nav className="nav-links">
           <LanguageSwitcher compact />

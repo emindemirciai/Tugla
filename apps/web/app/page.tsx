@@ -8,7 +8,7 @@ import { LanguageSwitcher, useI18n } from '../lib/i18n';
 /** Marketing landing page; every visible string flows through the dictionary. */
 export default function HomePage() {
   const { t } = useI18n();
-  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla';
+  const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla.fun';
 
   const stats = [
     { number: '10', label: t('landing.stats.worlds') },
@@ -63,24 +63,31 @@ export default function HomePage() {
         <div className="hero-visual" aria-hidden>
           <div className="orb orb-one" />
           <div className="orb orb-two" />
+          {/*
+            Animated demo board. The ball path and the paddle share one 6s
+            timeline, so the paddle is always where the ball lands: the bounce
+            reads as a real rally rather than two independent loops. Bricks pop
+            when the ball reaches them. Pure CSS, so the landing page ships no
+            extra JavaScript, and prefers-reduced-motion freezes it.
+          */}
           <div className="game-preview">
             <div className="preview-hud">
               <span>WORLD 01</span>
               <strong>LEVEL 24</strong>
-              <span>♥ 5</span>
+              <span>♥ 3</span>
             </div>
             <div className="preview-grid">
               {Array.from({ length: 35 }, (_, index) => (
                 <span
                   className={`preview-block tone-${(index + Math.floor(index / 7)) % 5}`}
                   key={index}
+                  style={{ '--brick': index } as CSSProperties}
                 />
               ))}
             </div>
-            <div className="preview-balls">
-              {Array.from({ length: 18 }, (_, index) => (
-                <i key={index} style={{ '--i': index } as CSSProperties} />
-              ))}
+            <div className="preview-field">
+              <i className="preview-ball" />
+              <i className="preview-ball preview-ball-two" />
             </div>
             <div className="preview-paddle" />
           </div>

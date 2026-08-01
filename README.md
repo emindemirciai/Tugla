@@ -68,6 +68,12 @@ belirteci alır, API bunu Google'ın JWKS'ine karşı doğrular ve e-posta zaten
 birleştirir. Düğme yalnızca `NEXT_PUBLIC_GOOGLE_CLIENT_ID` **ve** sunucudaki `GOOGLE_CLIENT_ID`
 doluyken görünür; aksi halde arayüz sağlayıcının kapalı olduğunu dürüstçe söyler.
 
+### Marka adı
+
+Görünen ürün adı `APP_NAME` / `NEXT_PUBLIC_APP_NAME` ile gelir ve **Tuğla.fun**'dur; slug (`APP_SLUG`)
+`tugla` olarak kalır çünkü paket adları, çerez öneki ve veritabanı kullanıcısı ondan türer. Bölüm
+adları (`Tuğla 274`) bilinçli olarak kısa kalır: ürün adından bağımsızdır, seed içinde üretilir.
+
 ### Marka varlıkları ve paylaşım görseli
 
 Logo ve tanıtım görselleri `apps/web/public/brand/` altındadır ve yayındayken doğrudan servis edilir:

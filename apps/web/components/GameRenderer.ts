@@ -139,16 +139,39 @@ export class GameRenderer {
     this.buildLighting();
     this.buildBoard();
 
-    // A bevelled slab catches the key light along its edges, which is what makes a
-    // brick look moulded rather than painted. Segments stay low: this geometry is
-    // instanced across every block on the board.
-    const blockGeometry = new THREE.BoxGeometry(1, 1, 0.46, 2, 2, 1);
-    blockGeometry.translate(0, 0, 0.02);
+    // Brick shape: a plain box reads as a coloured rectangle, so this is a
+    // rounded rectangle extruded with a bevel — soft corners and a lit edge,
+    // the same silhouette as the animated board on the landing page. Built once
+    // and instanced across the board, so the extra vertices cost one geometry.
+    const brickShape = new THREE.Shape();
+    const radius = 0.22;
+    const half = 0.5 - radius;
+    brickShape.moveTo(-half, -0.5);
+    brickShape.lineTo(half, -0.5);
+    brickShape.quadraticCurveTo(0.5, -0.5, 0.5, -half);
+    brickShape.lineTo(0.5, half);
+    brickShape.quadraticCurveTo(0.5, 0.5, half, 0.5);
+    brickShape.lineTo(-half, 0.5);
+    brickShape.quadraticCurveTo(-0.5, 0.5, -0.5, half);
+    brickShape.lineTo(-0.5, -half);
+    brickShape.quadraticCurveTo(-0.5, -0.5, -half, -0.5);
+
+    const blockGeometry = new THREE.ExtrudeGeometry(brickShape, {
+      depth: 0.3,
+      bevelEnabled: quality.level !== 'LOW',
+      bevelThickness: 0.06,
+      bevelSize: 0.05,
+      bevelSegments: 2,
+      curveSegments: 4,
+    });
+    blockGeometry.translate(0, 0, -0.2);
     const blockMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      roughness: 0.18,
-      metalness: 0.35,
-      reflectivity: 0.6,
+      roughness: 0.26,
+      metalness: 0.12,
+      reflectivity: 0.75,
+      emissive: 0x120e2e,
+      emissiveIntensity: 0.3,
       sheen: quality.level === 'LOW' ? 0 : 0.6,
       sheenRoughness: 0.4,
       clearcoat: quality.level === 'LOW' ? 0 : 1,
@@ -184,6 +207,7 @@ export class GameRenderer {
     this.ballMesh = new THREE.InstancedMesh(ballGeometry, ballMaterial, engine.maxBalls);
     this.ballMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.ballMesh.frustumCulled = false;
+    this.ballMesh.count = 0;
     this.scene.add(this.ballMesh);
     this.disposables.push(ballGeometry, ballMaterial);
 
@@ -198,6 +222,7 @@ export class GameRenderer {
     this.bonusMesh = new THREE.InstancedMesh(bonusGeometry, bonusMaterial, 64);
     this.bonusMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.bonusMesh.frustumCulled = false;
+    this.bonusMesh.count = 0;
     this.scene.add(this.bonusMesh);
     this.disposables.push(bonusGeometry, bonusMaterial);
 
@@ -212,6 +237,7 @@ export class GameRenderer {
       this.trailMesh = new THREE.InstancedMesh(trailGeometry, trailMaterial, quality.trailLength);
       this.trailMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       this.trailMesh.frustumCulled = false;
+      this.trailMesh.count = 0;
       this.scene.add(this.trailMesh);
       this.disposables.push(trailGeometry, trailMaterial);
     }
@@ -251,6 +277,9 @@ export class GameRenderer {
     );
     this.particlePoints = new THREE.Points(this.particleGeometry, particleMaterial);
     this.particlePoints.frustumCulled = false;
+    // Until the first update every point sits at the origin; drawing them would
+    // put a bright dot on the board.
+    this.particleGeometry.setDrawRange(0, 0);
     this.scene.add(this.particlePoints);
     this.disposables.push(this.particleGeometry, particleMaterial);
 
@@ -413,7 +442,9 @@ export class GameRenderer {
       this.trailHistory.unshift(new THREE.Vector3(lead.position.x, lead.position.y, 0.45));
       if (this.trailHistory.length > this.quality.trailLength) this.trailHistory.pop();
     } else if (this.trailHistory.length) {
-      this.trailHistory.pop();
+      // Not running: drop the whole tail at once instead of one point per frame,
+      // which used to leave a lingering dot on the board.
+      this.trailHistory.length = 0;
     }
     this.trailMesh.count = this.trailHistory.length;
     this.trailHistory.forEach((point, index) => {
@@ -441,7 +472,10 @@ export class GameRenderer {
     });
     this.blockMesh.instanceMatrix.needsUpdate = true;
 
-    const balls = snapshot.balls;
+    // Retired balls stay in the snapshot until the next tick prunes them, and
+    // the game does not tick while it waits for a launch — so an inactive ball
+    // would hang on screen as a frozen dot. Draw only live ones.
+    const balls = snapshot.balls.filter((ball) => ball.active);
     this.ballMesh.count = Math.min(balls.length, this.engine.maxBalls);
     for (let index = 0; index < this.ballMesh.count; index += 1) {
       const ball = balls[index]!;
