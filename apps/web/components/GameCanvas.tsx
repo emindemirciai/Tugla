@@ -121,13 +121,18 @@ export function GameCanvas({
     const audio = new GameAudio();
     audio.enabled = settings.soundEnabled;
     const quality = resolveQuality(settings.quality);
-    const renderer = new GameRenderer(mount, engine, {
-      ...quality,
-      trailLength: settings.showTrails ? quality.trailLength : 0,
-      maxParticles: settings.reducedMotion
-        ? Math.min(40, quality.maxParticles)
-        : quality.maxParticles,
-    });
+    const renderer = new GameRenderer(
+      mount,
+      engine,
+      {
+        ...quality,
+        trailLength: settings.showTrails ? quality.trailLength : 0,
+        maxParticles: settings.reducedMotion
+          ? Math.min(40, quality.maxParticles)
+          : quality.maxParticles,
+      },
+      { theme: session.level.theme, index: session.level.index },
+    );
 
     let frame = 0;
     let last = performance.now();
@@ -177,11 +182,11 @@ export function GameCanvas({
       pointerActive = true;
       pointerOrigin = event.clientX;
       renderer.domElement.setPointerCapture(event.pointerId);
-      engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX));
+      engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX, event.clientY));
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!pointerActive) return;
-      engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX));
+      engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX, event.clientY));
       // Moving the paddle far enough before release fires the ball in that
       // direction: the launch angle comes from how the player swiped.
       if (engine.snapshot.status === 'READY' && Math.abs(event.clientX - pointerOrigin) > 16) {
@@ -191,7 +196,7 @@ export function GameCanvas({
     };
     const onPointerUp = (event: PointerEvent) => {
       if (engine.snapshot.status === 'READY') {
-        engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX));
+        engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX, event.clientY));
         engine.launch();
         setHelpVisible(false);
       }
@@ -200,9 +205,9 @@ export function GameCanvas({
     const onKeyDown = (event: KeyboardEvent) => {
       const paddle = engine.snapshot.paddle;
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
-        engine.setPaddleTarget(paddle.targetX - 0.7);
+        engine.setPaddleTarget(paddle.targetX - 1.1);
       } else if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
-        engine.setPaddleTarget(paddle.targetX + 0.7);
+        engine.setPaddleTarget(paddle.targetX + 1.1);
       } else if (event.key === ' ') {
         event.preventDefault();
         engine.launch();
@@ -255,9 +260,9 @@ export function GameCanvas({
         <div className="level-title">
           <span>
             {t('game.world')} {String(session.level.world).padStart(2, '0')} ·{' '}
-            {session.level.theme.toUpperCase()}
+            {session.level.theme.replace(/-/g, ' ').toUpperCase()}
           </span>
-          <strong>{session.level.name}</strong>
+          <strong className="game-level-name">{session.level.name}</strong>
         </div>
         <div className="game-controls">
           <button
@@ -275,15 +280,19 @@ export function GameCanvas({
 
       <div className="game-stage">
         <aside className="hud-panel">
-          <span>{t('game.hud.score')}</span>
-          <strong>{view.score.toLocaleString(locale)}</strong>
-          <span>{t('game.hud.combo')}</span>
-          <strong className="accent">×{comboMultiplier}</strong>
+          <div className="hud-stat">
+            <span>{t('game.hud.score')}</span>
+            <strong>{view.score.toLocaleString(locale)}</strong>
+          </div>
+          <div className="hud-stat">
+            <span>{t('game.hud.combo')}</span>
+            <strong className="accent">×{comboMultiplier}</strong>
+          </div>
           {view.overcharge > 1 && (
-            <>
+            <div className="hud-stat">
               <span>{t('game.hud.overcharge')}</span>
               <strong className="overcharge">×{view.overcharge.toFixed(2)}</strong>
-            </>
+            </div>
           )}
         </aside>
 
@@ -408,20 +417,20 @@ export function GameCanvas({
         </div>
 
         <aside className="hud-panel hud-panel-right">
-          <span>{t('game.hud.lives')}</span>
-          <strong>{'♥'.repeat(Math.max(0, view.lives))}</strong>
-          <span>{t('game.hud.balls')}</span>
-          <strong className="accent">{view.balls}</strong>
-          <span>{t('game.hud.blocks')}</span>
-          <strong>{view.blocksRemaining}</strong>
+          <div className="hud-stat">
+            <span>{t('game.hud.lives')}</span>
+            <strong className="hud-lives">{'♥'.repeat(Math.max(0, view.lives))}</strong>
+          </div>
+          <div className="hud-stat">
+            <span>{t('game.hud.balls')}</span>
+            <strong className="accent">{view.balls}</strong>
+          </div>
+          <div className="hud-stat">
+            <span>{t('game.hud.blocks')}</span>
+            <strong>{view.blocksRemaining}</strong>
+          </div>
         </aside>
       </div>
-
-      <footer className="game-footer">
-        <span>{t('game.footer.controls')}</span>
-        <span>{t('game.footer.physics')}</span>
-        <span>{t('game.footer.maxBalls', { count: session.maxBalls })}</span>
-      </footer>
     </section>
   );
 }

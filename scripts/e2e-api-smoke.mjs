@@ -466,6 +466,30 @@ try {
   const friends = await call('/social/friends', { token });
   check('friend list responds', Array.isArray(friends.body?.items));
 
+  console.log('\nLevel progression gate');
+  const gateList = await call('/game/levels?world=1&limit=5', { token });
+  const firstLevel = gateList.body?.items?.[0];
+  const secondLevel = gateList.body?.items?.[1];
+  check('the first level of a world is open', firstLevel?.unlocked === true);
+  check(
+    'the next level starts locked',
+    secondLevel?.unlocked === false,
+    String(secondLevel?.unlocked),
+  );
+
+  if (secondLevel) {
+    const blocked = await call('/game/sessions', {
+      method: 'POST',
+      token,
+      body: { levelId: secondLevel.id },
+    });
+    check(
+      'starting a locked level is refused by the server',
+      blocked.status === 400,
+      `status ${blocked.status}`,
+    );
+  }
+
   console.log('\nEmail verification code');
   const codeEmail = `verify-${Date.now()}@example.com`;
   const codeAccount = await call('/auth/register', {

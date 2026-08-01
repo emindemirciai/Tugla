@@ -211,18 +211,35 @@ function PlayInner() {
               <button
                 key={level.id}
                 type="button"
-                className={`level-card level-${level.type.toLowerCase()}`}
+                className={`level-card level-${level.type.toLowerCase()} ${
+                  level.unlocked === false ? 'level-locked' : ''
+                } ${level.completed ? 'level-cleared' : ''}`}
                 onClick={() => void startLevel(level.id)}
-                disabled={starting !== null}
+                disabled={starting !== null || level.unlocked === false}
+                aria-disabled={level.unlocked === false}
+                title={level.unlocked === false ? t('play.level.lockedHint') : undefined}
               >
                 <span className="level-number">{level.index}</span>
+                {level.unlocked === false ? (
+                  <span className="level-lock" aria-hidden>
+                    🔒
+                  </span>
+                ) : (
+                  level.completed && (
+                    <span className="level-check" aria-hidden>
+                      ✓
+                    </span>
+                  )
+                )}
                 {badgeKey && <span className="level-badge">{t(badgeKey)}</span>}
                 <span className="level-name">{level.name}</span>
                 <span className="level-meta">
-                  {t('play.level.minutes', {
-                    minutes: Math.round(level.estimatedSeconds / 60),
-                    difficulty: Math.round(level.difficulty),
-                  })}
+                  {level.unlocked === false
+                    ? t('play.level.lockedHint')
+                    : t('play.level.minutes', {
+                        minutes: Math.round(level.estimatedSeconds / 60),
+                        difficulty: Math.round(level.difficulty),
+                      })}
                 </span>
                 {starting === level.id && (
                   <span className="level-starting">{t('play.level.starting')}</span>

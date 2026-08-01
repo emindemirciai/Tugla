@@ -1783,3 +1783,121 @@ textarea:focus {
   font-variant-numeric: tabular-nums;
   padding-left: 0.5em;
 }
+
+/* ----- in-game HUD: readable on a phone -------------------------------------- */
+.game-topbar .level-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: center;
+  flex: 1;
+}
+.game-topbar .level-title span {
+  font-size: 0.58rem;
+  letter-spacing: var(--tracking-label);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-level-name {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.hud-stat span {
+  font-size: 0.56rem;
+  letter-spacing: var(--tracking-label);
+  opacity: 0.62;
+  white-space: nowrap;
+}
+.hud-stat strong {
+  font-size: 1.05rem;
+  line-height: 1.1;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+.hud-lives {
+  color: #ff9a9a;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 900px) {
+  /* The panels sit under the board as one strip; each stat keeps its own
+     column so labels can never collide with the numbers. */
+  .hud-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px 10px;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .hud-panel-right {
+    text-align: center;
+  }
+  .hud-stat {
+    align-items: center;
+  }
+  .hud-stat strong {
+    font-size: 0.98rem;
+  }
+  .game-stage {
+    grid-template-areas: 'canvas' 'hud' 'hud2';
+    gap: 8px;
+  }
+  .game-stage .hud-panel:first-of-type {
+    grid-area: hud;
+  }
+  .game-stage .hud-panel-right {
+    grid-area: hud2;
+  }
+  .game-topbar {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+  .game-controls button,
+  .icon-button {
+    padding: 7px 11px;
+    font-size: 0.72rem;
+  }
+}
+
+/* ----- level progression: locked, cleared ------------------------------------ */
+.level-card.level-locked {
+  opacity: 0.72;
+  cursor: not-allowed;
+  background: var(--surface-2);
+  border-style: dashed;
+}
+.level-card.level-locked:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+.level-card.level-locked .level-number {
+  color: var(--ink-3);
+}
+.level-card.level-cleared {
+  border-color: #b9ead9;
+  background: linear-gradient(180deg, var(--mint-soft), var(--surface) 68%);
+}
+.level-lock,
+.level-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.level-check {
+  color: #0a7f5d;
+  font-weight: 800;
+}

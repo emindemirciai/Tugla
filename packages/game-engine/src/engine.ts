@@ -35,6 +35,25 @@ const EFFECT_TICKS = {
 } as const;
 
 const BASE_SPEED = 6.2;
+
+/**
+ * Ball speed is a property of the level, not a global constant: later worlds
+ * play faster, boss rooms faster still, and a handful of levels per world are
+ * deliberately "rush" levels. Derived from the level definition so the client
+ * and the server's verification run always agree without extra payload.
+ */
+export const ballSpeedForLevel = (level: {
+  world: number;
+  index: number;
+  type?: string;
+}): number => {
+  const worldRamp = 1 + Math.min(9, Math.max(0, level.world - 1)) * 0.035;
+  const withinWorld = 1 + ((level.index - 1) % 50) * 0.0022;
+  const boss = level.type === 'WORLD_BOSS' ? 1.12 : level.type === 'MINI_BOSS' ? 1.06 : 1;
+  // Every seventh level is a sprint; the pattern is stable per level index.
+  const rush = level.index % 7 === 3 ? 1.1 : 1;
+  return Number((BASE_SPEED * worldRamp * withinWorld * boss * rush).toFixed(4));
+};
 const MIN_SPEED = 5.6;
 const MAX_SPEED = 9.4;
 const REGEN_TICKS = 900;
@@ -86,6 +105,8 @@ export class TuğlaEngine {
   private events: GameEvent[] = [];
   private randomState: number;
   private readonly initialLives: number;
+  /** Per-level ball speed; see ballSpeedForLevel. */
+  readonly ballSpeed: number;
   private readonly recordReplay: boolean;
   private readonly inputs: ReplayInput[] = [];
   private pendingLaunch = false;
@@ -101,6 +122,7 @@ export class TuğlaEngine {
     this.levelId = options.levelId ?? `${level.world}-${level.index}`;
     this.randomState = this.seed || 1;
     this.initialLives = options.lives ?? APP_DEFAULTS.livesPerLevel;
+    this.ballSpeed = ballSpeedForLevel(level);
     this.recordReplay = options.recordReplay ?? true;
 
     const paddle: Paddle = {
@@ -210,7 +232,7 @@ export class TuğlaEngine {
       if (ball.stuckOffset === null && this.snapshot.status === 'RUNNING') continue;
       const angleBias = Math.abs(drift) < 0.35 ? (this.random() - 0.5) * 1.2 : drift;
       ball.velocity.x = angleBias;
-      ball.velocity.y = BASE_SPEED;
+      ball.velocity.y = this.ballSpeed;
       ball.stuckOffset = null;
       launched = true;
     }
@@ -236,7 +258,7 @@ export class TuğlaEngine {
 
     for (let index = 0; index < spawned; index += 1) {
       const angle = (this.random() - 0.5) * 1.4;
-      const speed = Math.hypot(source.velocity.x, source.velocity.y) || BASE_SPEED;
+      const speed = Math.hypot(source.velocity.x, source.velocity.y) || this.ballSpeed;
       const ball = this.makeBall(
         source.position.x,
         source.position.y,
@@ -491,7 +513,7 @@ export class TuğlaEngine {
     ) {
       this.snapshot.paddle.shield = 0;
       ball.position.y = this.snapshot.paddle.y + 0.4;
-      ball.velocity.y = Math.abs(ball.velocity.y) || BASE_SPEED;
+      ball.velocity.y = Math.abs(ball.velocity.y) || this.ballSpeed;
       this.events.push({ tick: this.snapshot.tick, type: 'SHIELD_ABSORBED' });
       return;
     }

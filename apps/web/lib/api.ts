@@ -221,6 +221,9 @@ export interface RemoteConfig {
 }
 
 export interface LevelSummary {
+  /** Server-side progression gate; a locked level cannot be started. */
+  unlocked?: boolean;
+  completed?: boolean;
   id: string;
   slug: string;
   name: string;

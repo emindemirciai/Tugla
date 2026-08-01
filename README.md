@@ -79,6 +79,24 @@ JSON-LD bu dosyaları kullanır. Oyun listeleme siteleri için **4:3** görsel:
 `https://tugla.fun/brand/logo-512.png`.
 Ayrıntı: `apps/web/public/brand/README.md`.
 
+### Oynanış ve ilerleme
+
+- **Kontrol:** Platform artık parmağın/farenin tam altında. Ekran koordinatı, kameranın kadrajına
+  ışın izlemeyle platform düzlemine yansıtılıyor; eskiden tuval genişliği doğrudan tahtaya
+  eşlendiği için kadraj mektup kutusu olduğunda platform parmağın gerisinde kalıyordu.
+- **Can:** Bölüm başına 3.
+- **Top hızı sabit değil:** Dünya ilerledikçe artar, boss odalarında daha yüksektir ve her yedinci
+  bölüm bir hız bölümüdür. Değer bölüm tanımından türetildiği için sunucunun doğrulama simülasyonu
+  aynı hızı kullanır.
+- **Bölüm kilidi:** Tüm bölümler listelenir, ancak bir bölüm ancak öncekini tamamlayınca açılır.
+  Kilitli kart üzerinde kilit simgesi vardır, tamamlananda onay işareti. Kural sunucuda uygulanır:
+  kilitli bir bölüm için oturum açma isteği reddedilir.
+- **Görsel çeşitlilik:** Bölümler artık rastgele doldurulmuş tek bir dikdörtgen değil; 10 farklı
+  siluet (duvar, tuğla örgüsü, piramit, elmas, sütunlar, kale, dalga, dama, kapı, halkalar)
+  kampanyaya eşit dağıtıldı. Zor blok türleri siluetin kenarını ve üst sıraları izler, böylece
+  zorluk gözle okunur. Her dünyanın kendi paleti (blok, zemin, ızgara, ışık) ve her bölümün kendi
+  platform rengi vardır.
+
 ### Günün bölümü
 
 Her UTC gününde yayınlanmış kampanya bölümlerinden biri **tarihin hash'iyle** seçilir: herkes aynı
@@ -195,7 +213,7 @@ pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
 pnpm test            # 58 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
-pnpm test:e2e:api    # 97 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
+pnpm test:e2e:api    # 100 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
 ```
 
@@ -310,7 +328,7 @@ emitted decorator metadata.
 ### Verification gate
 
 `pnpm lint` · `pnpm typecheck` · `pnpm test` (58 unit tests) · `pnpm build` · `pnpm build:preview` ·
-`pnpm test:e2e:api` (97-check end-to-end journey against a real database). CI runs the identical gate
+`pnpm test:e2e:api` (100-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
 ### Score verification (anti-cheat)
@@ -349,6 +367,15 @@ Logo and promotional artwork live in `apps/web/public/brand/` and are served str
 and the JSON-LD graph point at them. Game directories that ask for a 4:3 thumbnail can link
 `https://tugla.fun/brand/cover-400x300.png` directly — it is a separate composition rather than a
 downscale of the wide cover.
+
+### Gameplay and progression
+
+The paddle now sits exactly under the pointer (the screen position is ray-cast onto the paddle
+plane instead of assuming the canvas equals the board). Lives are 3 per level. Ball speed is derived
+from the level — rising per world, faster in boss rooms, with a sprint level every seventh — so the
+server's verification run uses the identical value. Every level is listed but locked until the
+previous one is cleared, enforced server-side. Boards are drawn from ten distinct silhouettes spread
+evenly across the campaign, each world has its own palette and each level its own paddle colour.
 
 ### Daily challenge
 

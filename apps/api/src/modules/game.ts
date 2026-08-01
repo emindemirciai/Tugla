@@ -79,6 +79,20 @@ export class GameService {
     });
     if (!level) throw new NotFoundException('Level not found');
 
+    // The client hides locked levels; the server refuses them.
+    if (level.type !== 'COMMUNITY' && level.index > 1 && data.mode !== 'DAILY') {
+      const previous = await this.db.level.findFirst({
+        where: { world: level.world, index: level.index - 1, status: 'PUBLISHED' },
+        select: { id: true },
+      });
+      if (previous) {
+        const cleared = await this.db.gameSession.count({
+          where: { userId, status: 'COMPLETED', levelId: { in: [previous.id, level.id] } },
+        });
+        if (!cleared) throw new BadRequestException('Finish the previous level first');
+      }
+    }
+
     await this.db.gameSession.updateMany({
       where: { userId, status: { in: ['CREATED', 'ACTIVE', 'PAUSED'] } },
       data: { status: 'ABANDONED', finishedAt: new Date() },
@@ -732,7 +746,7 @@ export class GameController {
   }
 
   @Get('levels')
-  async levels(@Query() query: unknown) {
+  async levels(@Req() request: AuthenticatedRequest, @Query() query: unknown) {
     const page = pageSchema.parse(query);
     const filter = z
       .object({ world: z.coerce.number().int().min(1).max(1000).optional() })
@@ -758,7 +772,64 @@ export class GameController {
         estimatedSeconds: true,
       },
     });
-    return { items: levels, nextCursor: levels.at(-1)?.id ?? null };
+    // Progression gate: every level is listed, but a level only opens once the
+    // previous one has been completed. The first level of each world is always
+    // open so a player is never stranded, and the check runs server-side —
+    // hiding the button in the client would not be a rule.
+    const userId = request.user?.sub;
+    const completed = userId
+      ? new Set(
+          (
+            await this.database.client.gameSession.findMany({
+              where: {
+                userId,
+                status: 'COMPLETED',
+                levelId: { in: levels.map((level) => level.id) },
+              },
+              select: { levelId: true },
+              distinct: ['levelId'],
+            })
+          ).map((session) => session.levelId),
+        )
+      : new Set<string>();
+
+    // A level is also open when the previous index was completed, which needs
+    // the neighbour even if it fell outside this page.
+    const previousIds = await this.database.client.level.findMany({
+      where: {
+        status: 'PUBLISHED',
+        type: { not: 'COMMUNITY' },
+        OR: levels.map((level) => ({ world: level.world, index: level.index - 1 })),
+      },
+      select: { id: true, world: true, index: true },
+    });
+    const previousByKey = new Map(previousIds.map((row) => [`${row.world}:${row.index}`, row.id]));
+    const completedPrevious = userId
+      ? new Set(
+          (
+            await this.database.client.gameSession.findMany({
+              where: {
+                userId,
+                status: 'COMPLETED',
+                levelId: { in: [...previousByKey.values()] },
+              },
+              select: { levelId: true },
+              distinct: ['levelId'],
+            })
+          ).map((session) => session.levelId),
+        )
+      : new Set<string>();
+
+    const items = levels.map((level) => {
+      const previousId = previousByKey.get(`${level.world}:${level.index - 1}`);
+      const unlocked =
+        level.index === 1 ||
+        completed.has(level.id) ||
+        (previousId ? completedPrevious.has(previousId) : false);
+      return { ...level, unlocked, completed: completed.has(level.id) };
+    });
+
+    return { items, nextCursor: levels.at(-1)?.id ?? null };
   }
 
   @Get('levels/:id')

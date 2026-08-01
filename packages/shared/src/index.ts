@@ -7,7 +7,7 @@ export * from './replay';
 export const APP_DEFAULTS = {
   name: process.env.APP_NAME ?? 'Tuğla',
   slug: process.env.APP_SLUG ?? 'tugla',
-  livesPerLevel: 5,
+  livesPerLevel: 3,
   maxBalls: 500,
   worlds: 10,
   levelsPerWorld: 50,

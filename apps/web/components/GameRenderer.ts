@@ -32,6 +32,47 @@ interface Particle {
 }
 
 /**
+ * Per-level identity.
+ *
+ * Every board used to be the same blue because ordinary blocks — the vast
+ * majority — had one fixed colour and the paddle was always orange. The world
+ * theme now drives the ordinary block hue, the board tint and the grid, while
+ * the special kinds keep their fixed meanings (armored grey, explosive red…)
+ * so the palette stays informative. The paddle rotates through the palette per
+ * level, which makes progress visible at a glance.
+ */
+const THEME_PALETTES: Record<string, { block: number; board: number; grid: number; glow: number }> =
+  {
+    'neon-grid': { block: 0x52bdf5, board: 0x1d1540, grid: 0x3a2f6b, glow: 0x8b6cff },
+    'crystal-core': { block: 0x8b7bff, board: 0x201a4d, grid: 0x453a86, glow: 0xb9a8ff },
+    'solar-forge': { block: 0xff9a6b, board: 0x2a1733, grid: 0x5c3350, glow: 0xffb27a },
+    'frozen-circuit': { block: 0x7fd8ef, board: 0x122a44, grid: 0x2b5474, glow: 0xa8f0ff },
+    'dark-matter': { block: 0xc07bff, board: 0x1a1130, grid: 0x3d2a63, glow: 0xd6b6ff },
+    'quantum-lab': { block: 0x4fd6a8, board: 0x122e37, grid: 0x2b5f63, glow: 0x7ce8b0 },
+    'magma-vein': { block: 0xff7a8f, board: 0x2d1230, grid: 0x63274f, glow: 0xffb27a },
+    'aurora-field': { block: 0x6ad2ff, board: 0x14243f, grid: 0x2f4a75, glow: 0x9dffe0 },
+    'void-garden': { block: 0xffd166, board: 0x241a3d, grid: 0x4b3a73, glow: 0xffe6a3 },
+    singularity: { block: 0xff8ad0, board: 0x201436, grid: 0x4a2a6b, glow: 0xffa8e0 },
+  };
+
+const DEFAULT_PALETTE = THEME_PALETTES['neon-grid']!;
+
+/** Paddle colours cycle per level so two neighbours never look alike. */
+const PADDLE_COLORS = [
+  { color: 0xffc7a3, emissive: 0xff7a45 },
+  { color: 0xa8f0ff, emissive: 0x2497b8 },
+  { color: 0xd8ffe9, emissive: 0x12b886 },
+  { color: 0xe4d2ff, emissive: 0x7c5cff },
+  { color: 0xffe6a3, emissive: 0xf5a524 },
+  { color: 0xffc2d6, emissive: 0xe5487f },
+];
+
+export interface LevelStyle {
+  theme: string;
+  index: number;
+}
+
+/**
  * Three.js presentation layer.
  *
  * Rendering is entirely driven by the engine snapshot: this class owns no game
@@ -42,6 +83,12 @@ export class GameRenderer {
   private readonly scene = new THREE.Scene();
   private readonly renderer: THREE.WebGLRenderer;
   private readonly camera: THREE.PerspectiveCamera;
+  // Pointer projection: the paddle plane is z = 0.34, where the paddle sits.
+  private readonly raycaster = new THREE.Raycaster();
+  private readonly paddlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.34);
+  private readonly pointerHit = new THREE.Vector3();
+  private readonly pointerNdc = new THREE.Vector2();
+  private readonly palette: (typeof THEME_PALETTES)[string];
   private readonly blockMesh: THREE.InstancedMesh;
   private readonly ballMesh: THREE.InstancedMesh;
   private readonly bonusMesh: THREE.InstancedMesh;
@@ -63,7 +110,11 @@ export class GameRenderer {
     private readonly mount: HTMLElement,
     private readonly engine: TuğlaEngine,
     private quality: ResolvedQuality,
+    private readonly levelStyle: LevelStyle = { theme: 'neon-grid', index: 1 },
   ) {
+    const palette = THEME_PALETTES[levelStyle.theme] ?? DEFAULT_PALETTE;
+    this.palette = palette;
+    const paddleTone = PADDLE_COLORS[(levelStyle.index - 1) % PADDLE_COLORS.length]!;
     const viewportWidth = mount.clientWidth;
     const viewportHeight = mount.clientHeight;
     this.renderer = new THREE.WebGLRenderer({
@@ -164,8 +215,8 @@ export class GameRenderer {
 
     const paddleGeometry = new THREE.BoxGeometry(1, 1, 0.55);
     const paddleMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffc7a3,
-      emissive: 0xff7a45,
+      color: paddleTone.color,
+      emissive: paddleTone.emissive,
       emissiveIntensity: 0.8,
       metalness: 0.65,
       roughness: 0.18,
@@ -210,7 +261,7 @@ export class GameRenderer {
       key.shadow.camera.far = 40;
     }
     this.scene.add(key);
-    const accent = new THREE.PointLight(0x8b6cff, 36, 30);
+    const accent = new THREE.PointLight(this.palette.glow, 36, 30);
     accent.position.set(this.engine.width, 4, 5);
     this.scene.add(accent);
   }
@@ -218,7 +269,7 @@ export class GameRenderer {
   private buildBoard() {
     const geometry = new THREE.BoxGeometry(this.engine.width + 0.5, this.engine.height + 0.5, 0.35);
     const material = new THREE.MeshPhysicalMaterial({
-      color: 0x1d1540,
+      color: this.palette.board,
       roughness: 0.58,
       metalness: 0.42,
       clearcoat: this.quality.level === 'LOW' ? 0 : 0.7,
@@ -229,7 +280,12 @@ export class GameRenderer {
     this.scene.add(board);
     this.disposables.push(geometry, material);
 
-    const grid = new THREE.GridHelper(this.engine.height + 2, 32, 0x3a2f6b, 0x281f52);
+    const grid = new THREE.GridHelper(
+      this.engine.height + 2,
+      32,
+      this.palette.grid,
+      this.palette.board,
+    );
     grid.rotation.x = Math.PI / 2;
     grid.position.set(this.engine.width / 2, this.engine.height / 2, -0.24);
     this.scene.add(grid);
@@ -237,7 +293,11 @@ export class GameRenderer {
 
   private applyBlockColors() {
     this.engine.snapshot.blocks.forEach((block, index) => {
-      this.tempColor.setHex(BLOCK_COLORS[block.kind] ?? 0x52bdf5);
+      this.tempColor.setHex(
+        block.kind === 'NORMAL'
+          ? this.palette.block
+          : (BLOCK_COLORS[block.kind] ?? this.palette.block),
+      );
       this.blockMesh.setColorAt(index, this.tempColor);
     });
     if (this.blockMesh.instanceColor) this.blockMesh.instanceColor.needsUpdate = true;
@@ -406,9 +466,27 @@ export class GameRenderer {
   }
 
   /** Board-space X for a client pointer position. */
-  pointerToBoardX(clientX: number) {
+  /**
+   * Projects a screen X onto the paddle plane.
+   *
+   * Mapping the canvas width straight onto the board was wrong as soon as the
+   * camera started letterboxing the field: the board covers only part of the
+   * canvas, so the paddle trailed the finger and felt sluggish. Ray-casting
+   * against the plane the paddle lives on puts it exactly under the pointer at
+   * any aspect ratio.
+   */
+  pointerToBoardX(clientX: number, clientY?: number) {
     const rect = this.renderer.domElement.getBoundingClientRect();
-    return ((clientX - rect.left) / rect.width) * this.engine.width;
+    if (rect.width === 0 || rect.height === 0) return this.engine.width / 2;
+
+    const ndc = this.pointerNdc.set(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -(((clientY ?? rect.top + rect.height * 0.85) - rect.top) / rect.height) * 2 + 1,
+    );
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = this.raycaster.ray.intersectPlane(this.paddlePlane, this.pointerHit);
+    if (!hit) return this.engine.width / 2;
+    return hit.x;
   }
 
   get domElement() {
