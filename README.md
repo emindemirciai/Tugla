@@ -71,10 +71,12 @@ doluyken görünür; aksi halde arayüz sağlayıcının kapalı olduğunu dür�
 ### Marka varlıkları ve paylaşım görseli
 
 Logo ve tanıtım görselleri `apps/web/public/brand/` altındadır ve yayındayken doğrudan servis edilir:
-`logo.svg`, `logo-512.png`, `logo-wordmark.svg|png`, `cover-1200x630.svg|png`,
-`cover-1280x720.svg|png`. Open Graph, Twitter kartı, PWA manifesti ve JSON-LD bu dosyaları
-kullanır. Oyun listeleme siteleri için doğrudan bağlantı:
-`https://tugla.fun/brand/cover-1200x630.png` (1200×630) ve `https://tugla.fun/brand/logo-512.png`.
+`logo.svg`, `logo-512.png`, `logo-wordmark.svg|png`, `cover-400x300.svg|png` (+ `cover-800x600.png`),
+`cover-1200x630.svg|png`, `cover-1280x720.svg|png`. Open Graph, Twitter kartı, PWA manifesti ve
+JSON-LD bu dosyaları kullanır. Oyun listeleme siteleri için **4:3** görsel:
+`https://tugla.fun/brand/cover-400x300.png`; sosyal paylaşım için
+`https://tugla.fun/brand/cover-1200x630.png`; kare ikon için
+`https://tugla.fun/brand/logo-512.png`.
 Ayrıntı: `apps/web/public/brand/README.md`.
 
 ### Günün bölümü
@@ -342,9 +344,11 @@ and the server-side `GOOGLE_CLIENT_ID` are configured.
 ### Brand assets
 
 Logo and promotional artwork live in `apps/web/public/brand/` and are served straight from the site:
-`logo.svg`, `logo-512.png`, `logo-wordmark.svg|png`, `cover-1200x630.svg|png`,
-`cover-1280x720.svg|png`. Open Graph, the Twitter card, the PWA manifest and the JSON-LD graph all
-point at them, so a listing site can link `https://tugla.fun/brand/cover-1200x630.png` directly.
+`logo.svg`, `logo-512.png`, `logo-wordmark.svg|png`, `cover-400x300.svg|png` (plus a 2× render),
+`cover-1200x630.svg|png` and `cover-1280x720.svg|png`. Open Graph, the Twitter card, the PWA manifest
+and the JSON-LD graph point at them. Game directories that ask for a 4:3 thumbnail can link
+`https://tugla.fun/brand/cover-400x300.png` directly — it is a separate composition rather than a
+downscale of the wide cover.
 
 ### Daily challenge
 

@@ -15,6 +15,8 @@ Canlı adresler (production URLs):
 - https://tugla.fun/brand/logo.svg
 - https://tugla.fun/brand/logo-512.png
 - https://tugla.fun/brand/logo-wordmark.png
+- https://tugla.fun/brand/cover-400x300.png (4:3 listeleme)
+- https://tugla.fun/brand/cover-800x600.png (4:3, 2× ekranlar)
 - https://tugla.fun/brand/cover-1200x630.png
 - https://tugla.fun/brand/cover-1280x720.png
 
@@ -23,5 +25,8 @@ mürekkep `#1b1533`, sahne `#2a2154 → #171034`.
 
 İşaret, oyunun kendisidir: üç sıra tuğla, ortadaki sıra kırılmış ve top aradan geçiyor.
 The mark is the game itself — three courses of brick, the middle one broken open, ball punching through.
+
+4:3 görsel geniş kapaktan türetilmedi: 400 pikselde geniş yerleşim okunmaz hâle geldiği için ayrı
+kurgulandı — kırık duvar kahraman, metin ikiye indi, rozet genişlikleri etiketten hesaplanıyor.
 
 SVG sürümlerdeki metin sistem yazı tipi yığınını kullanır; sabit sonuç gereken yerlerde PNG'yi tercih edin.
