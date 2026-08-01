@@ -297,18 +297,24 @@ export class GameRenderer {
       key.shadow.camera.far = 40;
     }
     this.scene.add(key);
-    const accent = new THREE.PointLight(this.palette.glow, 36, 30);
-    accent.position.set(this.engine.width, 4, 5);
+    // Placed well outside the field: close to the board it produced a visible
+    // specular dot instead of ambience.
+    const accent = new THREE.PointLight(this.palette.glow, 60, 60);
+    accent.position.set(this.engine.width + 7, this.engine.height * 0.75, 14);
     this.scene.add(accent);
   }
 
   private buildBoard() {
     const geometry = new THREE.BoxGeometry(this.engine.width + 0.5, this.engine.height + 0.5, 0.35);
-    const material = new THREE.MeshPhysicalMaterial({
+    // Matte on purpose. The board used to be a clearcoated, half-metallic
+    // surface, so the accent point light burned a small round highlight into it
+    // — the "white ball stuck in the background" players kept reporting. A
+    // backdrop must not be glossy: no clearcoat, no metalness, rough enough that
+    // no point light can leave a hotspot on it.
+    const material = new THREE.MeshStandardMaterial({
       color: this.palette.board,
-      roughness: 0.58,
-      metalness: 0.42,
-      clearcoat: this.quality.level === 'LOW' ? 0 : 0.7,
+      roughness: 1,
+      metalness: 0,
     });
     const board = new THREE.Mesh(geometry, material);
     board.position.set(this.engine.width / 2, this.engine.height / 2, -0.45);

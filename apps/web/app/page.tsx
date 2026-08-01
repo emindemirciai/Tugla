@@ -17,11 +17,13 @@ export default function HomePage() {
     { number: '120 Hz', label: t('landing.stats.fps') },
   ];
 
-  const features = [
-    { title: t('landing.feature1.title'), body: t('landing.feature1.body') },
-    { title: t('landing.feature2.title'), body: t('landing.feature2.body') },
-    { title: t('landing.feature3.title'), body: t('landing.feature3.body') },
-  ];
+  // Six cards, three across. The detail line is revealed on hover and on
+  // keyboard focus — it must never be the only place a fact lives.
+  const features = [1, 2, 3, 4, 5, 6].map((index) => ({
+    title: t(`landing.feature${index}.title` as 'landing.feature1.title'),
+    body: t(`landing.feature${index}.body` as 'landing.feature1.body'),
+    detail: t(`landing.feature${index}.detail` as 'landing.feature1.detail'),
+  }));
 
   return (
     <main className="landing">
@@ -86,8 +88,16 @@ export default function HomePage() {
               ))}
             </div>
             <div className="preview-field">
+              {/* Ambient swarm: the "storm" the product is about. */}
+              {Array.from({ length: 9 }, (_, index) => (
+                <i
+                  key={index}
+                  className={`preview-spark spark-${index % 3}`}
+                  style={{ '--i': index } as CSSProperties}
+                />
+              ))}
+              {/* Lead ball: shares the paddle's 3s half-period, so it lands on it. */}
               <i className="preview-ball" />
-              <i className="preview-ball preview-ball-two" />
             </div>
             <div className="preview-paddle" />
           </div>
@@ -110,10 +120,13 @@ export default function HomePage() {
         </div>
         <div className="world-cards">
           {features.map((feature, index) => (
-            <article key={feature.title} className={`world-card world-${index + 1}`}>
+            <article key={feature.title} className={`world-card world-${index + 1}`} tabIndex={0}>
               <span>0{index + 1}</span>
               <h3>{feature.title}</h3>
               <p>{feature.body}</p>
+              <div className="world-card-detail">
+                <p>{feature.detail}</p>
+              </div>
             </article>
           ))}
         </div>

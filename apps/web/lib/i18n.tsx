@@ -199,6 +199,24 @@ const tr = {
   'landing.feature3.title': 'Doğrulanmış skorlar',
   'landing.feature3.body':
     'Her oyun girdileriyle kaydedilir ve sunucu aynı tohumla yeniden simüle eder. Liderlik tablolarına hile giremez.',
+  'landing.feature4.title': 'Günün bölümü',
+  'landing.feature4.body': 'Herkes aynı bölümü oynar; günlük tablo her gece sıfırlanır.',
+  'landing.feature4.detail':
+    'Bölüm, tarihten türetilen sabit bir seçimle belirlenir; kimse için farklı değildir ve destek ekibi aynı seçimi yeniden üretebilir.',
+  'landing.feature5.title': 'Kendi bölümünü tasarla',
+  'landing.feature5.body': 'Izgara editörüyle tasarla, test et, incelemeye gönder.',
+  'landing.feature5.detail':
+    'Yayınlanan bölümler beğeni alır ve bildirilebilir; üç farklı oyuncu bildirdiğinde bölüm otomatik olarak incelemeye döner.',
+  'landing.feature6.title': 'Her cihazda aynı hesap',
+  'landing.feature6.body': 'Bulut kayıt, çoklu cihaz ve sınırlı çevrim dışı oyun.',
+  'landing.feature6.detail':
+    'İlerlemen sunucuda tutulur; çevrim dışı oynanan bölümler bağlantı gelince sırasız ilerleme olarak eşitlenir ve tabloları etkilemez.',
+  'landing.feature1.detail':
+    'Platform parmağın altına ışın izlemeyle yansıtılır; dokunmatik, fare ve klavye aynı hassasiyetle çalışır.',
+  'landing.feature2.detail':
+    'Bonuslar tek top, top sürüsü, güvenlik ağı, kalkan, mıknatıs ve daha fazlası arasında değişir; 500 top sınırında fazla enerji Overcharge çarpanına döner.',
+  'landing.feature3.detail':
+    'İstemci girdileri kaydeder, sunucu aynı tohumla yeniden simüle eder. Uyuşmayan sonuç hiçbir tabloya yazılmaz.',
   'landing.worlds.title': 'On dünya, on atmosfer',
   'landing.worlds.body':
     'Neon ızgaradan tekillik çekirdeğine: her dünya kendi blok davranışları, bonus dengesi ve boss mekanikleriyle gelir.',
@@ -562,6 +580,24 @@ const en: Record<TranslationKey, string> = {
   'landing.feature3.title': 'Verified scores',
   'landing.feature3.body':
     'Every run is recorded with its inputs and re-simulated server-side with the same seed. Cheats never reach the leaderboards.',
+  'landing.feature4.title': 'Daily challenge',
+  'landing.feature4.body': 'Everyone plays the same level; the board resets nightly.',
+  'landing.feature4.detail':
+    'The level is derived from the date, so it is identical for everyone and support can reproduce the same pick.',
+  'landing.feature5.title': 'Build your own levels',
+  'landing.feature5.body': 'Design on a grid, test it, submit it for review.',
+  'landing.feature5.detail':
+    'Published levels collect ratings and can be reported; three distinct reports send a level back to review automatically.',
+  'landing.feature6.title': 'One account, every device',
+  'landing.feature6.body': 'Cloud saves, multi-device and limited offline play.',
+  'landing.feature6.detail':
+    'Progress lives on the server; offline runs sync as unranked progress when you reconnect and never touch the leaderboards.',
+  'landing.feature1.detail':
+    'The paddle is ray-cast to sit under your finger; touch, mouse and keyboard share the same precision.',
+  'landing.feature2.detail':
+    'Bonuses rotate between a single ball, swarms, the safety net, shields, magnets and more; at the 500-ball cap the surplus becomes an Overcharge multiplier.',
+  'landing.feature3.detail':
+    'The client records inputs and the server re-simulates them with the same seed. A result that does not match never reaches a leaderboard.',
   'landing.worlds.title': 'Ten worlds, ten moods',
   'landing.worlds.body':
     'From neon grid to singularity core: each world ships its own block behaviours, bonus balance and boss mechanics.',
