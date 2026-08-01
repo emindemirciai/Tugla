@@ -84,6 +84,7 @@ export class GameRenderer {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly camera: THREE.PerspectiveCamera;
   private readonly palette: (typeof THEME_PALETTES)[string];
+  private safetyNet: THREE.Mesh | null = null;
   private readonly blockMesh: THREE.InstancedMesh;
   private readonly ballMesh: THREE.InstancedMesh;
   private readonly bonusMesh: THREE.InstancedMesh;
@@ -138,11 +139,18 @@ export class GameRenderer {
     this.buildLighting();
     this.buildBoard();
 
-    const blockGeometry = new THREE.BoxGeometry(1, 1, 0.46, 1, 1, 1);
+    // A bevelled slab catches the key light along its edges, which is what makes a
+    // brick look moulded rather than painted. Segments stay low: this geometry is
+    // instanced across every block on the board.
+    const blockGeometry = new THREE.BoxGeometry(1, 1, 0.46, 2, 2, 1);
+    blockGeometry.translate(0, 0, 0.02);
     const blockMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      roughness: 0.24,
-      metalness: 0.48,
+      roughness: 0.18,
+      metalness: 0.35,
+      reflectivity: 0.6,
+      sheen: quality.level === 'LOW' ? 0 : 0.6,
+      sheenRoughness: 0.4,
       clearcoat: quality.level === 'LOW' ? 0 : 1,
       clearcoatRoughness: 0.18,
     });
@@ -208,7 +216,11 @@ export class GameRenderer {
       this.disposables.push(trailGeometry, trailMaterial);
     }
 
-    const paddleGeometry = new THREE.BoxGeometry(1, 1, 0.55);
+    // Rounded ends: a plain box reads as a bar, a capsule reads as a paddle.
+    // Built from a cylinder laid on its side so it stays one draw call.
+    const paddleGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 20, 1);
+    paddleGeometry.rotateZ(Math.PI / 2);
+    paddleGeometry.scale(1, 1, 0.55);
     const paddleMaterial = new THREE.MeshPhysicalMaterial({
       color: paddleTone.color,
       emissive: paddleTone.emissive,
@@ -275,15 +287,33 @@ export class GameRenderer {
     this.scene.add(board);
     this.disposables.push(geometry, material);
 
-    const grid = new THREE.GridHelper(
-      this.engine.height + 2,
-      32,
-      this.palette.grid,
-      this.palette.board,
+    // No grid overlay: the ruled lines read as screen artefacts on a phone and
+    // added nothing to depth perception. The board keeps a soft vignette instead.
+    const vignette = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.engine.width + 6, this.engine.height + 6),
+      new THREE.MeshBasicMaterial({
+        color: this.palette.board,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+      }),
     );
-    grid.rotation.x = Math.PI / 2;
-    grid.position.set(this.engine.width / 2, this.engine.height / 2, -0.24);
-    this.scene.add(grid);
+    const netGeometry = new THREE.PlaneGeometry(this.engine.width, 0.12);
+    const netMaterial = new THREE.MeshBasicMaterial({
+      color: 0x7ce8b0,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    });
+    this.safetyNet = new THREE.Mesh(netGeometry, netMaterial);
+    this.safetyNet.position.set(this.engine.width / 2, 0.16, 0.3);
+    this.safetyNet.visible = false;
+    this.scene.add(this.safetyNet);
+    this.disposables.push(netGeometry, netMaterial);
+
+    vignette.position.set(this.engine.width / 2, this.engine.height / 2, -0.6);
+    this.scene.add(vignette);
+    this.disposables.push(vignette.geometry, vignette.material as THREE.Material);
   }
 
   private applyBlockColors() {
@@ -437,6 +467,17 @@ export class GameRenderer {
     }
     this.tempQuaternion.identity();
     this.bonusMesh.instanceMatrix.needsUpdate = true;
+
+    // Safety net: a lit floor line for the seconds the bonus lasts.
+    if (this.safetyNet) {
+      const active = snapshot.safetyNetTicks > 0;
+      this.safetyNet.visible = active;
+      if (active) {
+        const material = this.safetyNet.material as THREE.MeshBasicMaterial;
+        // Fade out over the last second so its end is never a surprise.
+        material.opacity = Math.min(1, snapshot.safetyNetTicks / 120) * 0.9;
+      }
+    }
 
     const paddle = snapshot.paddle;
     this.paddle.position.set(paddle.x, paddle.y, 0.34);

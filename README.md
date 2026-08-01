@@ -79,6 +79,15 @@ JSON-LD bu dosyaları kullanır. Oyun listeleme siteleri için **4:3** görsel:
 `https://tugla.fun/brand/logo-512.png`.
 Ayrıntı: `apps/web/public/brand/README.md`.
 
+### Skor doğrulama gerileme kaydı
+
+Dürüst oyuncular bir süre `replay-score-mismatch` ile reddedildi. Sebep: platform hedefi tekrar
+kaydında dört ondalıkla saklanıyor, canlı oyun ise tam çift duyarlıkla entegre ediyordu. Bu kadar
+kaotik bir sistemde o küçük fark binlerce tikte tamamen farklı bir tahtaya dönüşüyor. Artık hedef
+**uygulanmadan önce** yuvarlanıyor, yani canlı oyun ve doğrulama aynı sayıyı görüyor; ayrıca tekrar
+istemcinin bildirdiği tikten ileriye simüle etmiyor. Beş bölümü gerçek kare süreleriyle oynayıp
+sunucu gibi doğrulayan testler eklendi.
+
 ### Oynanış ve ilerleme
 
 - **Kontrol:** Platform artık parmağın/farenin tam altında. Ekran koordinatı, kameranın kadrajına
@@ -93,6 +102,11 @@ Ayrıntı: `apps/web/public/brand/README.md`.
 - **Bölüm kilidi:** Tüm bölümler listelenir, ancak bir bölüm ancak öncekini tamamlayınca açılır.
   Kilitli kart üzerinde kilit simgesi vardır, tamamlananda onay işareti. Kural sunucuda uygulanır:
   kilitli bir bölüm için oturum açma isteği reddedilir.
+- **Bonuslar:** Havuz ağırlıklandırıldı; tek top yaygın, büyük sürüler nadir, faydalı bonuslar
+  çoğunlukta. Yeni **güvenlik ağı** bonusu 5 saniye boyunca tabana ışıklı bir zemin serer: toplar
+  düşmez, geri sekerler ve can gitmez.
+- **Ses:** Bloğa çarpma, kırılmayan bloğa çarpma ve blok patlaması ayrı seslerdir; güvenlik ağı ve
+  kalkan da kendi sesine sahiptir. Ses, oyun içi ayar panelinden açılıp kapatılır.
 - **Görsel çeşitlilik:** Bölümler artık rastgele doldurulmuş tek bir dikdörtgen değil; 10 farklı
   siluet (duvar, tuğla örgüsü, piramit, elmas, sütunlar, kale, dalga, dama, kapı, halkalar)
   kampanyaya eşit dağıtıldı. Zor blok türleri siluetin kenarını ve üst sıraları izler, böylece
@@ -213,7 +227,7 @@ admin kullanıcılar, SEO/GEO çıktıları) TR/EN anahtarıyla gösterir. İçi
 ```bash
 pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
-pnpm test            # 75 birim test (engine, shared, api, web, admin)
+pnpm test            # 82 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
 pnpm test:e2e:api    # 100 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
@@ -329,7 +343,7 @@ emitted decorator metadata.
 
 ### Verification gate
 
-`pnpm lint` · `pnpm typecheck` · `pnpm test` (75 unit tests) · `pnpm build` · `pnpm build:preview` ·
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (82 unit tests) · `pnpm build` · `pnpm build:preview` ·
 `pnpm test:e2e:api` (100-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 

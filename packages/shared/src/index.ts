@@ -72,6 +72,7 @@ export const bonusKinds = [
   'STICKY',
   'SHIELD',
   'LIFE_GUARD',
+  'SAFETY_NET',
 ] as const;
 
 export type BonusKind = (typeof bonusKinds)[number];

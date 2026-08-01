@@ -1901,3 +1901,42 @@ textarea:focus {
   color: #0a7f5d;
   font-weight: 800;
 }
+
+/* ----- world strip: scrollable with affordances ------------------------------ */
+.world-strip-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.world-strip {
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 8px;
+  flex: 1;
+}
+.world-chip {
+  scroll-snap-align: start;
+}
+.strip-arrow {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.strip-arrow:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+@media (max-width: 560px) {
+  /* On a phone the thumb scrolls; arrows would only steal width. */
+  .strip-arrow {
+    display: none;
+  }
+}

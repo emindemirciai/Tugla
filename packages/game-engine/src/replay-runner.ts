@@ -35,7 +35,10 @@ export const runReplay = (
     recordReplay: false,
   });
 
-  const maxTicks = Math.min(options.maxTicks ?? 600_000, Math.max(document.finalTick, 1) + 2);
+  // Stop exactly where the client stopped: two spare ticks were enough to
+  // destroy one more block and report a different outcome for runs that ended
+  // without a win or a loss.
+  const maxTicks = Math.min(options.maxTicks ?? 600_000, Math.max(document.finalTick, 1));
   const byTick = new Map<number, typeof document.inputs>();
   for (const input of document.inputs) {
     const bucket = byTick.get(input.t);

@@ -74,10 +74,17 @@ export class GameAudio {
           this.tone('paddle', 220, 0.06, 'sine', 60);
           break;
         case 'BLOCK_HIT':
-          this.tone('hit', 520, 0.05, 'square');
+          // A block that survived the hit: duller, lower, clearly not a break.
+          this.tone('hit', 300, 0.045, 'square', -40);
           break;
         case 'BLOCK_DESTROYED':
-          this.tone('break', 660, 0.09, 'triangle', 180);
+          this.tone('break', 680, 0.09, 'triangle', 220);
+          break;
+        case 'SAFETY_NET_BOUNCE':
+          this.tone('net', 420, 0.12, 'sine', 240);
+          break;
+        case 'SHIELD_ABSORBED':
+          this.tone('shield', 500, 0.14, 'sine', 180);
           break;
         case 'BLOCK_EXPLODED':
           this.tone('boom', 110, 0.3, 'sawtooth', -60);

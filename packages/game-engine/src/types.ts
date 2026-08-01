@@ -75,6 +75,7 @@ export type GameEventType =
   | 'OVERCHARGE'
   | 'LIFE_LOST'
   | 'SHIELD_ABSORBED'
+  | 'SAFETY_NET_BOUNCE'
   | 'BOSS_DAMAGED'
   | 'BOSS_DEFEATED'
   | 'LEVEL_COMPLETED'
@@ -104,6 +105,8 @@ export interface EngineSnapshot {
   status: EngineStatus;
   /** Damage multiplier granted by Overcharge once the ball cap is reached. */
   overcharge: number;
+  /** Remaining ticks of the safety-net floor (bonus). */
+  safetyNetTicks: number;
   blocksDestroyed: number;
   maxBallsReached: number;
   bossDefeated: boolean;

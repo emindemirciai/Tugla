@@ -95,6 +95,8 @@ const tr = {
   'play.badge.daily': 'GÜNLÜK',
   'play.badge.community': 'TOPLULUK',
   'play.worldsAria': 'Dünyalar',
+  'play.worldsPrev': 'Önceki dünyalar',
+  'play.worldsNext': 'Sonraki dünyalar',
   'play.levelsAria': 'Bölümler',
 
   // in-game
@@ -458,6 +460,8 @@ const en: Record<TranslationKey, string> = {
   'play.badge.daily': 'DAILY',
   'play.badge.community': 'COMMUNITY',
   'play.worldsAria': 'Worlds',
+  'play.worldsPrev': 'Previous worlds',
+  'play.worldsNext': 'Next worlds',
   'play.levelsAria': 'Levels',
 
   'game.exit': '← Exit',

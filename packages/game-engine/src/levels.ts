@@ -45,19 +45,37 @@ const kindPoolForWorld = (world: number): BlockKind[] => {
   return pools[Math.min(pools.length - 1, world - 1)] ?? pools[0]!;
 };
 
+/**
+ * Bonus pool.
+ *
+ * Extra balls used to dominate because three of the eight entries added balls;
+ * every drop felt like the same "+3 balls". The pool is now weighted: a single
+ * extra ball is the common case, larger swarms are rare, and the utility
+ * bonuses (net, shield, magnet, slow time…) make up the bulk so two drops in a
+ * row rarely feel alike.
+ */
 const bonusPool: BonusKind[] = [
+  'BALL_1',
+  'BALL_1',
+  'BALL_1',
   'BALL_3',
   'BALL_5',
   'BALL_DOUBLE',
-  'PADDLE_GROW',
-  'FIREBALL',
-  'PIERCING',
-  'MAGNET',
+  'SAFETY_NET',
+  'SAFETY_NET',
   'SHIELD',
+  'PADDLE_GROW',
+  'PADDLE_GROW',
+  'MAGNET',
+  'STICKY',
   'SLOW_TIME',
   'LASER',
-  'CHAIN_LIGHTNING',
+  'FIREBALL',
+  'PIERCING',
   'EXPLOSIVE',
+  'CHAIN_LIGHTNING',
+  'GIANT_BALL',
+  'LIFE_GUARD',
 ];
 
 const hitPointsFor = (kind: BlockKind, index: number) => {

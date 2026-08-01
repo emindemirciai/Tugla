@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { GameCanvas, type CompletionSummary } from '../../components/GameCanvas';
 import { HubTabs } from '../../components/PlayerNav';
 import { gameApi, type LevelSummary, type SessionStart } from '../../lib/api';
@@ -35,6 +35,7 @@ function PlayInner() {
     params.get('verify') === 'sent' ? t('play.banner.verifySent') : null,
   );
   const [offlineQueued, setOfflineQueued] = useState(0);
+  const worldStrip = useRef<HTMLElement>(null);
   const [daily, setDaily] = useState<Awaited<ReturnType<typeof gameApi.daily>> | null>(null);
 
   // No guest accounts: the game requires a signed-in player.
@@ -186,21 +187,39 @@ function PlayInner() {
         </section>
       )}
 
-      <section className="world-strip" aria-label={t('play.worldsAria')}>
-        {worlds.map((entry) => (
-          <button
-            key={entry.world}
-            type="button"
-            className={`world-chip world-${entry.theme} ${entry.world === world ? 'active' : ''}`}
-            onClick={() => setWorld(entry.world)}
-          >
-            <span>
-              {t('play.world')} {String(entry.world).padStart(2, '0')}
-            </span>
-            <strong>{entry.theme.replace('-', ' ')}</strong>
-          </button>
-        ))}
-      </section>
+      <div className="world-strip-wrap">
+        <button
+          type="button"
+          className="strip-arrow strip-arrow-left"
+          aria-label={t('play.worldsPrev')}
+          onClick={() => worldStrip.current?.scrollBy({ left: -240, behavior: 'smooth' })}
+        >
+          ‹
+        </button>
+        <section className="world-strip" ref={worldStrip} aria-label={t('play.worldsAria')}>
+          {worlds.map((entry) => (
+            <button
+              key={entry.world}
+              type="button"
+              className={`world-chip world-${entry.theme} ${entry.world === world ? 'active' : ''}`}
+              onClick={() => setWorld(entry.world)}
+            >
+              <span>
+                {t('play.world')} {String(entry.world).padStart(2, '0')}
+              </span>
+              <strong>{entry.theme.replace('-', ' ')}</strong>
+            </button>
+          ))}
+        </section>
+        <button
+          type="button"
+          className="strip-arrow strip-arrow-right"
+          aria-label={t('play.worldsNext')}
+          onClick={() => worldStrip.current?.scrollBy({ left: 240, behavior: 'smooth' })}
+        >
+          ›
+        </button>
+      </div>
 
       <section className="level-grid" aria-label={t('play.levelsAria')}>
         {levelsLoading && <p className="loading-note">{t('play.levelsLoading')}</p>}

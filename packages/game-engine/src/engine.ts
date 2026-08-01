@@ -32,6 +32,8 @@ const EFFECT_TICKS = {
   MAGNET: 1440,
   SLOW_TIME: 720,
   STICKY: 1440,
+  /** Five seconds of floor at 120 Hz. */
+  SAFETY_NET: 600,
 } as const;
 
 const BASE_SPEED = 6.2;
@@ -151,6 +153,7 @@ export class TuğlaEngine {
       paddle,
       status: 'READY',
       overcharge: 1,
+      safetyNetTicks: 0,
       blocksDestroyed: 0,
       maxBallsReached: 1,
       bossDefeated: false,
@@ -215,8 +218,17 @@ export class TuğlaEngine {
       this.snapshot.paddle.width / 2,
       this.width - this.snapshot.paddle.width / 2,
     );
-    if (options.record !== false) this.record('m', clamped);
-    this.snapshot.paddle.targetX = clamped;
+    // Quantise before applying, not only before recording.
+    //
+    // The replay stores four decimals, so a live run that steered with full
+    // double precision integrated a slightly different paddle position than the
+    // verification run. In a system this chaotic that tiny gap compounds over
+    // thousands of ticks into a different board — which is why honest players
+    // were being rejected with replay-score-mismatch. Live play and replay must
+    // see the exact same number.
+    const quantised = Number(clamped.toFixed(4));
+    if (options.record !== false) this.record('m', quantised);
+    this.snapshot.paddle.targetX = quantised;
   }
 
   /**
@@ -336,6 +348,11 @@ export class TuğlaEngine {
       case 'SHIELD':
         paddle.shield = 1;
         break;
+      case 'SAFETY_NET':
+        // A floor across the whole board for five seconds: balls bounce back up
+        // instead of being lost, so a busy board cannot wipe a life in one go.
+        this.snapshot.safetyNetTicks = EFFECT_TICKS.SAFETY_NET;
+        break;
       case 'LIFE_GUARD':
         this.snapshot.lives = Math.min(APP_DEFAULTS.livesPerLevel, this.snapshot.lives + 1);
         break;
@@ -448,6 +465,7 @@ export class TuğlaEngine {
     if (paddle.magnetTicks > 0) paddle.magnetTicks -= 1;
     if (paddle.stickyTicks > 0) paddle.stickyTicks -= 1;
     if (paddle.laserTicks > 0) paddle.laserTicks -= 1;
+    if (this.snapshot.safetyNetTicks > 0) this.snapshot.safetyNetTicks -= 1;
 
     for (const ball of this.snapshot.balls) {
       for (const [effect, ticks] of ball.effects) {
@@ -507,6 +525,12 @@ export class TuğlaEngine {
   }
 
   private retireBall(ball: Ball) {
+    if (this.snapshot.safetyNetTicks > 0) {
+      ball.position.y = 0.22;
+      ball.velocity.y = Math.abs(ball.velocity.y) || this.ballSpeed;
+      this.events.push({ tick: this.snapshot.tick, type: 'SAFETY_NET_BOUNCE', entityId: ball.id });
+      return;
+    }
     if (
       this.snapshot.paddle.shield > 0 &&
       this.snapshot.balls.filter((b) => b.active).length === 1
