@@ -55,6 +55,9 @@ pnpm build:preview          # preview/ui-preview.html
 2. **Her metin TR ve EN olmalı** (`apps/web/lib/i18n.tsx`, `apps/admin/lib/i18n.ts`,
    `apps/api/src/services/mail.ts`). Sözlük eşliği birim testiyle korunur.
 3. Gizli anahtar repoya yazılmaz; her şey `.env` üzerinden (`.env.example` tek referans).
+   **Demo/örnek veride gerçek kişi izlenimi veren ad kullanılmaz**: tarafsız İngilizce yer tutucular
+   (`Player One`, `Smoke Player`) ve `example.com` adresleri kullanılır — KVKK/GDPR açısından
+   ekran görüntüsü ve önizlemeler kişisel veri gibi görünmemelidir.
 4. Küçük ve anlamlı commit'ler; **kapı yeşil olmadan commit yok** — komutu çalıştırmak yetmez,
    çıktısı okunmalı. (Bir kez `pnpm test:e2e:api` çıktısı okunmadan commit atıldı ve kırmızıydı.)
    Uçtan uca smoke kendi sürecinde hız sınırını yükseltir; bu kasıtlıdır, sınırı ölçen yer

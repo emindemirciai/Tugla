@@ -106,7 +106,7 @@ async function seed() {
       create: {
         email: adminEmail.toLowerCase(),
         username: 'tugla-admin',
-        displayName: 'Tuğla Admin',
+        displayName: 'Tugla Admin',
         passwordHash,
         role: UserRole.SUPER_ADMIN,
         emailVerifiedAt: new Date(),

@@ -4,8 +4,12 @@
  *
  * The screens below are rendered inside isolated iframes using the *real*
  * compiled stylesheets from the Next.js production builds, so what you see is
- * the shipped design system rather than a hand-drawn mockup. The data shown is
- * clearly labelled sample data — the preview never calls the API.
+ * the shipped design system rather than a hand-drawn mockup. The preview never
+ * calls the API.
+ *
+ * Sample records use neutral English placeholders ("Player One", example.com
+ * addresses) on purpose: demo material must never look like, or be mistaken
+ * for, a real person's data.
  *
  * Usage: pnpm build:preview   (run after `pnpm build`)
  */
@@ -129,7 +133,7 @@ const screens = `[
           <a class="brand" href="#"><span class="brand-mark">◇</span>\${APP}</a>
           <nav class="nav-links">
             <span class="lang-switch compact"><button class="\${TR}">TR</button><button class="\${EN}">EN</button></span>
-            <a href="#">Ada Yılmaz</a><button class="button-quiet">\${L('Çıkış','Sign out')}</button>
+            <a href="#">Player One</a><button class="button-quiet">\${L('Çıkış','Sign out')}</button>
           </nav>
         </header>
         \${tabs(0)}
@@ -242,7 +246,7 @@ const screens = `[
         <table class="hub-table">
           <thead><tr><th>\${L('Sıra','Rank')}</th><th>\${L('Oyuncu','Player')}</th><th>\${L('Skor','Score')}</th></tr></thead>
           <tbody>
-            \${[['1','Mira Kaya','412,880',''],['2','J. Novak','388,140',''],['3','Ada Yılmaz','355,020','self-row'],['4','K. Adeyemi','341,700',''],['5','L. Rossi','299,410','']].map((r)=>
+            \${[['1','Player Two','412,880',''],['2','Player Three','388,140',''],['3','Player One','355,020','self-row'],['4','Player Four','341,700',''],['5','Player Five','299,410','']].map((r)=>
               '<tr class="'+r[3]+'"><td>'+r[0]+'</td><td>'+r[1]+(r[3]?' <span class="tag tag-ok">'+L('sen','you')+'</span>':'')+'</td><td>'+r[2]+'</td></tr>').join('')}
           </tbody>
         </table>
@@ -287,7 +291,7 @@ const screens = `[
               .map((n)=>'<a class="'+(n[1]?'active':'')+'">'+n[0]+'</a>').join('')}
           </nav>
           <span class="lang-switch"><button class="\${TR}">TR</button><button class="\${EN}">EN</button></span>
-          <footer><span>Ops Lead<small>SUPER_ADMIN</small></span><button>\${L('Çıkış','Sign out')}</button></footer>
+          <footer><span>Demo Staff<small>SUPER_ADMIN</small></span><button>\${L('Çıkış','Sign out')}</button></footer>
         </aside>
         <main class="admin-main">
           <header class="admin-header"><h1>\${L('Genel bakış','Overview')}</h1><span class="admin-env">production</span></header>
@@ -316,7 +320,7 @@ const screens = `[
             <div class="table-wrap"><table class="admin-table">
               <thead><tr><th>\${L('Kullanıcı','User')}</th><th>\${L('Rol','Role')}</th><th>\${L('Durum','Status')}</th><th>\${L('Risk','Risk')}</th><th>\${L('İşlemler','Actions')}</th></tr></thead>
               <tbody>
-                \${[['Ada Yılmaz','ada','PLAYER','ACTIVE','4'],['Mira Kaya','mira','CONTENT_EDITOR','ACTIVE','0'],['J. Novak','jnovak','PLAYER','SUSPENDED','82']].map((u)=>
+                \${[['Player One','player-one','PLAYER','ACTIVE','4'],['Player Two','player-two','CONTENT_EDITOR','ACTIVE','0'],['Player Three','player-three','PLAYER','SUSPENDED','82']].map((u)=>
                   '<tr><td><strong>'+u[0]+'</strong><div class="admin-sub">@'+u[1]+' · '+u[1]+'@example.com</div></td><td>'+u[2]+'</td>'+
                   '<td><span class="tag tag-'+String(u[3]).toLowerCase()+'">'+u[3]+'</span></td><td>'+u[4]+'</td>'+
                   '<td><div class="admin-actions"><button>'+(u[3]==='SUSPENDED'?L('Banı kaldır','Unban'):L('Banla','Ban'))+'</button><button>'+L('Kredi ver','Grant credits')+'</button></div></td></tr>').join('')}

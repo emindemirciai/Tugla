@@ -118,7 +118,7 @@ try {
     body: {
       email: `weak-${Date.now()}@example.com`,
       password: 'onlyletters',
-      displayName: 'Weak',
+      displayName: 'Smoke Weak',
       acceptedTerms: true,
     },
   });
@@ -129,7 +129,7 @@ try {
     body: {
       email: `nt-${Date.now()}@example.com`,
       password,
-      displayName: 'NoTerms',
+      displayName: 'Smoke NoTerms',
       acceptedTerms: false,
     },
   });
@@ -150,7 +150,7 @@ try {
 
   const duplicate = await call('/auth/register', {
     method: 'POST',
-    body: { email, password, displayName: 'Dupe', acceptedTerms: true },
+    body: { email, password, displayName: 'Smoke Dupe', acceptedTerms: true },
   });
   check('duplicate email rejected', duplicate.status === 400, `status ${duplicate.status}`);
 
@@ -497,7 +497,7 @@ try {
     body: {
       email: codeEmail,
       password: 'smoke-password-1',
-      displayName: 'Code Tester',
+      displayName: 'Smoke Verify',
       acceptedTerms: true,
       locale: 'tr',
     },
@@ -742,7 +742,7 @@ try {
         body: {
           email: `reporter-${index}-${Date.now()}@example.com`,
           password: 'smoke-password-1',
-          displayName: `Reporter ${index}`,
+          displayName: `Smoke Reporter ${index}`,
           acceptedTerms: true,
         },
       });
