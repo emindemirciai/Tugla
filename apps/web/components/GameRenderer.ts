@@ -1,6 +1,6 @@
 import type { EngineSnapshot, GameEvent, TuğlaEngine } from '@tugla/game-engine';
 import * as THREE from 'three';
-import { fitGameCamera } from '../lib/game-camera';
+import { fitGameCamera, projectPointerToBoardX } from '../lib/game-camera';
 import type { ResolvedQuality } from '../lib/settings';
 
 const BLOCK_COLORS: Record<string, number> = {
@@ -83,11 +83,6 @@ export class GameRenderer {
   private readonly scene = new THREE.Scene();
   private readonly renderer: THREE.WebGLRenderer;
   private readonly camera: THREE.PerspectiveCamera;
-  // Pointer projection: the paddle plane is z = 0.34, where the paddle sits.
-  private readonly raycaster = new THREE.Raycaster();
-  private readonly paddlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.34);
-  private readonly pointerHit = new THREE.Vector3();
-  private readonly pointerNdc = new THREE.Vector2();
   private readonly palette: (typeof THEME_PALETTES)[string];
   private readonly blockMesh: THREE.InstancedMesh;
   private readonly ballMesh: THREE.InstancedMesh;
@@ -476,17 +471,13 @@ export class GameRenderer {
    * any aspect ratio.
    */
   pointerToBoardX(clientX: number, clientY?: number) {
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return this.engine.width / 2;
-
-    const ndc = this.pointerNdc.set(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -(((clientY ?? rect.top + rect.height * 0.85) - rect.top) / rect.height) * 2 + 1,
-    );
-    this.raycaster.setFromCamera(ndc, this.camera);
-    const hit = this.raycaster.ray.intersectPlane(this.paddlePlane, this.pointerHit);
-    if (!hit) return this.engine.width / 2;
-    return hit.x;
+    return projectPointerToBoardX({
+      camera: this.camera,
+      rect: this.renderer.domElement.getBoundingClientRect(),
+      clientX,
+      clientY,
+      boardWidth: this.engine.width,
+    });
   }
 
   get domElement() {

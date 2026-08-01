@@ -83,7 +83,9 @@ Ayrıntı: `apps/web/public/brand/README.md`.
 
 - **Kontrol:** Platform artık parmağın/farenin tam altında. Ekran koordinatı, kameranın kadrajına
   ışın izlemeyle platform düzlemine yansıtılıyor; eskiden tuval genişliği doğrudan tahtaya
-  eşlendiği için kadraj mektup kutusu olduğunda platform parmağın gerisinde kalıyordu.
+  eşlendiği için kadraj mektup kutusu olduğunda platform parmağın gerisinde kalıyordu. Bu hata
+  üretime çıkabildi çünkü hesap WebGL gerektiren sınıfın içindeydi: artık saf bir fonksiyon
+  (`projectPointerToBoardX`) ve dar telefon kadrajında gerilemeyi yakalayan testleri var.
 - **Can:** Bölüm başına 3.
 - **Top hızı sabit değil:** Dünya ilerledikçe artar, boss odalarında daha yüksektir ve her yedinci
   bölüm bir hız bölümüdür. Değer bölüm tanımından türetildiği için sunucunun doğrulama simülasyonu
@@ -211,7 +213,7 @@ admin kullanıcılar, SEO/GEO çıktıları) TR/EN anahtarıyla gösterir. İçi
 ```bash
 pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
-pnpm test            # 58 birim test (engine, shared, api, web, admin)
+pnpm test            # 75 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
 pnpm test:e2e:api    # 100 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
@@ -327,7 +329,7 @@ emitted decorator metadata.
 
 ### Verification gate
 
-`pnpm lint` · `pnpm typecheck` · `pnpm test` (58 unit tests) · `pnpm build` · `pnpm build:preview` ·
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (75 unit tests) · `pnpm build` · `pnpm build:preview` ·
 `pnpm test:e2e:api` (100-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 

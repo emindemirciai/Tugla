@@ -1,4 +1,4 @@
-import { MathUtils, type PerspectiveCamera } from 'three';
+import { MathUtils, Plane, Raycaster, Vector2, Vector3, type PerspectiveCamera } from 'three';
 
 const CAMERA_FOV = 35;
 const CAMERA_NEAR = 0.1;
@@ -80,4 +80,50 @@ export function fitGameCamera(
   camera.updateMatrixWorld(true);
 
   return { aspect, distance, positionY, positionZ, targetX, targetY };
+}
+
+/** The paddle sits slightly in front of the board; pointers project onto it. */
+export const PADDLE_PLANE_Z = 0.34;
+
+export interface PointerProjectionInput {
+  camera: PerspectiveCamera;
+  /** Bounding box of the canvas in client coordinates. */
+  rect: { left: number; top: number; width: number; height: number };
+  clientX: number;
+  clientY?: number;
+  boardWidth: number;
+}
+
+const projectionRaycaster = new Raycaster();
+const projectionPlane = new Plane(new Vector3(0, 0, 1), -PADDLE_PLANE_Z);
+const projectionHit = new Vector3();
+const projectionNdc = new Vector2();
+
+/**
+ * Maps a screen position onto the paddle plane.
+ *
+ * Treating the canvas width as the board width is wrong whenever the camera
+ * letterboxes the field — the paddle then trails the finger, which is exactly
+ * how it reached production. Ray-casting through the actual camera keeps the
+ * paddle under the pointer at any aspect ratio, and the result is clamped so a
+ * pointer dragged off-canvas parks the paddle at the wall instead of beyond it.
+ */
+export function projectPointerToBoardX({
+  camera,
+  rect,
+  clientX,
+  clientY,
+  boardWidth,
+}: PointerProjectionInput): number {
+  if (rect.width === 0 || rect.height === 0) return boardWidth / 2;
+
+  const y = clientY ?? rect.top + rect.height * 0.85;
+  projectionNdc.set(
+    ((clientX - rect.left) / rect.width) * 2 - 1,
+    -((y - rect.top) / rect.height) * 2 + 1,
+  );
+  projectionRaycaster.setFromCamera(projectionNdc, camera);
+  const hit = projectionRaycaster.ray.intersectPlane(projectionPlane, projectionHit);
+  if (!hit) return boardWidth / 2;
+  return Math.min(boardWidth, Math.max(0, hit.x));
 }

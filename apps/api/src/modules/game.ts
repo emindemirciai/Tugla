@@ -772,10 +772,10 @@ export class GameController {
         estimatedSeconds: true,
       },
     });
-    // Progression gate: every level is listed, but a level only opens once the
-    // previous one has been completed. The first level of each world is always
-    // open so a player is never stranded, and the check runs server-side —
-    // hiding the button in the client would not be a rule.
+    // Progression gate: every level is listed, but only the very first level of
+    // the campaign starts open — each later one needs its predecessor cleared,
+    // including across world boundaries (level indexes run 1..500). The check
+    // runs server-side; hiding a button in the client would not be a rule.
     const userId = request.user?.sub;
     const completed = userId
       ? new Set(
