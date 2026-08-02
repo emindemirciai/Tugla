@@ -85,6 +85,17 @@ JSON-LD bu dosyaları kullanır. Oyun listeleme siteleri için **4:3** görsel:
 `https://tugla.fun/brand/logo-512.png`.
 Ayrıntı: `apps/web/public/brand/README.md`.
 
+### Skor gönderimi ve boyut sınırı
+
+Uzun bir oyun binlerce platform girdisi kaydeder. İki şey düzeltildi: tekrar kaydı artık aynı tik
+içindeki girdileri üzerine yazıyor (aynı tikteki son girdi dışındakiler simülasyonu etkilemez), yani
+paket boyutu cihazın işaretçi örnekleme hızıyla değil oyun uzunluğuyla orantılı; API gövde sınırı da
+8 MB'a çıkarıldı. Önceden uzun oyunlar 413 ile reddediliyor, skor kayboluyordu.
+
+Bölüm listesi, oyun bittikten sonra yeniden çekilir: kilit sunucuda açılıyordu ama oyuncunun
+ekranındaki liste oyundan önce alınmış kopyaydı, bu yüzden yeni bölüm ancak sayfa yenilenince
+açılmış görünüyordu.
+
 ### Skor doğrulama gerileme kaydı
 
 Dürüst oyuncular bir süre `replay-score-mismatch` ile reddedildi. Sebep: platform hedefi tekrar

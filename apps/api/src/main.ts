@@ -39,6 +39,12 @@ async function bootstrap() {
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
+  // Replay payloads are the largest thing this API accepts: a long game records
+  // thousands of paddle inputs, and the default 100 kB body limit rejected them
+  // with 413 — the score was lost and the level never counted as finished.
+  // Configured through Nest so express stays a transitive dependency.
+  app.useBodyParser('json', { limit: '8mb' });
+  app.useBodyParser('urlencoded', { limit: '1mb', extended: true });
   app.use(cookieParser());
   app.use((request: Request, response: Response, next: NextFunction) => {
     const requestId = request.header('x-request-id') ?? randomUUID();

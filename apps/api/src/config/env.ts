@@ -18,6 +18,11 @@ const schema = z.object({
   RATE_LIMIT_BURST_SECONDS: z.coerce.number().int().min(1).max(3600).default(1),
   RATE_LIMIT_SUSTAINED: z.coerce.number().int().min(1).max(1000000).default(1200),
   RATE_LIMIT_SUSTAINED_SECONDS: z.coerce.number().int().min(1).max(86400).default(60),
+  // Multiplies the auth-specific limits (registrations, login attempts, reset
+  // requests). Must stay 1 in production; it exists so automated suites can
+  // exercise the flows repeatedly from one address without weakening the
+  // shipped defaults.
+  AUTH_RATE_LIMIT_FACTOR: z.coerce.number().int().min(1).max(10000).default(1),
 
   APP_NAME: z.string().min(1).default('Tuğla'),
   APP_SLUG: z

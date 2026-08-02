@@ -85,7 +85,8 @@ export class AuthService {
    */
   private async guardRate(bucket: string, identity: string, limit: number, windowSeconds: number) {
     const count = await this.redis.increment(`rate:${bucket}:${identity}`, windowSeconds);
-    if (count !== null && count > limit) {
+    const effectiveLimit = limit * env().AUTH_RATE_LIMIT_FACTOR;
+    if (count !== null && count > effectiveLimit) {
       throw new TooManyRequestsException('Too many attempts, please wait and try again');
     }
   }

@@ -84,10 +84,28 @@ function PlayInner() {
     }
   }, []);
 
-  const handleExit = useCallback((_summary: CompletionSummary | null) => {
-    setSession(null);
-    setOfflineQueued(pendingOfflineRuns());
-  }, []);
+  const handleExit = useCallback(
+    (summary: CompletionSummary | null) => {
+      setSession(null);
+      setOfflineQueued(pendingOfflineRuns());
+
+      // Finishing a level unlocks the next one server-side, but the grid in
+      // front of the player is the copy fetched before the game started — so
+      // without this refetch the next level stayed locked until a manual
+      // reload, which read as "the level did not unlock".
+      if (summary?.accepted) {
+        void gameApi
+          .levels(world, 50)
+          .then((result) => setLevels(result.items))
+          .catch(() => undefined);
+        void gameApi
+          .daily()
+          .then(setDaily)
+          .catch(() => undefined);
+      }
+    },
+    [world],
+  );
 
   if (loading || (!user && typeof window !== 'undefined')) {
     return (

@@ -77,6 +77,10 @@ const api = spawn('node', ['dist/main.js'], {
     // limiter itself is covered by tests/load/smoke.js.
     RATE_LIMIT_BURST: '5000',
     RATE_LIMIT_SUSTAINED: '200000',
+    // The suite registers a handful of accounts per run from one address, and
+    // the auth guard allows ten per hour by design. Raising the factor keeps
+    // that production default intact while letting the suite run repeatedly.
+    AUTH_RATE_LIMIT_FACTOR: '1000',
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });

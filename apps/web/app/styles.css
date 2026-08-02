@@ -321,11 +321,12 @@ code {
 }
 .hero {
   display: grid;
-  /* Equal columns: the message block matches the playfield card, so the two
-     halves read as one composition instead of a wide column beside a small one. */
+  /* Equal columns *and* equal height: stretching both halves keeps the message
+     block and the playfield card the same size, which is what stops one side
+     looking larger than the other. */
   grid-template-columns: 1fr 1fr;
   gap: 40px;
-  align-items: center;
+  align-items: stretch;
   justify-items: center;
   padding: 40px 20px 56px;
 }
@@ -334,6 +335,7 @@ code {
   flex-direction: column;
   gap: 18px;
   align-items: center;
+  justify-content: center;
   text-align: center;
   /* Identical measure to the playfield card so neither half dominates. */
   width: min(400px, 100%);
@@ -402,7 +404,7 @@ code {
 .game-preview {
   position: relative;
   width: min(400px, 100%);
-  aspect-ratio: 9 / 14;
+  aspect-ratio: 9 / 13;
   border-radius: var(--radius-lg);
   padding: 16px;
   background: linear-gradient(180deg, var(--stage-top), var(--stage-bottom));
@@ -476,10 +478,14 @@ code {
   background: linear-gradient(180deg, #ffe08a, #ffc23f);
 }
 
-/* The rally: ball and paddle run on the same 6s clock. */
+/* The rally.
+   The ball layer covers the entire card rather than only the empty middle:
+   previously it sat between the brick grid and the paddle, so the balls could
+   never touch either of them. */
 .preview-field {
-  position: relative;
-  flex: 1;
+  position: absolute;
+  inset: 54px 16px 26px;
+  pointer-events: none;
 }
 .preview-ball {
   position: absolute;
@@ -529,14 +535,19 @@ code {
 }
 @keyframes rally-y {
   from {
-    top: 2%;
+    /* Bottom edge of the brick wall. */
+    top: 0%;
   }
   to {
-    /* Stops exactly on the paddle face, so the bounce looks like contact. */
+    /* Paddle face, so the bounce reads as contact. */
     top: calc(100% - 11px);
   }
 }
 .preview-paddle {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
   height: 11px;
   width: 34%;
   border-radius: 999px;
@@ -609,15 +620,15 @@ code {
   text-align: center;
 }
 .world-section h2 {
-  /* Kept to the measure of the card grid below, so the block reads as one
-     column instead of a wide banner over narrow cards. */
+  /* Full measure of the grid above and below, so the three blocks line up as
+     one column instead of a narrow band between wide cards. */
   font-size: clamp(1.15rem, 2.2vw, 1.6rem);
   font-weight: 800;
-  margin: 10px auto 0;
-  max-width: 46ch;
+  margin: 10px 0 0;
+  max-width: none;
 }
 .world-section > div:first-child {
-  max-width: 640px;
+  width: 100%;
 }
 .world-cards {
   display: grid;

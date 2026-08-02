@@ -207,7 +207,24 @@ export class TuğlaEngine {
   private record(kind: ReplayInput['k'], value: number) {
     if (!this.recordReplay) return;
     if (this.inputs.length >= 20000) return;
-    this.inputs.push({ t: this.snapshot.tick, k: kind, v: Number(value.toFixed(4)) });
+
+    const quantised = Number(value.toFixed(4));
+    const last = this.inputs.at(-1);
+
+    // A pointer fires many moves between two ticks, and the replay applies them
+    // in order at the same tick — so only the last one can matter. Overwriting
+    // instead of appending keeps the payload proportional to game length rather
+    // than to how fast the device samples the pointer, which is what pushed long
+    // games past the request size limit.
+    if (last && last.t === this.snapshot.tick && last.k === kind) {
+      last.v = quantised;
+      return;
+    }
+    // An unchanged target is a no-op for the simulation; recording it only makes
+    // the replay bigger.
+    if (last && last.k === kind && last.v === quantised && kind === 'm') return;
+
+    this.inputs.push({ t: this.snapshot.tick, k: kind, v: quantised });
   }
 
   // ----- public control surface -------------------------------------------------
