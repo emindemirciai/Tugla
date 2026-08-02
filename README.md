@@ -96,6 +96,11 @@ sunucu gibi doğrulayan testler eklendi.
 
 ### Oynanış ve ilerleme
 
+- **Dokunmatik:** Oyun alanı `touch-action: none` ile jesti üstlenir ve işaretçi olayları
+  `preventDefault` eder. Bunlar olmadan tarayıcı dikey sürüklemeyi kaydırma sayıp işaretçi akışını
+  iptal ediyordu; telefonda platformun hiç hareket etmemesinin sebebi buydu.
+- **Süre:** HUD, sabit 120 Hz tik sayacından türetilen dakika:saniye süresini gösterir (duvar saati
+  değil, simülasyon süresi).
 - **Kontrol:** Platform artık parmağın/farenin tam altında. Ekran koordinatı, kameranın kadrajına
   ışın izlemeyle platform düzlemine yansıtılıyor; eskiden tuval genişliği doğrudan tahtaya
   eşlendiği için kadraj mektup kutusu olduğunda platform parmağın gerisinde kalıyordu. Bu hata

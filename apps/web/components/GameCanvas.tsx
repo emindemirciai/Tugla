@@ -17,8 +17,15 @@ interface ViewState {
   combo: number;
   overcharge: number;
   blocksRemaining: number;
+  tick: number;
   status: EngineSnapshot['status'];
 }
+
+/** Ticks run at a fixed 120 Hz, so elapsed time is exact, not wall-clock. */
+const formatElapsed = (tick: number) => {
+  const seconds = Math.floor(tick / 120);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+};
 
 export interface CompletionSummary {
   accepted: boolean;
@@ -37,11 +44,12 @@ export interface CompletionSummary {
 
 const initialView: ViewState = {
   score: 0,
-  lives: 5,
+  lives: 3,
   balls: 1,
   combo: 0,
   overcharge: 1,
   blocksRemaining: 0,
+  tick: 0,
   status: 'READY',
 };
 
@@ -159,6 +167,7 @@ export function GameCanvas({
           combo: snapshot.combo,
           overcharge: snapshot.overcharge,
           blocksRemaining: snapshot.blocks.filter((block) => block.active && block.required).length,
+          tick: snapshot.tick,
           status: snapshot.status,
         });
       }
@@ -179,6 +188,10 @@ export function GameCanvas({
     let pointerOrigin = 0;
 
     const onPointerDown = (event: PointerEvent) => {
+      // Without this the browser treats a drag as a scroll gesture, cancels the
+      // pointer stream and the paddle freezes — which is exactly how the game
+      // behaved on phones. The canvas also sets touch-action: none.
+      event.preventDefault();
       pointerActive = true;
       pointerOrigin = event.clientX;
       renderer.domElement.setPointerCapture(event.pointerId);
@@ -186,6 +199,7 @@ export function GameCanvas({
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!pointerActive) return;
+      event.preventDefault();
       engine.setPaddleTarget(renderer.pointerToBoardX(event.clientX, event.clientY));
       // Moving the paddle far enough before release fires the ball in that
       // direction: the launch angle comes from how the player swiped.
@@ -223,8 +237,9 @@ export function GameCanvas({
     window.addEventListener('resize', onResize);
     window.addEventListener('keydown', onKeyDown);
     document.addEventListener('visibilitychange', onVisibility);
-    renderer.domElement.addEventListener('pointerdown', onPointerDown);
-    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    // passive: false, otherwise preventDefault is ignored on touch devices.
+    renderer.domElement.addEventListener('pointerdown', onPointerDown, { passive: false });
+    renderer.domElement.addEventListener('pointermove', onPointerMove, { passive: false });
     renderer.domElement.addEventListener('pointerup', onPointerUp);
     renderer.domElement.addEventListener('pointercancel', onPointerUp);
 
@@ -428,6 +443,10 @@ export function GameCanvas({
           <div className="hud-stat">
             <span>{t('game.hud.blocks')}</span>
             <strong>{view.blocksRemaining}</strong>
+          </div>
+          <div className="hud-stat">
+            <span>{t('game.hud.time')}</span>
+            <strong>{formatElapsed(view.tick)}</strong>
           </div>
         </aside>
       </div>

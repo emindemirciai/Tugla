@@ -255,7 +255,9 @@ export class GameRenderer {
       roughness: 0.18,
     });
     this.paddle = new THREE.Mesh(paddleGeometry, paddleMaterial);
-    this.paddle.castShadow = quality.shadows;
+    // No cast shadow under the paddle: it lands directly beneath it and reads
+    // as a black hole punched into the board rather than depth.
+    this.paddle.castShadow = false;
     this.scene.add(this.paddle);
     this.disposables.push(paddleGeometry, paddleMaterial);
 
@@ -305,7 +307,14 @@ export class GameRenderer {
   }
 
   private buildBoard() {
-    const geometry = new THREE.BoxGeometry(this.engine.width + 0.5, this.engine.height + 0.5, 0.35);
+    // Same colour behind and on the board, so no seam is visible where the
+    // board ends and the canvas begins.
+    this.renderer.setClearColor(this.palette.board, 1);
+    this.scene.background = new THREE.Color(this.palette.board);
+
+    // Generously oversized: the board should always reach past the viewport so
+    // its edge never becomes a visible band.
+    const geometry = new THREE.BoxGeometry(this.engine.width * 3, this.engine.height * 2, 0.35);
     // Matte on purpose. The board used to be a clearcoated, half-metallic
     // surface, so the accent point light burned a small round highlight into it
     // — the "white ball stuck in the background" players kept reporting. A

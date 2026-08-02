@@ -323,6 +323,35 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
     });
   }
 
+  // A silhouette can be thin — the pyramid bottoms out at twelve bricks — and a
+  // board that thin is cleared on the first rally. Fill the upper rows until the
+  // level is worth playing. The extra bricks draw from the same deterministic
+  // random stream, so server verification rebuilds the identical board.
+  const minimumBlocks = Math.min(34, 18 + Math.floor(index / 40));
+  const occupied = new Set(blocks.map((block) => `${block.x.toFixed(3)}:${block.y.toFixed(3)}`));
+  for (let row = 0; blocks.length < minimumBlocks && row < rows; row += 1) {
+    for (let column = 0; column < columns && blocks.length < minimumBlocks; column += 1) {
+      const x = 0.08 + column * 0.12;
+      const y = (type === 'NORMAL' ? 0.84 : 0.74) - row * 0.055;
+      if (y <= 0.24) continue;
+      const key = `${x.toFixed(3)}:${y.toFixed(3)}`;
+      if (occupied.has(key)) continue;
+      occupied.add(key);
+      blocks.push({
+        id: `l${index}-fill${row}c${column}`,
+        kind: 'NORMAL',
+        x,
+        y,
+        width: 0.102,
+        height: 0.038,
+        hitPoints: hitPointsFor('NORMAL', index),
+        rotation: 0,
+        bonus: random() > 0.9 ? (bonusPool[Math.floor(random() * bonusPool.length)] ?? null) : null,
+        required: true,
+      });
+    }
+  }
+
   return {
     version: 1,
     name: `${APP_DEFAULTS.name} ${index}`,

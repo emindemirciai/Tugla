@@ -488,17 +488,18 @@ code {
     rally-x 3s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate,
     rally-y 1.5s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate;
 }
-/* Drifting swarm behind the rally: colour and pace vary per ball. */
+/* Every ball in the swarm rallies: down to the paddle line and back up, each on
+   its own pace, so the board reads as a game in play rather than a still. */
 .preview-spark {
   position: absolute;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  left: calc(8% + var(--i) * 10%);
-  top: calc(10% + (var(--i) * 9%));
-  opacity: 0.85;
-  animation: spark-drift calc(4s + var(--i) * 0.7s) ease-in-out infinite alternate;
-  animation-delay: calc(var(--i) * -0.45s);
+  opacity: 0.9;
+  animation:
+    rally-x calc(2.2s + var(--i) * 0.28s) cubic-bezier(0.45, 0, 0.55, 1) infinite alternate,
+    rally-y calc(0.85s + var(--i) * 0.12s) cubic-bezier(0.3, 0, 0.7, 1) infinite alternate;
+  animation-delay: calc(var(--i) * -0.37s), calc(var(--i) * -0.29s);
 }
 .spark-0 {
   background: radial-gradient(circle at 35% 32%, #ffffff, #7ee7c1);
@@ -512,14 +513,7 @@ code {
   background: radial-gradient(circle at 35% 32%, #ffffff, #a99bff);
   box-shadow: 0 0 10px rgba(169, 155, 255, 0.7);
 }
-@keyframes spark-drift {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(18px, 34px, 0);
-  }
-}
+
 @keyframes rally-x {
   from {
     left: 6%;
@@ -563,7 +557,8 @@ code {
   .preview-paddle {
     animation: none !important;
   }
-  .preview-ball {
+  .preview-ball,
+  .preview-spark {
     top: 40%;
     left: 45%;
   }
@@ -609,10 +604,15 @@ code {
   text-align: center;
 }
 .world-section h2 {
-  font-size: clamp(1.3rem, 3vw, 2rem);
+  /* Kept to the measure of the card grid below, so the block reads as one
+     column instead of a wide banner over narrow cards. */
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
   font-weight: 800;
-  margin-top: 10px;
-  max-width: 30ch;
+  margin: 10px auto 0;
+  max-width: 46ch;
+}
+.world-section > div:first-child {
+  max-width: 640px;
 }
 .world-cards {
   display: grid;
@@ -2097,4 +2097,16 @@ textarea:focus {
   .strip-arrow {
     display: none;
   }
+}
+
+/* ----- touch: the board owns the gesture ------------------------------------ */
+.canvas-frame,
+.game-canvas,
+.game-canvas canvas {
+  /* Without this the browser claims a vertical drag as a scroll, cancels the
+     pointer stream and the paddle stops following the finger. */
+  touch-action: none;
+}
+.game-shell {
+  overscroll-behavior: none;
 }
