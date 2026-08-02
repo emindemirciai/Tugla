@@ -444,7 +444,7 @@ export function GameCanvas({
             <span>{t('game.hud.blocks')}</span>
             <strong>{view.blocksRemaining}</strong>
           </div>
-          <div className="hud-stat">
+          <div className="hud-stat hud-time">
             <span>{t('game.hud.time')}</span>
             <strong>{formatElapsed(view.tick)}</strong>
           </div>

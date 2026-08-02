@@ -282,6 +282,19 @@ npx cap open android   # / ios
 
 Kabuk çevrim dışıyken `apps/mobile/www` açılış ekranını gösterir; bağlantı gelince canlı PWA yüklenir.
 
+### İçeriği yeniden tohumlama (deploy sonrası)
+
+Bölüm tanımları veritabanında durur; bölüm üretimini değiştiren bir sürüm ancak yeniden tohumlama
+sonrası görünür. Tohumlama upsert'tir: oyuncu ilerlemesi, skorlar ve hesaplar korunur.
+
+```bash
+docker compose --profile tools run --rm seed   # compose projesinden
+cd /repo && pnpm db:seed                       # çalışan API konteynerinde
+```
+
+Konteyner kabuğu `/` dizininde açılır ve orada manifest yoktur; `cd /repo` olmadan `pnpm db:seed`
+`ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND` verir.
+
 ### Sürüm ve commit biçimi
 
 Tek sürüm kaynağı kökteki `package.json` (`pnpm release:version 1.5.0` tüm paketleri günceller).

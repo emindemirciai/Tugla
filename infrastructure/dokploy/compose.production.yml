@@ -125,6 +125,24 @@ services:
         condition: service_healthy
     networks: [private]
 
+  # Content seeding is a deliberate, occasional action, so it sits behind a
+  # profile and never runs as part of a deploy:
+  #   docker compose --profile tools run --rm seed
+  # Inside a running API container the same job is: cd /repo && pnpm db:seed
+  seed:
+    profiles: ['tools']
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    working_dir: /repo
+    command: ['pnpm', '--filter', '@tugla/database', 'seed']
+    environment: *app-environment
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [private]
+
   postgres:
     image: postgres:17-alpine
     environment:

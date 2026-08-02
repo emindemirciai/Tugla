@@ -69,6 +69,21 @@ pnpm db:seed
 `prisma generate` downloads engines from `binaries.prisma.sh`; allow that host on locked-down
 builders or pre-bake the engines into the image.
 
+### Re-seeding content
+
+Level definitions live in the database, so a release that changes level generation only takes effect
+after a re-seed. The seed upserts: player progress, scores and accounts are untouched.
+
+```bash
+# From the compose project (preferred):
+docker compose --profile tools run --rm seed
+
+# Or inside a running API container — note the working directory. The shell
+# opens at "/" where there is no manifest, which is why `pnpm db:seed` fails
+# there with ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND:
+cd /repo && pnpm db:seed
+```
+
 The seed creates 500 campaign levels, tasks and achievements. It creates the first super admin only
 when `ADMIN_BOOTSTRAP_EMAIL` and `ADMIN_BOOTSTRAP_PASSWORD` are set. Remove the bootstrap password
 afterward.

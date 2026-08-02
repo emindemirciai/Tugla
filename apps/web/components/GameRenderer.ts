@@ -355,6 +355,35 @@ export class GameRenderer {
     this.scene.add(this.safetyNet);
     this.disposables.push(netGeometry, netMaterial);
 
+    // Playfield rails.
+    //
+    // Making the backdrop one flat colour removed the two-tone seam but also
+    // removed every cue about where the walls are, so the board became a void.
+    // These three rails mark the exact bounds the ball bounces off — a
+    // deliberate frame rather than an artefact of two surfaces meeting.
+    const railMaterial = new THREE.MeshStandardMaterial({
+      color: this.palette.glow,
+      emissive: this.palette.glow,
+      emissiveIntensity: 0.55,
+      roughness: 0.6,
+      metalness: 0,
+    });
+    const railThickness = 0.14;
+    const verticalRail = new THREE.BoxGeometry(railThickness, this.engine.height, 0.5);
+    const horizontalRail = new THREE.BoxGeometry(
+      this.engine.width + railThickness,
+      railThickness,
+      0.5,
+    );
+    const left = new THREE.Mesh(verticalRail, railMaterial);
+    left.position.set(0, this.engine.height / 2, 0);
+    const right = new THREE.Mesh(verticalRail, railMaterial);
+    right.position.set(this.engine.width, this.engine.height / 2, 0);
+    const top = new THREE.Mesh(horizontalRail, railMaterial);
+    top.position.set(this.engine.width / 2, this.engine.height, 0);
+    for (const rail of [left, right, top]) this.scene.add(rail);
+    this.disposables.push(verticalRail, horizontalRail, railMaterial);
+
     vignette.position.set(this.engine.width / 2, this.engine.height / 2, -0.6);
     this.scene.add(vignette);
     this.disposables.push(vignette.geometry, vignette.material as THREE.Material);
