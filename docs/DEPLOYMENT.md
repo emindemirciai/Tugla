@@ -69,18 +69,23 @@ pnpm db:seed
 `prisma generate` downloads engines from `binaries.prisma.sh`; allow that host on locked-down
 builders or pre-bake the engines into the image.
 
-### Re-seeding content
+### Content seeding happens on deploy
 
 Level definitions live in the database, so a release that changes level generation only takes effect
-after a re-seed. The seed upserts: player progress, scores and accounts are untouched.
+after a re-seed. The `migrate` job therefore runs `prisma migrate deploy` **and then the seed** on
+every deploy. The seed is an upsert: accounts, progress, scores and community levels are untouched,
+only generated campaign content and the catalogue are refreshed. Nothing has to be run by hand after
+a release.
+
+Set `SEED_ON_DEPLOY=false` if you hand-edit campaign levels in the admin panel and want those edits
+to survive deploys. A manual run is still available:
 
 ```bash
-# From the compose project (preferred):
 docker compose --profile tools run --rm seed
 
-# Or inside a running API container — note the working directory. The shell
-# opens at "/" where there is no manifest, which is why `pnpm db:seed` fails
-# there with ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND:
+# Inside a running API container the working directory matters: the shell opens
+# at "/" where there is no manifest, which is why a bare `pnpm db:seed` fails
+# with ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND.
 cd /repo && pnpm db:seed
 ```
 

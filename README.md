@@ -293,18 +293,17 @@ npx cap open android   # / ios
 
 Kabuk çevrim dışıyken `apps/mobile/www` açılış ekranını gösterir; bağlantı gelince canlı PWA yüklenir.
 
-### İçeriği yeniden tohumlama (deploy sonrası)
+### İçerik tohumlaması dağıtımda otomatik
 
 Bölüm tanımları veritabanında durur; bölüm üretimini değiştiren bir sürüm ancak yeniden tohumlama
-sonrası görünür. Tohumlama upsert'tir: oyuncu ilerlemesi, skorlar ve hesaplar korunur.
+sonrası görünür. Bu yüzden `migrate` işi her dağıtımda önce `prisma migrate deploy`, ardından
+tohumlamayı çalıştırır. Tohumlama upsert'tir: hesaplar, ilerleme, skorlar ve topluluk bölümleri
+korunur; yalnızca üretilen kampanya içeriği ve katalog tazelenir. **Sürüm sonrası elle komut
+çalıştırmak gerekmez.**
 
-```bash
-docker compose --profile tools run --rm seed   # compose projesinden
-cd /repo && pnpm db:seed                       # çalışan API konteynerinde
-```
-
-Konteyner kabuğu `/` dizininde açılır ve orada manifest yoktur; `cd /repo` olmadan `pnpm db:seed`
-`ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND` verir.
+Kampanya bölümlerini yönetim panelinden elle düzenliyorsan ve bu düzenlemelerin dağıtımdan sağ
+çıkmasını istiyorsan `SEED_ON_DEPLOY=false` yap. Elle çalıştırma seçeneği duruyor:
+`docker compose --profile tools run --rm seed`.
 
 ### Sürüm ve commit biçimi
 

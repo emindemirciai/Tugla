@@ -22,7 +22,13 @@ interface ViewState {
 }
 
 /** Ticks run at a fixed 120 Hz, so elapsed time is exact, not wall-clock. */
-const formatElapsed = (tick: number) => Math.floor(tick / 120);
+const formatElapsed = (tick: number) => {
+  const total = Math.floor(tick / 120);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':');
+};
 
 export interface CompletionSummary {
   accepted: boolean;
@@ -320,7 +326,7 @@ export function GameCanvas({
           </div>
           <div className="hud-stat hud-time">
             <span>{t('game.hud.time')}</span>
-            <strong>{t('game.hud.seconds', { seconds: formatElapsed(view.tick) })}</strong>
+            <strong>{formatElapsed(view.tick)}</strong>
           </div>
         </aside>
 
