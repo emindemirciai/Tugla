@@ -23,60 +23,58 @@
 
   <rect width="400" height="300" fill="url(#paper)"/>
 
-  <!-- lockup, clear of the card badge in the corner -->
-  <g transform="translate(22 40)">
-    <rect width="30" height="30" rx="9" fill="url(#mark)"/>
-    <g fill="#ffffff" transform="scale(0.3125)">
-      <rect x="18" y="24" width="26" height="11" rx="3.5" opacity="0.95"/>
-      <rect x="48" y="24" width="30" height="11" rx="3.5" opacity="0.95"/>
-      <rect x="18" y="41" width="14" height="11" rx="3.5" opacity="0.6"/>
-      <rect x="64" y="41" width="14" height="11" rx="3.5" opacity="0.6"/>
-      <rect x="30" y="72" width="36" height="8" rx="4" opacity="0.95"/>
-      <circle cx="48" cy="46.5" r="8.5" fill="#ffd166"/>
-    </g>
-    <text x="38" y="21" font-family="ui-sans-serif, system-ui, sans-serif" font-size="19" font-weight="800" letter-spacing="-0.6" fill="#1b1533">Tuğla.fun</text>
-  </g>
-
-  <!-- message -->
+  <!-- The top strip stays empty: the directory card drops its own badge here. -->
   <g font-family="ui-sans-serif, system-ui, sans-serif">
-    <text x="22" y="140" font-size="24" font-weight="800" letter-spacing="-0.7" fill="#1b1533">Tuğlaları kır.</text>
-    <text x="22" y="170" font-size="24" font-weight="800" letter-spacing="-0.7" fill="#5b4be1">Fırtınayı çoğalt.</text>
-    <text x="22" y="192" font-size="11" fill="#423a63">Ücretsiz · tarayıcıda oynanır</text>
-    <g transform="translate(22 205)">
+    <g transform="translate(24 82)">
+      <rect width="24" height="24" rx="7" fill="url(#mark)"/>
+      <g fill="#ffffff" transform="scale(0.25)">
+        <rect x="18" y="24" width="26" height="11" rx="3.5" opacity="0.95"/>
+        <rect x="48" y="24" width="30" height="11" rx="3.5" opacity="0.95"/>
+        <rect x="18" y="41" width="14" height="11" rx="3.5" opacity="0.6"/>
+        <rect x="64" y="41" width="14" height="11" rx="3.5" opacity="0.6"/>
+        <rect x="30" y="72" width="36" height="8" rx="4" opacity="0.95"/>
+        <circle cx="48" cy="46.5" r="8.5" fill="#ffd166"/>
+      </g>
+      <text x="32" y="17" font-size="20" font-weight="800" letter-spacing="-0.5" fill="#1b1533">Tuğla.fun</text>
+    </g>
+
+    <text x="24" y="152" font-size="23" font-weight="800" letter-spacing="-0.7" fill="#1b1533">Tuğlaları kır.</text>
+    <text x="24" y="180" font-size="23" font-weight="800" letter-spacing="-0.7" fill="#5b4be1">Fırtınayı çoğalt.</text>
+    <text x="24" y="201" font-size="11" fill="#423a63">Ücretsiz · tarayıcıda oynanır</text>
+    <g transform="translate(24 213)">
       <rect width="123.2" height="20" rx="10" fill="#ffffff" stroke="#e2daf6"/>
       <text x="61.6" y="13.5" text-anchor="middle" font-size="8" font-weight="700" letter-spacing="0.4" fill="#5b4be1">10 DÜNYA · 500 BÖLÜM</text>
     </g>
   </g>
 
-  <!-- playfield -->
   <g>
-    <rect x="264" y="44" width="116" height="196" rx="16" fill="url(#stage)"/>
-    <rect x="265" y="45" width="114" height="194" rx="15" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
-    <text x="275" y="63" font-family="ui-sans-serif, system-ui, sans-serif" font-size="6.5" font-weight="700" letter-spacing="1.1" fill="#efe9ff" opacity="0.75">DÜNYA 03</text>
-    <text x="369" y="63" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="6.5" font-weight="700" fill="#efe9ff" opacity="0.75">♥ 3</text>
-    <rect x="269.0" y="74.0" width="18" height="8" rx="3" fill="#6ad2ff"/>
-      <rect x="291.0" y="74.0" width="18" height="8" rx="3" fill="#8b7bff"/>
-      <rect x="313.0" y="74.0" width="18" height="8" rx="3" fill="#ff9a6b"/>
-      <rect x="335.0" y="74.0" width="18" height="8" rx="3" fill="#4fd6a8"/>
-      <rect x="269.0" y="86.0" width="18" height="8" rx="3" fill="#8b7bff"/>
-      <rect x="291.0" y="86.0" width="18" height="8" rx="3" fill="#ff9a6b"/>
-      <rect x="335.0" y="86.0" width="18" height="8" rx="3" fill="#ffd166"/>
-      <rect x="357.0" y="86.0" width="18" height="8" rx="3" fill="#6ad2ff"/>
-      <rect x="269.0" y="98.0" width="18" height="8" rx="3" fill="#ff9a6b"/>
-      <rect x="335.0" y="98.0" width="18" height="8" rx="3" fill="#6ad2ff"/>
-      <rect x="357.0" y="98.0" width="18" height="8" rx="3" fill="#8b7bff"/>
-      <rect x="269.0" y="110.0" width="18" height="8" rx="3" fill="#4fd6a8"/>
-      <rect x="291.0" y="110.0" width="18" height="8" rx="3" fill="#ffd166"/>
-      <rect x="313.0" y="110.0" width="18" height="8" rx="3" fill="#6ad2ff"/>
-      <rect x="335.0" y="110.0" width="18" height="8" rx="3" fill="#8b7bff"/>
-      <rect x="357.0" y="110.0" width="18" height="8" rx="3" fill="#ff9a6b"/>
-      <rect x="269.0" y="122.0" width="18" height="8" rx="3" fill="#ffd166"/>
-      <rect x="291.0" y="122.0" width="18" height="8" rx="3" fill="#6ad2ff"/>
-      <rect x="313.0" y="122.0" width="18" height="8" rx="3" fill="#8b7bff"/>
-      <rect x="335.0" y="122.0" width="18" height="8" rx="3" fill="#ff9a6b"/>
-      <rect x="357.0" y="122.0" width="18" height="8" rx="3" fill="#4fd6a8"/>
-    <circle cx="335.9" cy="165.5" r="4" fill="#ffffff"/>
-    <circle cx="304.6" cy="185.1" r="3" fill="#ffd166"/>
-    <rect x="301.1" y="222.0" width="41.8" height="5" rx="2.5" fill="url(#paddle)"/>
+    <rect x="266" y="74" width="112" height="176" rx="15" fill="url(#stage)"/>
+    <rect x="267" y="75" width="110" height="174" rx="14" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <text x="276" y="91" font-family="ui-sans-serif, system-ui, sans-serif" font-size="6" font-weight="700" letter-spacing="1" fill="#efe9ff" opacity="0.75">DÜNYA 03</text>
+    <text x="368" y="91" text-anchor="end" font-family="ui-sans-serif, system-ui, sans-serif" font-size="6" font-weight="700" fill="#efe9ff" opacity="0.75">♥ 3</text>
+    <rect x="271.5" y="100.0" width="17" height="7" rx="3" fill="#6ad2ff"/>
+      <rect x="292.5" y="100.0" width="17" height="7" rx="3" fill="#8b7bff"/>
+      <rect x="313.5" y="100.0" width="17" height="7" rx="3" fill="#ff9a6b"/>
+      <rect x="334.5" y="100.0" width="17" height="7" rx="3" fill="#4fd6a8"/>
+      <rect x="271.5" y="111.0" width="17" height="7" rx="3" fill="#8b7bff"/>
+      <rect x="292.5" y="111.0" width="17" height="7" rx="3" fill="#ff9a6b"/>
+      <rect x="334.5" y="111.0" width="17" height="7" rx="3" fill="#ffd166"/>
+      <rect x="355.5" y="111.0" width="17" height="7" rx="3" fill="#6ad2ff"/>
+      <rect x="271.5" y="122.0" width="17" height="7" rx="3" fill="#ff9a6b"/>
+      <rect x="334.5" y="122.0" width="17" height="7" rx="3" fill="#6ad2ff"/>
+      <rect x="355.5" y="122.0" width="17" height="7" rx="3" fill="#8b7bff"/>
+      <rect x="271.5" y="133.0" width="17" height="7" rx="3" fill="#4fd6a8"/>
+      <rect x="292.5" y="133.0" width="17" height="7" rx="3" fill="#ffd166"/>
+      <rect x="313.5" y="133.0" width="17" height="7" rx="3" fill="#6ad2ff"/>
+      <rect x="334.5" y="133.0" width="17" height="7" rx="3" fill="#8b7bff"/>
+      <rect x="355.5" y="133.0" width="17" height="7" rx="3" fill="#ff9a6b"/>
+      <rect x="271.5" y="144.0" width="17" height="7" rx="3" fill="#ffd166"/>
+      <rect x="292.5" y="144.0" width="17" height="7" rx="3" fill="#6ad2ff"/>
+      <rect x="313.5" y="144.0" width="17" height="7" rx="3" fill="#8b7bff"/>
+      <rect x="334.5" y="144.0" width="17" height="7" rx="3" fill="#ff9a6b"/>
+      <rect x="355.5" y="144.0" width="17" height="7" rx="3" fill="#4fd6a8"/>
+    <circle cx="335.4" cy="190.2" r="3.6" fill="#ffffff"/>
+    <circle cx="304.1" cy="207.8" r="2.8" fill="#ffd166"/>
+    <rect x="301.8" y="234.0" width="40.3" height="4.5" rx="2.2" fill="url(#paddle)"/>
   </g>
 </svg>

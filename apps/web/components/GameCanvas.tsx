@@ -22,10 +22,7 @@ interface ViewState {
 }
 
 /** Ticks run at a fixed 120 Hz, so elapsed time is exact, not wall-clock. */
-const formatElapsed = (tick: number) => {
-  const seconds = Math.floor(tick / 120);
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-};
+const formatElapsed = (tick: number) => Math.floor(tick / 120);
 
 export interface CompletionSummary {
   accepted: boolean;
@@ -309,6 +306,22 @@ export function GameCanvas({
               <strong className="overcharge">×{view.overcharge.toFixed(2)}</strong>
             </div>
           )}
+          <div className="hud-stat">
+            <span>{t('game.hud.lives')}</span>
+            <strong className="hud-lives">{'♥'.repeat(Math.max(0, view.lives))}</strong>
+          </div>
+          <div className="hud-stat">
+            <span>{t('game.hud.balls')}</span>
+            <strong className="accent">{view.balls}</strong>
+          </div>
+          <div className="hud-stat">
+            <span>{t('game.hud.blocks')}</span>
+            <strong>{view.blocksRemaining}</strong>
+          </div>
+          <div className="hud-stat hud-time">
+            <span>{t('game.hud.time')}</span>
+            <strong>{t('game.hud.seconds', { seconds: formatElapsed(view.tick) })}</strong>
+          </div>
         </aside>
 
         <div className="canvas-frame">
@@ -430,25 +443,6 @@ export function GameCanvas({
             </div>
           )}
         </div>
-
-        <aside className="hud-panel hud-panel-right">
-          <div className="hud-stat">
-            <span>{t('game.hud.lives')}</span>
-            <strong className="hud-lives">{'♥'.repeat(Math.max(0, view.lives))}</strong>
-          </div>
-          <div className="hud-stat">
-            <span>{t('game.hud.balls')}</span>
-            <strong className="accent">{view.balls}</strong>
-          </div>
-          <div className="hud-stat">
-            <span>{t('game.hud.blocks')}</span>
-            <strong>{view.blocksRemaining}</strong>
-          </div>
-          <div className="hud-stat hud-time">
-            <span>{t('game.hud.time')}</span>
-            <strong>{formatElapsed(view.tick)}</strong>
-          </div>
-        </aside>
       </div>
     </section>
   );

@@ -67,6 +67,17 @@ const PADDLE_COLORS = [
   { color: 0xffc2d6, emissive: 0xe5487f },
 ];
 
+/**
+ * Vivid tones for ordinary bricks.
+ *
+ * Giving every NORMAL block the world's single hue made whole boards read as
+ * one flat blue — the "kasvetli" look players reported. Tones are picked from
+ * the block's own position, so the wall is colourful but never random: the same
+ * board always paints the same way, and special kinds keep their meaning
+ * colours (armored grey, explosive red…).
+ */
+const BRICK_TONES = [0x52bdf5, 0x8b7bff, 0xff9a6b, 0x4fd6a8, 0xffd166, 0x7fd8ef, 0xff8ad0];
+
 export interface LevelStyle {
   theme: string;
   index: number;
@@ -167,11 +178,10 @@ export class GameRenderer {
     blockGeometry.translate(0, 0, -0.2);
     const blockMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      roughness: 0.26,
-      metalness: 0.12,
-      reflectivity: 0.75,
-      emissive: 0x120e2e,
-      emissiveIntensity: 0.3,
+      roughness: 0.32,
+      metalness: 0.05,
+      reflectivity: 0.7,
+      emissiveIntensity: 0,
       sheen: quality.level === 'LOW' ? 0 : 0.6,
       sheenRoughness: 0.4,
       clearcoat: quality.level === 'LOW' ? 0 : 1,
@@ -391,11 +401,17 @@ export class GameRenderer {
 
   private applyBlockColors() {
     this.engine.snapshot.blocks.forEach((block, index) => {
-      this.tempColor.setHex(
-        block.kind === 'NORMAL'
-          ? this.palette.block
-          : (BLOCK_COLORS[block.kind] ?? this.palette.block),
-      );
+      if (block.kind === 'NORMAL') {
+        // Tone from the brick's own position: the wall is colourful but stable,
+        // and neighbouring bricks always differ.
+        // origin is the block's authored position and never moves, so a moving
+        // block keeps its colour instead of flickering through the palette.
+        const column = Math.round(block.origin.x);
+        const row = Math.round(block.origin.y);
+        this.tempColor.setHex(BRICK_TONES[(column + row) % BRICK_TONES.length]!);
+      } else {
+        this.tempColor.setHex(BLOCK_COLORS[block.kind] ?? this.palette.block);
+      }
       this.blockMesh.setColorAt(index, this.tempColor);
     });
     if (this.blockMesh.instanceColor) this.blockMesh.instanceColor.needsUpdate = true;

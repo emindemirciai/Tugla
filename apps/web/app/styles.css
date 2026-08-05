@@ -326,7 +326,9 @@ code {
      looking larger than the other. */
   grid-template-columns: 1fr 1fr;
   gap: 40px;
-  align-items: stretch;
+  /* Start both halves on the same line: centring them vertically made one look
+     lower than the other whenever their natural heights differed. */
+  align-items: start;
   justify-items: center;
   padding: 40px 20px 56px;
 }
@@ -335,10 +337,11 @@ code {
   flex-direction: column;
   gap: 18px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
-  /* Identical measure to the playfield card so neither half dominates. */
+  /* Identical measure and starting line to the playfield card. */
   width: min(400px, 100%);
+  padding-top: 4px;
 }
 .hero-copy h1 {
   /* Capped so the message block stays the same height as the playfield card. */
@@ -375,9 +378,8 @@ code {
 .hero-visual {
   position: relative;
   display: grid;
-  place-items: center;
+  place-items: start center;
   width: min(400px, 100%);
-  min-height: 520px;
 }
 .orb {
   position: absolute;
@@ -1535,7 +1537,9 @@ textarea:focus {
 .game-stage {
   flex: 1;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* One HUD column, then the board. Splitting stats across both edges made the
+     player look in two places at once. */
+  grid-template-columns: auto 1fr;
   gap: 10px;
   padding: 0 12px;
   align-items: stretch;
@@ -1543,9 +1547,9 @@ textarea:focus {
 .hud-panel {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
   padding: 14px 12px;
-  min-width: 96px;
+  min-width: 104px;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--stage-line);
@@ -2011,12 +2015,11 @@ textarea:focus {
 }
 
 @media (max-width: 900px) {
-  /* The panels sit under the board as one strip; each stat keeps its own
-     column so labels can never collide with the numbers. Four columns on the
-     right-hand panel now that elapsed time is shown. */
+  /* Under the board as one strip; every stat keeps its own column so labels can
+     never collide with the numbers. */
   .hud-panel {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
     gap: 6px 10px;
     width: 100%;
     padding: 10px 12px;
@@ -2032,14 +2035,15 @@ textarea:focus {
     font-size: 0.98rem;
   }
   .game-stage {
-    grid-template-areas: 'canvas' 'hud' 'hud2';
+    grid-template-columns: 1fr;
+    grid-template-areas: 'canvas' 'hud';
     gap: 8px;
   }
-  .game-stage .hud-panel:first-of-type {
-    grid-area: hud;
+  .canvas-frame {
+    grid-area: canvas;
   }
-  .game-stage .hud-panel-right {
-    grid-area: hud2;
+  .game-stage .hud-panel {
+    grid-area: hud;
   }
   .game-topbar {
     gap: 8px;
