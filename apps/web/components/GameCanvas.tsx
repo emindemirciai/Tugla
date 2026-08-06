@@ -27,7 +27,7 @@ interface ViewState {
  * tick rather than the wall clock, so it pauses with the game and matches the
  * duration the server verifies.
  */
-const formatElapsed = (tick: number) => {
+export const formatElapsed = (tick: number) => {
   const hundredths = Math.floor(tick / 1.2);
   const minutes = Math.floor(hundredths / 6000);
   const seconds = Math.floor((hundredths % 6000) / 100);
