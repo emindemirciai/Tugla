@@ -29,7 +29,7 @@ export interface MailDeliveryResult {
 export type MailLocale = 'tr' | 'en';
 
 /** Transactional email copy in both supported product languages. */
-const MAIL_COPY: Record<
+export const MAIL_COPY: Record<
   MailLocale,
   Record<
     'verification' | 'reset' | 'deleted',

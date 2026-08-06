@@ -22,12 +22,18 @@ interface ViewState {
 }
 
 /** Ticks run at a fixed 120 Hz, so elapsed time is exact, not wall-clock. */
+/**
+ * Stopwatch readout: minutes:seconds:hundredths, driven by the fixed 120 Hz
+ * tick rather than the wall clock, so it pauses with the game and matches the
+ * duration the server verifies.
+ */
 const formatElapsed = (tick: number) => {
-  const total = Math.floor(tick / 120);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-  return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':');
+  const hundredths = Math.floor(tick / 1.2);
+  const minutes = Math.floor(hundredths / 6000);
+  const seconds = Math.floor((hundredths % 6000) / 100);
+  return [minutes, seconds, hundredths % 100]
+    .map((part) => String(part).padStart(2, '0'))
+    .join(':');
 };
 
 export interface CompletionSummary {
@@ -68,6 +74,7 @@ export function GameCanvas({
   const engineRef = useRef<TuğlaEngine | null>(null);
   const submittedRef = useRef(false);
   const [view, setView] = useState(initialView);
+  const clockRef = useRef<HTMLElement>(null);
   const [settings, setSettings] = useState<GameSettings>(() => loadSettings());
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpVisible, setHelpVisible] = useState(true);
@@ -158,6 +165,10 @@ export function GameCanvas({
       renderer.emitEvents(events);
       audio.handle(events);
       renderer.render(delta);
+
+      // Written every frame: re-rendering the whole HUD at this rate would be
+      // wasteful, and a stopwatch that only moves ten times a second stutters.
+      if (clockRef.current) clockRef.current.textContent = formatElapsed(engine.snapshot.tick);
 
       hudAccumulator += delta;
       if (hudAccumulator > 0.1) {
@@ -326,7 +337,7 @@ export function GameCanvas({
           </div>
           <div className="hud-stat hud-time">
             <span>{t('game.hud.time')}</span>
-            <strong>{formatElapsed(view.tick)}</strong>
+            <strong ref={clockRef}>{formatElapsed(view.tick)}</strong>
           </div>
         </aside>
 

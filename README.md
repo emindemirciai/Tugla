@@ -110,8 +110,10 @@ sunucu gibi doğrulayan testler eklendi.
 - **Dokunmatik:** Oyun alanı `touch-action: none` ile jesti üstlenir ve işaretçi olayları
   `preventDefault` eder. Bunlar olmadan tarayıcı dikey sürüklemeyi kaydırma sayıp işaretçi akışını
   iptal ediyordu; telefonda platformun hiç hareket etmemesinin sebebi buydu.
-- **Süre:** HUD, sabit 120 Hz tik sayacından türetilen dakika:saniye süresini gösterir (duvar saati
-  değil, simülasyon süresi).
+- **Süre:** HUD'daki kronometre `dakika:saniye:salise` biçiminde akar (`01:29:11`). Sayaç sabit
+  120 Hz tikten türetilir — duvar saatinden değil — bu yüzden duraklatınca durur ve sunucunun
+  doğruladığı süreyle birebir aynıdır. Salise hanesi kare hızında yazılır; HUD'ın geri kalanı
+  saniyede on kez tazelenir, böylece kronometre akıcı görünürken gereksiz yeniden çizim olmaz.
 - **Kontrol:** Platform artık parmağın/farenin tam altında. Ekran koordinatı, kameranın kadrajına
   ışın izlemeyle platform düzlemine yansıtılıyor; eskiden tuval genişliği doğrudan tahtaya
   eşlendiği için kadraj mektup kutusu olduğunda platform parmağın gerisinde kalıyordu. Bu hata
@@ -249,7 +251,7 @@ admin kullanıcılar, SEO/GEO çıktıları) TR/EN anahtarıyla gösterir. İçi
 ```bash
 pnpm lint            # prettier --check + eslint (tek düz konfig)
 pnpm typecheck       # tüm workspace
-pnpm test            # 82 birim test (engine, shared, api, web, admin)
+pnpm test            # 93 birim test (engine, shared, api, web, admin)
 pnpm build           # packages + api + web + admin (production)
 pnpm test:e2e:api    # 100 kontrollü uçtan uca API smoke (gerçek DB/Redis ister)
 pnpm test:load       # k6 yük testi (k6 kurulumu gerekir; docs/OPERATIONS.md)
@@ -304,6 +306,19 @@ korunur; yalnızca üretilen kampanya içeriği ve katalog tazelenir. **Sürüm 
 Kampanya bölümlerini yönetim panelinden elle düzenliyorsan ve bu düzenlemelerin dağıtımdan sağ
 çıkmasını istiyorsan `SEED_ON_DEPLOY=false` yap. Elle çalıştırma seçeneği duruyor:
 `docker compose --profile tools run --rm seed`.
+
+### İki dillilik nasıl güvence altında
+
+TR ve EN desteği "yazıldı ve umulur ki çalışıyor" durumunda bırakılmadı; her commit'te testle
+doğrulanır:
+
+| Katman            | Kaynak                          | Test                                                                                                                        |
+| ----------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Oyuncu uygulaması | `apps/web/lib/i18n.tsx`         | anahtar eşliği, boş/TODO çeviri yok, `{değişken}` adları iki dilde aynı, son eklenen ekranların anahtarları dolu ve TR ≠ EN |
+| Yönetim paneli    | `apps/admin/lib/i18n.ts`        | anahtar eşliği, boş çeviri yok, değişken eşliği                                                                             |
+| İşlemsel e-posta  | `apps/api/src/services/mail.ts` | her mesaj iki dilde, tüm alanlar dolu, TR metni EN'in kopyası değil, doğrulama kodu etiketi mevcut                          |
+
+Bir anahtar tek dilde kalırsa test kırılır; oyuncu ham anahtar görmez.
 
 ### Sürüm ve commit biçimi
 
@@ -377,7 +392,7 @@ emitted decorator metadata.
 
 ### Verification gate
 
-`pnpm lint` · `pnpm typecheck` · `pnpm test` (82 unit tests) · `pnpm build` · `pnpm build:preview` ·
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (93 unit tests) · `pnpm build` · `pnpm build:preview` ·
 `pnpm test:e2e:api` (100-check end-to-end journey against a real database). CI runs the identical gate
 with Postgres+Redis services and triggers the Dokploy webhook on success.
 
@@ -450,6 +465,15 @@ next scheduled season — all in one transaction, recorded as `SEASON_SETTLED` i
 inbox is fed by real events too: friend requests and acceptances, community level published /
 rejected / archived / auto-hidden, and season results. Previously a moderation decision never
 reached the author.
+
+### How bilingual support is guaranteed
+
+TR/EN is not left to hope: every commit runs parity tests. The player app
+(`apps/web/lib/i18n.tsx`), the control centre (`apps/admin/lib/i18n.ts`) and transactional mail
+(`apps/api/src/services/mail.ts`) are each checked for identical key sets, no empty or TODO strings,
+identical `{variable}` names across languages, and — for mail and recent screens — that the Turkish
+text is an actual translation rather than a copy of the English. A key that exists in one language
+only fails the build, so a player can never see a raw key.
 
 ### Capacity and rate limiting
 
