@@ -23,7 +23,7 @@ interface ViewState {
 
 /** Ticks run at a fixed 120 Hz, so elapsed time is exact, not wall-clock. */
 /**
- * Stopwatch readout: minutes:seconds:hundredths, driven by the fixed 120 Hz
+ * Stopwatch readout: hours:minutes:seconds, driven by the fixed 120 Hz
  * tick rather than the wall clock, so it pauses with the game and matches the
  * duration the server verifies.
  */
@@ -32,9 +32,7 @@ export const formatElapsed = (tick: number) => {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return [hours, minutes, seconds]
-    .map((part) => String(part).padStart(2, '0'))
-    .join(':');
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':');
 };
 
 export interface CompletionSummary {
