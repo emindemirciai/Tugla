@@ -360,6 +360,13 @@ const tr = {
   'daily.player': 'Oyuncu',
   'daily.score': 'Skor',
   'daily.unavailable': 'Günün bölümü şu an hazırlanıyor.',
+  'daily.noUnlock': 'Günün bölümü kampanya ilerlemeni etkilemez; sonraki bölümü açmaz.',
+  'daily.replayTitle': 'Tekrar oynamak istediğine emin misin?',
+  'daily.replayBody':
+    'Bugün bu bölümü {score} puanla bitirdin. Yeniden oynarsan günlük tablodaki skorun yalnızca daha iyisini yaparsan güncellenir.',
+  'daily.replayConfirm': 'Evet, tekrar oyna',
+  'daily.replayCancel': 'Vazgeç',
+  'daily.replayAck': 'Anladım: bu oyun sonraki bölümü açmaz.',
   'auth.or': 'veya',
   'auth.google.pending': 'Google hesabın doğrulanıyor…',
   'auth.verify.codeTitle': 'E-postanı doğrula',
@@ -733,6 +740,14 @@ const en: Record<TranslationKey, string> = {
   'daily.player': 'Player',
   'daily.score': 'Score',
   'daily.unavailable': 'The daily level is being prepared.',
+  'daily.noUnlock':
+    'The daily challenge does not affect campaign progress; it never unlocks the next level.',
+  'daily.replayTitle': 'Play it again?',
+  'daily.replayBody':
+    'You finished today with {score} points. Replaying only updates your daily score if you beat it.',
+  'daily.replayConfirm': 'Yes, play again',
+  'daily.replayCancel': 'Cancel',
+  'daily.replayAck': 'I understand this run will not unlock the next level.',
   'auth.or': 'or',
   'auth.google.pending': 'Verifying your Google account…',
   'auth.verify.codeTitle': 'Verify your email',

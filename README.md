@@ -307,6 +307,31 @@ Kampanya bölümlerini yönetim panelinden elle düzenliyorsan ve bu düzenlemel
 çıkmasını istiyorsan `SEED_ON_DEPLOY=false` yap. Elle çalıştırma seçeneği duruyor:
 `docker compose --profile tools run --rm seed`.
 
+### Lisans ve kaynak bildirimi
+
+Depo **MIT lisanslıdır** (`LICENSE`). Servis edilen HTML'in başında, "kaynağı görüntüle" diyen
+herkesin göreceği iki dilli bir bildirim vardır; tarayıcı konsoluna da aynı bilgi yazılır.
+Sayfa ayrıca `<meta name="copyright">` ve `<meta name="license">` taşır. Hak sahibi `SITE_OWNER`
+değişkeninden gelir.
+
+**Dürüst uyarı:** İstemci kodu tarayıcıya gönderilir; teknik olarak gizlenemez. Küçültme ve
+kaynak haritalarının kapalı olması okumayı zorlaştırır, engellemez. Sağ tık engellemek de koruma
+sağlamaz, yalnızca kullanılabilirliği ve erişilebilirliği bozar — bu yüzden yapılmadı. Yapılan şey
+dürüst olanı: kimin eseri olduğunu ve hangi şartlarla kullanılabileceğini açıkça belirtmek.
+
+MIT'in anlamı: **herkes kodu kopyalayabilir, değiştirebilir ve kendi projesinde kullanabilir**;
+tek şart telif ve lisans bildirimini korumaktır. Kodun kopyalanmasını istemiyorsan MIT yanlış
+seçimdir; o durumda tescilli (proprietary) bir lisans metni gerekir. Marka adı, logo ve görseller
+zaten MIT kapsamında değildir.
+
+### Günün bölümü kampanyayı açmaz
+
+Günün bölümü bir kampanya bölümünü yeniden kullanır, ama oynanışı kampanya ilerlemesine **saymaz**:
+kilit sorguları yalnızca `CAMPAIGN` modundaki tamamlanmış oturumları sayar. Böylece her gün bedava
+bir bölüm açılmaz. Aynı günde tekrar oynamak serbesttir; oyuncu önce onay kutusunu işaretleyip
+"tekrar oyna" demek zorundadır, çünkü bu oyun yalnızca daha iyi bir skor yaparsa günlük tabloyu
+günceller.
+
 ### İki dillilik nasıl güvence altında
 
 TR ve EN desteği "yazıldı ve umulur ki çalışıyor" durumunda bırakılmadı; her commit'te testle
@@ -465,6 +490,24 @@ next scheduled season — all in one transaction, recorded as `SEASON_SETTLED` i
 inbox is fed by real events too: friend requests and acceptances, community level published /
 rejected / archived / auto-hidden, and season results. Previously a moderation decision never
 reached the author.
+
+### Licence and source notice
+
+The repository is **MIT licensed** (`LICENSE`). The served HTML opens with a bilingual notice that
+anyone choosing "view source" will read, the same text is printed to the browser console, and the
+page carries `copyright` and `license` meta tags. The rights holder comes from `SITE_OWNER`.
+
+An honest caveat: client code is shipped to the browser and cannot be hidden. Minification and
+disabled source maps make it harder to read, not impossible, and blocking right-click protects
+nothing while harming usability — so it was not done. MIT also means anyone may copy and reuse the
+code as long as the notice is kept; if that is not the intent, a proprietary licence is the correct
+tool. Brand name, logo and artwork are outside the licence either way.
+
+### The daily challenge never unlocks a level
+
+It reuses a campaign level but does not count towards campaign progress: unlock queries only look at
+completed `CAMPAIGN` sessions. Replaying it the same day is allowed, behind a confirmation with an
+acknowledgement tick, because the run only improves the daily board if it beats the previous score.
 
 ### How bilingual support is guaranteed
 

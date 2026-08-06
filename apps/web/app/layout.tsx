@@ -152,10 +152,37 @@ function structuredData() {
   return { '@context': 'https://schema.org', '@graph': [publisher, website, game, faqPage] };
 }
 
+/**
+ * Notice shown to anyone who opens "view source".
+ *
+ * Client-side code is delivered to the browser by definition, so it cannot be
+ * hidden — anything claiming otherwise would be theatre. What is honest and
+ * useful is stating who owns the work and under what terms, in the two places
+ * a curious visitor actually looks: the top of the HTML and the console.
+ */
+const sourceNotice = `
+  ${config.appName} — © ${new Date().getFullYear()} ${config.owner}
+  ${config.webUrl}
+
+  Kaynak kodu MIT lisansı altındadır: kullanabilir, değiştirebilir ve
+  dağıtabilirsiniz; telif ve lisans bildirimini korumanız gerekir.
+  Marka adı, logo ve görseller lisansın kapsamı dışındadır.
+
+  Source code is MIT licensed: use, modify and distribute it, provided the
+  copyright and licence notice are kept. The brand name, logo and artwork are
+  not covered by that licence.
+`;
+
+const consoleNotice = `%c${config.appName}%c © ${new Date().getFullYear()} ${config.owner} — MIT licensed source, brand assets reserved. ${config.webUrl}`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang={config.defaultLocale}>
       <head>
+        {/* Rendered verbatim into the served HTML, so it is the first thing in
+            "view source"; the surrounding braces keep it out of the visible page. */}
+        <meta name="copyright" content={`© ${new Date().getFullYear()} ${config.owner}`} />
+        <meta name="license" content="MIT" />
         {/* Applies the stored appearance before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         {/* Explicit home-page hreflang set: the ?lang parameter is honoured by
@@ -165,10 +192,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="alternate" hrefLang="x-default" href={`${config.webUrl}/`} />
       </head>
       <body>
+        {/* Raw HTML comment: this is what a visitor sees at the top of the
+            document when they choose "view source". */}
+        <script dangerouslySetInnerHTML={{ __html: `</script><!--${sourceNotice}--><script>` }} />
         <LocaleProvider>
           <SessionProvider>{children}</SessionProvider>
         </LocaleProvider>
         <PwaRegistration />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `console.info(${JSON.stringify(consoleNotice)}, 'font-weight:700;color:#5b4be1', 'color:inherit');`,
+          }}
+        />
         <SiteAnalytics />
         <script
           type="application/ld+json"

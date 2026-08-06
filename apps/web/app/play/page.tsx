@@ -36,6 +36,10 @@ function PlayInner() {
   );
   const [offlineQueued, setOfflineQueued] = useState(0);
   const worldStrip = useRef<HTMLElement>(null);
+  // Replaying the daily level is allowed but never accidental: the player has
+  // to confirm, and has to acknowledge that it does not unlock anything.
+  const [dailyConfirm, setDailyConfirm] = useState(false);
+  const [dailyAck, setDailyAck] = useState(false);
   const [daily, setDaily] = useState<Awaited<ReturnType<typeof gameApi.daily>> | null>(null);
 
   // No guest accounts: the game requires a signed-in player.
@@ -163,6 +167,46 @@ function PlayInner() {
             <span className="tag">{daily.day}</span>
           </div>
           <p className="muted">{t('daily.subtitle')}</p>
+          <p className="muted">{t('daily.noUnlock')}</p>
+
+          {dailyConfirm && (
+            <div className="confirm-box" role="alertdialog" aria-label={t('daily.replayTitle')}>
+              <strong>{t('daily.replayTitle')}</strong>
+              <p className="muted">
+                {t('daily.replayBody', {
+                  score: (daily.mine?.score ?? 0).toLocaleString(locale),
+                })}
+              </p>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={dailyAck}
+                  onChange={(event) => setDailyAck(event.target.checked)}
+                />
+                <span>{t('daily.replayAck')}</span>
+              </label>
+              <div className="card-actions">
+                <button
+                  type="button"
+                  className="button button-primary"
+                  disabled={!dailyAck || starting !== null}
+                  onClick={() => {
+                    setDailyConfirm(false);
+                    void startLevel(daily.level!.id, 'DAILY');
+                  }}
+                >
+                  {t('daily.replayConfirm')}
+                </button>
+                <button
+                  type="button"
+                  className="button-quiet"
+                  onClick={() => setDailyConfirm(false)}
+                >
+                  {t('daily.replayCancel')}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="card-foot">
             <span className="muted">
               {daily.level.world}-{daily.level.index} · {daily.level.name} ·{' '}
@@ -174,7 +218,14 @@ function PlayInner() {
               type="button"
               className="button button-primary"
               disabled={starting !== null}
-              onClick={() => void startLevel(daily.level!.id, 'DAILY')}
+              onClick={() => {
+                if (daily.mine) {
+                  setDailyAck(false);
+                  setDailyConfirm(true);
+                  return;
+                }
+                void startLevel(daily.level!.id, 'DAILY');
+              }}
             >
               {t('daily.play')}
             </button>

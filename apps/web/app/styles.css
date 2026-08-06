@@ -2137,3 +2137,18 @@ textarea:focus {
 .game-shell {
   overscroll-behavior: none;
 }
+
+/* ----- confirmation box ------------------------------------------------------ */
+.confirm-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.confirm-box strong {
+  font-size: 1rem;
+}

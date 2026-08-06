@@ -15,6 +15,8 @@ export interface SeoConfig {
   defaultLocale: Locale;
   indexable: boolean;
   allowAiCrawlers: boolean;
+  /** Rights holder, shown in the source notice and the copyright metadata. */
+  owner: string;
   twitter?: string;
   googleVerification?: string;
   bingVerification?: string;
@@ -37,6 +39,7 @@ export const seoConfig = (env: NodeJS.ProcessEnv = process.env): SeoConfig => {
     // Staging and preview environments must never outrank production.
     indexable: clean(env.SEO_INDEXABLE) === 'true' || clean(env.NODE_ENV) === 'production',
     allowAiCrawlers: clean(env.AI_CRAWLERS_ALLOWED) !== 'false',
+    owner: clean(env.SITE_OWNER) ?? clean(env.APP_NAME) ?? 'Tuğla.fun',
     twitter: clean(env.SOCIAL_TWITTER),
     googleVerification: clean(env.GOOGLE_SITE_VERIFICATION),
     bingVerification: clean(env.BING_SITE_VERIFICATION),

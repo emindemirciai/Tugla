@@ -87,7 +87,12 @@ export class GameService {
       });
       if (previous) {
         const cleared = await this.db.gameSession.count({
-          where: { userId, status: 'COMPLETED', levelId: { in: [previous.id, level.id] } },
+          where: {
+            userId,
+            status: 'COMPLETED',
+            mode: 'CAMPAIGN',
+            levelId: { in: [previous.id, level.id] },
+          },
         });
         if (!cleared) throw new BadRequestException('Finish the previous level first');
       }
@@ -784,6 +789,10 @@ export class GameController {
               where: {
                 userId,
                 status: 'COMPLETED',
+                // Only campaign runs advance the campaign. The daily challenge
+                // reuses a campaign level, so counting it would hand players a
+                // free unlock every day.
+                mode: 'CAMPAIGN',
                 levelId: { in: levels.map((level) => level.id) },
               },
               select: { levelId: true },
@@ -811,6 +820,7 @@ export class GameController {
               where: {
                 userId,
                 status: 'COMPLETED',
+                mode: 'CAMPAIGN',
                 levelId: { in: [...previousByKey.values()] },
               },
               select: { levelId: true },

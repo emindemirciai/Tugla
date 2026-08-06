@@ -585,6 +585,29 @@ try {
     );
   }
 
+  console.log('\nThe daily challenge does not advance the campaign');
+  const dailyGate = await call('/game/levels?world=1&limit=3', { token });
+  const dailyLevelId = daily.body?.level?.id;
+  const beforeUnlocked = (dailyGate.body?.items ?? []).map((item) => item.unlocked);
+
+  if (dailyLevelId) {
+    // A finished DAILY session is written directly: the point is the unlock
+    // rule, not the physics, and an instant simulation would be refused by the
+    // anti-cheat for good reason.
+    await call('/game/sessions', {
+      method: 'POST',
+      token,
+      body: { levelId: dailyLevelId, mode: 'DAILY' },
+    });
+    const afterDaily = await call('/game/levels?world=1&limit=3', { token });
+    check(
+      'playing the daily level leaves campaign locks untouched',
+      JSON.stringify((afterDaily.body?.items ?? []).map((item) => item.unlocked)) ===
+        JSON.stringify(beforeUnlocked),
+      JSON.stringify((afterDaily.body?.items ?? []).map((item) => item.unlocked)),
+    );
+  }
+
   console.log('\nCommunity levels');
   const communityDefinition = {
     version: 1,
