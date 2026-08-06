@@ -81,8 +81,15 @@ export class GameService {
 
     // The client hides locked levels; the server refuses them.
     if (level.type !== 'COMMUNITY' && level.index > 1 && data.mode !== 'DAILY') {
+      const prevIndex = level.index - 1;
+      const prevWorld = Math.floor((prevIndex - 1) / 50) + 1;
       const previous = await this.db.level.findFirst({
-        where: { world: level.world, index: level.index - 1, status: 'PUBLISHED' },
+        where: {
+          world: prevWorld,
+          index: prevIndex,
+          status: 'PUBLISHED',
+          type: { not: 'COMMUNITY' },
+        },
         select: { id: true },
       });
       if (previous) {
@@ -808,7 +815,11 @@ export class GameController {
       where: {
         status: 'PUBLISHED',
         type: { not: 'COMMUNITY' },
-        OR: levels.map((level) => ({ world: level.world, index: level.index - 1 })),
+        OR: levels.map((level) => {
+          const prevIndex = level.index - 1;
+          const prevWorld = Math.floor((prevIndex - 1) / 50) + 1;
+          return { world: prevWorld, index: prevIndex };
+        }),
       },
       select: { id: true, world: true, index: true },
     });
@@ -831,7 +842,9 @@ export class GameController {
       : new Set<string>();
 
     const items = levels.map((level) => {
-      const previousId = previousByKey.get(`${level.world}:${level.index - 1}`);
+      const prevIndex = level.index - 1;
+      const prevWorld = Math.floor((prevIndex - 1) / 50) + 1;
+      const previousId = previousByKey.get(`${prevWorld}:${prevIndex}`);
       const unlocked =
         level.index === 1 ||
         completed.has(level.id) ||

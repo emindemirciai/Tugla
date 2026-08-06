@@ -28,10 +28,11 @@ interface ViewState {
  * duration the server verifies.
  */
 export const formatElapsed = (tick: number) => {
-  const hundredths = Math.floor(tick / 1.2);
-  const minutes = Math.floor(hundredths / 6000);
-  const seconds = Math.floor((hundredths % 6000) / 100);
-  return [minutes, seconds, hundredths % 100]
+  const totalSeconds = Math.floor(tick / 120);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds]
     .map((part) => String(part).padStart(2, '0'))
     .join(':');
 };
