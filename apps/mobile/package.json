@@ -19,9 +19,9 @@
     "@capacitor/status-bar": "7.0.1"
   },
   "devDependencies": {
-    "@capacitor/android": "7.4.1",
-    "@capacitor/cli": "7.4.1",
-    "@capacitor/ios": "7.4.1",
-    "typescript": "5.8.3"
+    "@capacitor/android": "8.5.0",
+    "@capacitor/cli": "8.5.0",
+    "@capacitor/ios": "8.5.0",
+    "typescript": "7.0.2"
   }
 }
