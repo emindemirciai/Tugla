@@ -309,6 +309,15 @@ başladığı için bir hata yalnızca loga yazılır, siteyi etkilemez.
 Kampanya bölümlerini yönetim panelinden elle düzenliyorsan `SEED_ON_DEPLOY=false` yap. Elle
 çalıştırma seçeneği duruyor: `docker compose --profile tools run --rm seed`.
 
+### Güvenlik olayı (2026-08-07) ve sertleştirme
+
+Web konteynerinin loglarında uzaktan kod çalıştırma ve `/tmp` altına yük indirme izleri bulundu;
+ayrıntı, kanıt ve sunucuda yapılması gerekenler `docs/INCIDENT-2026-08-07.md` dosyasındadır.
+**Sırların tamamı yakılmış sayılmalı ve döndürülmelidir.** Depoda yapılanlar: Next.js 15.3.3 →
+15.5.23 ve uygulama konteynerlerinin sertleştirilmesi — salt okunur dosya sistemi, tüm Linux
+yeteneklerinin düşürülmesi, `no-new-privileges` ve `noexec` bir `/tmp` tmpfs'i. Bir sonraki açıkta
+bile bir yük yazılamaz ve çalıştırılamaz.
+
 ### Lisans ve kaynak bildirimi
 
 Depo **MIT lisanslıdır** (`LICENSE`). Servis edilen HTML'in başında, "kaynağı görüntüle" diyen
@@ -492,6 +501,14 @@ next scheduled season — all in one transaction, recorded as `SEASON_SETTLED` i
 inbox is fed by real events too: friend requests and acceptances, community level published /
 rejected / archived / auto-hidden, and season results. Previously a moderation decision never
 reached the author.
+
+### Security incident (2026-08-07) and hardening
+
+The web container's logs show remote code execution and a payload download into `/tmp`; the
+evidence and the required server-side response are in `docs/INCIDENT-2026-08-07.md`. **Every secret
+must be treated as burned and rotated.** In this repository: Next.js 15.3.3 → 15.5.23, and the
+application containers now run read-only with all Linux capabilities dropped, `no-new-privileges`,
+and a small `noexec` `/tmp` tmpfs, so the next bug cannot be turned into a running payload.
 
 ### Licence and source notice
 

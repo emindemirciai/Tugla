@@ -1,6 +1,11 @@
+# Tuğla.fun — production compose for Dokploy.
+#
+# Application containers run read-only with all capabilities dropped: an
+# attacker who achieves code execution still cannot write or run a payload.
+# The analytics service keeps a writable filesystem because it stores its
+# event log on disk.
 name: tugla
-
-x-app-environment: &app-environment
+x-app-environment: &id003
   NODE_ENV: production
   SEED_ON_DEPLOY: ${SEED_ON_DEPLOY:-true}
   APP_NAME: ${APP_NAME:-Tuğla.fun}
@@ -37,7 +42,6 @@ x-app-environment: &app-environment
   PAYMENTS_ENABLED: ${PAYMENTS_ENABLED:-false}
   SENTRY_DSN: ${SENTRY_DSN:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
-
 services:
   web:
     build:
@@ -69,12 +73,25 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000']
+      test:
+        - CMD
+        - wget
+        - -qO-
+        - http://127.0.0.1:3000
       interval: 30s
       timeout: 5s
       retries: 3
-    networks: [public, private]
-
+    networks:
+      - public
+      - private
+    read_only: true
+    security_opt: &id001
+      - no-new-privileges:true
+    cap_drop: &id002
+      - ALL
+    tmpfs:
+      - /tmp:noexec,nosuid,size=32m
+      - /app/apps/web/.next/cache:size=64m
   admin:
     build:
       context: ../..
@@ -89,17 +106,28 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001']
+      test:
+        - CMD
+        - wget
+        - -qO-
+        - http://127.0.0.1:3001
       interval: 30s
       timeout: 5s
       retries: 3
-    networks: [public, private]
-
+    networks:
+      - public
+      - private
+    read_only: true
+    security_opt: *id001
+    cap_drop: *id002
+    tmpfs:
+      - /tmp:noexec,nosuid,size=32m
+      - /app/apps/admin/.next/cache:size=64m
   api:
     build:
       context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
-    environment: *app-environment
+    environment: *id003
     restart: unless-stopped
     depends_on:
       postgres:
@@ -112,40 +140,49 @@ services:
       resources:
         limits:
           memory: 1400M
-    networks: [public, private]
-
+    networks:
+      - public
+      - private
+    read_only: true
+    security_opt: *id001
+    cap_drop: *id002
+    tmpfs:
+      - /tmp:noexec,nosuid,size=32m
   migrate:
     build:
       context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
-    # Migrations only. Content seeding runs inside the API after it starts
-    # listening (SEED_ON_DEPLOY), so a seeding problem can never fail a release
-    # or take the site down with it.
-    command: ['pnpm', '--filter', '@tugla/database', 'migrate']
-    environment: *app-environment
+    command:
+      - pnpm
+      - --filter
+      - '@tugla/database'
+      - migrate
+    environment: *id003
     restart: 'no'
     depends_on:
       postgres:
         condition: service_healthy
-    networks: [private]
-
-  # Manual seeding stays available for one-off runs:
-  #   docker compose --profile tools run --rm seed
-  # Inside a running API container the same job is: cd /repo && pnpm db:seed
+    networks:
+      - private
   seed:
-    profiles: ['tools']
+    profiles:
+      - tools
     build:
       context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
     working_dir: /repo
-    command: ['pnpm', '--filter', '@tugla/database', 'seed']
-    environment: *app-environment
+    command:
+      - pnpm
+      - --filter
+      - '@tugla/database'
+      - seed
+    environment: *id003
     restart: 'no'
     depends_on:
       postgres:
         condition: service_healthy
-    networks: [private]
-
+    networks:
+      - private
   postgres:
     image: postgres:17-alpine
     environment:
@@ -157,7 +194,9 @@ services:
     restart: unless-stopped
     shm_size: 256mb
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-tugla} -d ${POSTGRES_DB:-tugla}']
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-tugla} -d ${POSTGRES_DB:-tugla}
       interval: 10s
       timeout: 5s
       retries: 10
@@ -169,24 +208,24 @@ services:
       private:
         aliases:
           - tugla-postgres
-
   redis:
     image: redis:8-alpine
     command:
-      [
-        'redis-server',
-        '--appendonly',
-        'yes',
-        '--maxmemory',
-        '384mb',
-        '--maxmemory-policy',
-        'allkeys-lru',
-      ]
+      - redis-server
+      - --appendonly
+      - 'yes'
+      - --maxmemory
+      - 384mb
+      - --maxmemory-policy
+      - allkeys-lru
     volumes:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test:
+        - CMD
+        - redis-cli
+        - ping
       interval: 10s
       timeout: 3s
       retries: 10
@@ -194,8 +233,8 @@ services:
       resources:
         limits:
           memory: 512M
-    networks: [private]
-
+    networks:
+      - private
   minio:
     image: minio/minio:RELEASE.2025-05-24T17-08-30Z
     command: server /data --console-address ":9001"
@@ -206,7 +245,11 @@ services:
       - minio_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
+      test:
+        - CMD
+        - mc
+        - ready
+        - local
       interval: 15s
       timeout: 5s
       retries: 10
@@ -214,10 +257,8 @@ services:
       resources:
         limits:
           memory: 768M
-    networks: [private]
-
-  # Site analytics: the project's own Analyze.Your.Site dashboard.
-  # Give it its own domain (e.g. analiz.${ROOT_DOMAIN}) in Dokploy.
+    networks:
+      - private
   analytics:
     build:
       context: ../..
@@ -226,7 +267,6 @@ services:
         ANALYTICS_REPO: ${ANALYTICS_REPO:-https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git}
         ANALYTICS_REF: ${ANALYTICS_REF:-main}
     environment:
-      # Only the player site may post events; the tracker script is public.
       ANALYZE_ALLOWED_ORIGIN: ${WEB_URL:-https://${ROOT_DOMAIN}}
       ANALYZE_DATA_DIR: /data
       ANALYZE_MAX_EVENTS: ${ANALYTICS_MAX_EVENTS:-20000}
@@ -237,15 +277,19 @@ services:
       resources:
         limits:
           memory: 512M
-    networks: [public]
-
+    networks:
+      - public
+    read_only: false
+    security_opt: *id001
+    cap_drop: *id002
+    tmpfs:
+      - /tmp:noexec,nosuid,size=32m
 volumes:
-  postgres_data:
-  redis_data:
-  minio_data:
-  analytics_data:
-
+  postgres_data: null
+  redis_data: null
+  minio_data: null
+  analytics_data: null
 networks:
-  public:
+  public: null
   private:
     internal: true

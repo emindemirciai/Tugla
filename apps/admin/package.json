@@ -1,6 +1,6 @@
 {
   "name": "@tugla/admin",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@tugla/game-engine": "workspace:*",
     "@tugla/shared": "workspace:*",
-    "next": "15.3.3",
+    "next": "15.5.23",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
