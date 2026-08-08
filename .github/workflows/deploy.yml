@@ -27,5 +27,14 @@ jobs:
         env:
           DEPLOY_URL: ${{ steps.environment.outputs.url }}
         run: |
-          test -n "$DEPLOY_URL"
+          # Dokploy can deploy either way: through its own Git integration, or
+          # through this webhook. When the webhook secret is not configured the
+          # first mode is in use, and that is not a failure — it used to fail
+          # the run and send a "run failed" email after every green push.
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "No Dokploy webhook secret for this branch."
+            echo "Nothing to do: Dokploy deploys this repository through its own Git integration."
+            echo "Set DOKPLOY_PRODUCTION_WEBHOOK (or DOKPLOY_STAGING_WEBHOOK) to deploy from CI instead."
+            exit 0
+          fi
           curl --fail --silent --show-error --retry 3 -X POST "$DEPLOY_URL"

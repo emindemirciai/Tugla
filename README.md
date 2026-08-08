@@ -309,6 +309,18 @@ başladığı için bir hata yalnızca loga yazılır, siteyi etkilemez.
 Kampanya bölümlerini yönetim panelinden elle düzenliyorsan `SEED_ON_DEPLOY=false` yap. Elle
 çalıştırma seçeneği duruyor: `docker compose --profile tools run --rm seed`.
 
+### Dağıtım iş akışı ve "run failed" e-postaları
+
+Depoda iki iş akışı var: **CI** (lint, typecheck, testler, smoke, derleme) ve **Dokploy deploy**.
+İkincisi yalnızca `DOKPLOY_PRODUCTION_WEBHOOK` gizli değeri tanımlıysa bir şey yapar. Dokploy kendi
+Git entegrasyonuyla dağıtıyorsa bu gizli değer gerekmez; iş akışı bunu bir hata olarak değil,
+"yapılacak bir şey yok" olarak raporlar. Önceden gizli değer boş olduğunda iş kırmızıya düşüyor ve
+her yeşil push'tan sonra "run failed" e-postası geliyordu.
+
+Dependabot açtığı çekme istekleri için de CI koşar. Bu koşuların kırmızı olması bağımlılık
+yükseltmesinin gerçekten kırıcı olduğunu gösterir — iş akışının hatası değildir; ilgili PR
+incelenip kapatılmalı veya düzeltilmelidir.
+
 ### Güvenlik olayı (2026-08-07) ve sertleştirme
 
 Web konteynerinin loglarında uzaktan kod çalıştırma ve `/tmp` altına yük indirme izleri bulundu;
@@ -501,6 +513,16 @@ next scheduled season — all in one transaction, recorded as `SEASON_SETTLED` i
 inbox is fed by real events too: friend requests and acceptances, community level published /
 rejected / archived / auto-hidden, and season results. Previously a moderation decision never
 reached the author.
+
+### Deploy workflow and "run failed" emails
+
+There are two workflows: **CI** (lint, typecheck, tests, smoke, build) and **Dokploy deploy**. The
+second one only acts when `DOKPLOY_PRODUCTION_WEBHOOK` is set. If Dokploy deploys through its own
+Git integration, that secret is unnecessary and the workflow now reports "nothing to do" instead of
+failing — previously it turned red after every green push and sent a "run failed" email.
+
+CI also runs for Dependabot pull requests. A red run there means the dependency bump genuinely
+breaks the build; review or close that PR rather than the workflow.
 
 ### Security incident (2026-08-07) and hardening
 
