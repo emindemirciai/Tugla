@@ -1,6 +1,10 @@
 # NestJS depends on emitDecoratorMetadata, which esbuild-based runners cannot
 # emit, so the image compiles with tsc and runs the compiled output.
 FROM node:24-alpine AS base
+# Pin corepack's cache location so the runtime stage can copy it from a known
+# path rather than guessing where this corepack version happens to store it.
+ENV COREPACK_HOME=/root/.cache/node/corepack \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN apk add --no-cache openssl libc6-compat && corepack enable
 WORKDIR /repo
 
@@ -10,7 +14,7 @@ COPY apps/api/package.json apps/api/package.json
 COPY packages/database/package.json packages/database/package.json
 COPY packages/shared/package.json packages/shared/package.json
 COPY packages/game-engine/package.json packages/game-engine/package.json
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile && mkdir -p "$COREPACK_HOME"
 
 FROM dependencies AS build
 COPY apps/api apps/api
@@ -26,6 +30,9 @@ RUN pnpm --filter @tugla/database generate \
 FROM base AS runtime
 ENV NODE_ENV=production
 ENV PORT=4000
+# Corepack looks here, which is where the build stage's cache was copied.
+ENV COREPACK_HOME=/home/api/.cache/node/corepack \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 WORKDIR /repo
 COPY --from=build /repo/node_modules ./node_modules
 COPY --from=build /repo/package.json ./package.json
@@ -34,8 +41,13 @@ COPY --from=build /repo/apps/api/package.json ./apps/api/package.json
 COPY --from=build /repo/apps/api/dist ./apps/api/dist
 COPY --from=build /repo/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /repo/packages ./packages
+# The migrate job runs `pnpm --filter @tugla/database migrate` in this image as
+# the unprivileged api user. Corepack would otherwise try to download pnpm at
+# that moment — into a home directory it does not own, on a host that may have
+# no outbound access — so the cache downloaded during the build is carried over.
+COPY --from=dependencies /root/.cache/node/corepack /home/api/.cache/node/corepack
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 api \
- && chown -R api:nodejs /repo
+ && chown -R api:nodejs /repo /home/api
 USER api
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

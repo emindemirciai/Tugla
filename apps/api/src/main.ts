@@ -91,11 +91,19 @@ async function bootstrap() {
  */
 function seedContent(logger: Logger) {
   logger.log('Seeding generated content (SEED_ON_DEPLOY=true)…');
-  const seed = spawn('pnpm', ['--filter', '@tugla/database', 'seed'], {
-    cwd: resolve(__dirname, '../../..'),
-    env: process.env,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  // Run the seed with the node binary already in this process and tsx from
+  // node_modules, rather than through pnpm. The API container is read-only and
+  // unprivileged, so anything that makes corepack fetch or write at runtime is
+  // avoidable risk; node executing a file needs neither.
+  const repoRoot = resolve(__dirname, '../../..');
+  const seed = spawn(
+    process.execPath,
+    [
+      require.resolve('tsx/cli', { paths: [repoRoot] }),
+      resolve(repoRoot, 'packages/database/prisma/seed.ts'),
+    ],
+    { cwd: repoRoot, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] },
+  );
   let output = '';
   seed.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
   seed.stderr.on('data', (chunk: Buffer) => (output += chunk.toString()));

@@ -309,6 +309,18 @@ başladığı için bir hata yalnızca loga yazılır, siteyi etkilemez.
 Kampanya bölümlerini yönetim panelinden elle düzenliyorsan `SEED_ON_DEPLOY=false` yap. Elle
 çalıştırma seçeneği duruyor: `docker compose --profile tools run --rm seed`.
 
+### Çalışma zamanında pnpm ve corepack
+
+API imajı, migration işini kendi içinde `pnpm --filter @tugla/database migrate` ile çalıştırır ve bu
+komut ayrıcalıksız `api` kullanıcısıyla koşar. Corepack bu anda pnpm'i indirmeye kalkarsa — sahibi
+olmadığı bir ev dizinine, dışa erişimi olmayabilecek bir sunucuda — iş düşer. Bu yüzden derleme
+aşamasındaki corepack önbelleği runtime imajına kopyalanır, `COREPACK_HOME` her iki aşamada da
+açıkça sabitlenir ve `/home/api` sahipliği API kullanıcısına verilir.
+
+Açılıştaki içerik tohumlaması ise pnpm'e hiç uğramaz: doğrudan `node` ve node_modules içindeki `tsx`
+ile çalışır. API konteyneri salt okunur olduğu için çalışma zamanında indirme veya yazma gerektiren
+her adım gereksiz risktir.
+
 ### Dağıtım iş akışı ve "run failed" e-postaları
 
 Depoda iki iş akışı var: **CI** (lint, typecheck, testler, smoke, derleme) ve **Dokploy deploy**.
@@ -513,6 +525,16 @@ next scheduled season — all in one transaction, recorded as `SEASON_SETTLED` i
 inbox is fed by real events too: friend requests and acceptances, community level published /
 rejected / archived / auto-hidden, and season results. Previously a moderation decision never
 reached the author.
+
+### pnpm and corepack at runtime
+
+The API image runs migrations with `pnpm --filter @tugla/database migrate` as the unprivileged `api`
+user. If corepack has to fetch pnpm at that moment — into a home directory it does not own, possibly
+on a host without outbound access — the job fails, so the build stage's corepack cache is copied into
+the runtime image, `COREPACK_HOME` is pinned explicitly in both stages, and `/home/api` is owned by
+the API user. Boot-time content seeding avoids pnpm entirely and runs through `node` with `tsx` from
+`node_modules`, because the API container is read-only and anything that downloads or writes at
+runtime is avoidable risk.
 
 ### Deploy workflow and "run failed" emails
 

@@ -60,9 +60,23 @@ for (const target of targets.concat([
   { dockerfile: 'infrastructure/docker/Dockerfile.analytics' },
 ])) {
   const dockerfile = await readFile(join(root, target.dockerfile), 'utf8');
-  const created = [...dockerfile.matchAll(/RUN\s+mkdir\s+-p\s+([^\s&|]+)/g)].map(
-    (match) => match[1],
-  );
+  // Directories a stage creates for itself. Variables are resolved with the ENV
+  // values in force at that line: the same name is often reset in a later stage,
+  // so resolving against the whole file would pick the wrong value.
+  const environment = new Map();
+  const created = [];
+  for (const line of dockerfile.split('\n')) {
+    const assignment = /^ENV\s+(\w+)=([^\s\\]+)/.exec(line);
+    if (assignment) environment.set(assignment[1], assignment[2]);
+    const mkdir = /mkdir\s+-p\s+"?([^\s&|"]+)"?/.exec(line);
+    if (!mkdir) continue;
+    const target = mkdir[1];
+    created.push(
+      target.startsWith('$')
+        ? (environment.get(target.replace(/^\$\{?|\}$/g, '')) ?? target)
+        : target,
+    );
+  }
 
   for (const match of dockerfile.matchAll(/^COPY\s+--from=\S+(?:\s+--chown=\S+)?\s+(.+)$/gm)) {
     const parts = match[1].trim().split(/\s+/);
