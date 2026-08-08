@@ -298,14 +298,16 @@ Kabuk çevrim dışıyken `apps/mobile/www` açılış ekranını gösterir; ba�
 ### İçerik tohumlaması dağıtımda otomatik
 
 Bölüm tanımları veritabanında durur; bölüm üretimini değiştiren bir sürüm ancak yeniden tohumlama
-sonrası görünür. Bu yüzden `migrate` işi her dağıtımda önce `prisma migrate deploy`, ardından
-tohumlamayı çalıştırır. Tohumlama upsert'tir: hesaplar, ilerleme, skorlar ve topluluk bölümleri
-korunur; yalnızca üretilen kampanya içeriği ve katalog tazelenir. **Sürüm sonrası elle komut
-çalıştırmak gerekmez.**
+sonrası görünür. `SEED_ON_DEPLOY=true` iken **API, dinlemeye başladıktan sonra** tohumlamayı kendisi
+çalıştırır. Tohumlama upsert'tir: hesaplar, ilerleme, skorlar ve topluluk bölümleri korunur; yalnızca
+üretilen kampanya içeriği ve katalog tazelenir. **Sürüm sonrası elle komut çalıştırmak gerekmez.**
 
-Kampanya bölümlerini yönetim panelinden elle düzenliyorsan ve bu düzenlemelerin dağıtımdan sağ
-çıkmasını istiyorsan `SEED_ON_DEPLOY=false` yap. Elle çalıştırma seçeneği duruyor:
-`docker compose --profile tools run --rm seed`.
+Bu iş bilinçli olarak ayrı bir konteynerde değil: çıkış kodu üreten tek seferlik bir servis, dağıtım
+hattı tarafından "başarısız sürüm" olarak okunabilir. Tohumlama servis ayağa kalktıktan sonra
+başladığı için bir hata yalnızca loga yazılır, siteyi etkilemez.
+
+Kampanya bölümlerini yönetim panelinden elle düzenliyorsan `SEED_ON_DEPLOY=false` yap. Elle
+çalıştırma seçeneği duruyor: `docker compose --profile tools run --rm seed`.
 
 ### Lisans ve kaynak bildirimi
 

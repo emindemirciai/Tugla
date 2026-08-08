@@ -71,6 +71,11 @@ builders or pre-bake the engines into the image.
 
 ### Content seeding happens on deploy
 
+Seeding runs **inside the API, after it starts listening**, when `SEED_ON_DEPLOY=true`. It is
+deliberately not a separate one-shot container: a container that exits is easy for a deployment
+pipeline to read as a failed release, and a release must never depend on content seeding. A seeding
+failure is logged and the service keeps serving.
+
 Level definitions live in the database, so a release that changes level generation only takes effect
 after a re-seed. The `migrate` job therefore runs `prisma migrate deploy` **and then the seed** on
 every deploy. The seed is an upsert: accounts, progress, scores and community levels are untouched,

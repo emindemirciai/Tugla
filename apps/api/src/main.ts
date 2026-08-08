@@ -1,6 +1,8 @@
 import './config/load-dotenv';
 import 'reflect-metadata';
+import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { resolve } from 'node:path';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -73,6 +75,35 @@ async function bootstrap() {
 
   await app.listen(config.PORT, '0.0.0.0');
   logger.log(`${config.APP_NAME} API listening on port ${config.PORT} (${config.NODE_ENV})`);
+
+  if (config.SEED_ON_DEPLOY) seedContent(logger);
+}
+
+/**
+ * Refreshes generated content (campaign levels, catalogue) after boot.
+ *
+ * Seeding used to be a separate one-shot container in the compose file. A
+ * container that exits is easy for a deploy pipeline to read as a failed
+ * release, and a release must never be at the mercy of content seeding — so the
+ * job moved here: it starts *after* the server is already listening, its output
+ * is logged, and a failure is reported without touching the running service.
+ * The seed is an upsert, so accounts, progress and scores are untouched.
+ */
+function seedContent(logger: Logger) {
+  logger.log('Seeding generated content (SEED_ON_DEPLOY=true)…');
+  const seed = spawn('pnpm', ['--filter', '@tugla/database', 'seed'], {
+    cwd: resolve(__dirname, '../../..'),
+    env: process.env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let output = '';
+  seed.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
+  seed.stderr.on('data', (chunk: Buffer) => (output += chunk.toString()));
+  seed.on('error', (error) => logger.error(`Content seeding could not start: ${error.message}`));
+  seed.on('close', (code) => {
+    if (code === 0) logger.log('Content seeding finished.');
+    else logger.error(`Content seeding failed with code ${code}: ${output.trim().slice(-800)}`);
+  });
 }
 
 void bootstrap().catch((error: unknown) => {

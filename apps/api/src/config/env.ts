@@ -22,6 +22,12 @@ const schema = z.object({
   // requests). Must stay 1 in production; it exists so automated suites can
   // exercise the flows repeatedly from one address without weakening the
   // shipped defaults.
+  // Refresh generated content after the service starts. Kept inside the API so
+  // a seeding problem can never fail a deployment or block the site.
+  SEED_ON_DEPLOY: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   AUTH_RATE_LIMIT_FACTOR: z.coerce.number().int().min(1).max(10000).default(1),
 
   APP_NAME: z.string().min(1).default('Tuğla'),

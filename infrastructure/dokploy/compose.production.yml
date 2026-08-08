@@ -118,19 +118,10 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
-    # Migrate, then seed. The seed is an upsert — it refreshes generated campaign
-    # levels and the catalogue while leaving accounts, progress and scores alone
-    # — so it is safe to run on every deploy, and running it here means nobody
-    # has to open a terminal after a release. Set SEED_ON_DEPLOY=false if you
-    # hand-edit campaign levels in the admin panel and want them preserved.
-    command:
-      - sh
-      - -c
-      - >-
-        pnpm --filter @tugla/database migrate &&
-        if [ "$${SEED_ON_DEPLOY:-true}" = "true" ]; then
-        pnpm --filter @tugla/database seed;
-        else echo "SEED_ON_DEPLOY=false, skipping seed"; fi
+    # Migrations only. Content seeding runs inside the API after it starts
+    # listening (SEED_ON_DEPLOY), so a seeding problem can never fail a release
+    # or take the site down with it.
+    command: ['pnpm', '--filter', '@tugla/database', 'migrate']
     environment: *app-environment
     restart: 'no'
     depends_on:
