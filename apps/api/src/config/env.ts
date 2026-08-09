@@ -122,13 +122,82 @@ export const loadEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv => {
     }
   }
   const parsed = schema.safeParse(merged);
-  if (!parsed.success) {
-    const details = parsed.error.issues
-      .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)
+  if (parsed.success) return parsed.data;
+
+  // Not every misconfiguration deserves a dead service.
+  //
+  // A typo in an optional integration (`MAIL_PROVIDER=stmp`) once took the whole
+  // site down: the API refused to boot, so web and admin had nothing to depend
+  // on. Settings that only disable a feature now fall back to their safe default
+  // with a loud warning, while anything that would make the service unsafe or
+  // unable to serve — database URL, token secrets — stays fatal.
+  const recoverable = new Set([
+    'MAIL_PROVIDER',
+    'STORAGE_PROVIDER',
+    'DEFAULT_LOCALE',
+    'SEO_INDEXABLE',
+    'SEED_ON_DEPLOY',
+    'AI_CRAWLERS_ALLOWED',
+  ]);
+
+  const fatal = parsed.error.issues.filter((issue) => !recoverable.has(String(issue.path[0])));
+  const ignored = parsed.error.issues.filter((issue) => recoverable.has(String(issue.path[0])));
+
+  if (fatal.length) {
+    const details = fatal
+      .map((issue) => `  - ${issue.path.join('.')}: ${describe(issue)}`)
       .join('\n');
     throw new Error(`Invalid environment configuration:\n${details}`);
   }
-  return parsed.data;
+
+  const retry: NodeJS.ProcessEnv = { ...merged };
+  for (const issue of ignored) {
+    const key = String(issue.path[0]);
+    console.warn(
+      `[env] ${key}: ${describe(issue)} — falling back to the default. ` +
+        'The service starts, but this setting is not active.',
+    );
+    delete retry[key];
+  }
+
+  const second = schema.safeParse(retry);
+  if (second.success) return second.data;
+
+  const details = second.error.issues
+    .map((issue) => `  - ${issue.path.join('.')}: ${describe(issue)}`)
+    .join('\n');
+  throw new Error(`Invalid environment configuration:\n${details}`);
+};
+
+/** Adds a "did you mean" hint to enum mistakes, which are almost always typos. */
+const describe = (issue: z.ZodIssue): string => {
+  if (issue.code !== 'invalid_enum_value') return issue.message;
+  const received = String(issue.received);
+  const closest = issue.options
+    .map((option) => ({ option: String(option), distance: editDistance(received, String(option)) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+  return closest && closest.distance <= 2
+    ? `${issue.message} — did you mean '${closest.option}'?`
+    : issue.message;
+};
+
+/** Levenshtein distance, small enough to keep inline. */
+const editDistance = (a: string, b: string): number => {
+  const rows = Array.from({ length: a.length + 1 }, (_, index) => [
+    index,
+    ...Array<number>(b.length).fill(0),
+  ]);
+  for (let column = 0; column <= b.length; column += 1) rows[0]![column] = column;
+  for (let row = 1; row <= a.length; row += 1) {
+    for (let column = 1; column <= b.length; column += 1) {
+      rows[row]![column] = Math.min(
+        rows[row - 1]![column]! + 1,
+        rows[row]![column - 1]! + 1,
+        rows[row - 1]![column - 1]! + (a[row - 1] === b[column - 1] ? 0 : 1),
+      );
+    }
+  }
+  return rows[a.length]![b.length]!;
 };
 
 export const env = (): AppEnv => (cached ??= loadEnv());

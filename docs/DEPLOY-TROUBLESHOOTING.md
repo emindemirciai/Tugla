@@ -6,6 +6,23 @@
 veritabanına ulaşamıyorsa **503** döner, Redis yoksa "degraded" ama 200 döner. Yani bu hata iki
 şeyden birini söyler.
 
+### 0. Gerçek örnek: `MAIL_PROVIDER=stmp`
+
+2026-08-09 dağıtımı tam olarak bu yüzden düştü — `smtp` yerine `stmp` yazılmıştı. API açılmayı
+reddetti, `web` ve `admin` de ona bağlı olduğu için site komple gitti.
+
+Bundan sonra bu sınıf hata siteyi düşürmez: yalnızca bir özelliği kapatan ayarlar (posta sağlayıcı,
+depolama sağlayıcı, varsayılan dil, SEO/tohumlama anahtarları) geçersizse **uyarı yazılır ve güvenli
+varsayılana düşülür**; servis çalışmaya devam eder. Log şöyle görünür:
+
+```
+[env] MAIL_PROVIDER: Invalid enum value. Expected 'smtp' | 'log' | 'disabled', received 'stmp'
+      — did you mean 'smtp'? — falling back to the default.
+```
+
+Güvenliği veya çalışabilirliği etkileyen değerler (`DATABASE_URL`, JWT sırları, oturum anahtarı) hâlâ
+ölümcüldür: yanlışsa servis açılmaz.
+
 ### 1. API süreci hiç ayağa kalkmadı (ortam doğrulaması)
 
 En sık sebep **döndürülmüş bir sırrın şema kuralına uymaması**. API, geçersiz ortamla yarım

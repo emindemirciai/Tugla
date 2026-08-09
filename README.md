@@ -335,8 +335,11 @@ incelenip kapatılmalı veya düzeltilmelidir.
 
 ### Dağıtım sorun giderme
 
-`api-1 is unhealthy` ile düşen bir dağıtımın iki olası sebebi ve çözümü `docs/DEPLOY-TROUBLESHOOTING.md`
-dosyasındadır. Kısaca: ortam doğrulaması başarısızsa API açılışta durur ve **hangi değişkenin neden**
+`api-1 is unhealthy` ile düşen bir dağıtımın sebepleri ve çözümü `docs/DEPLOY-TROUBLESHOOTING.md`
+dosyasındadır. Ortam hataları artık ölçülü: yalnızca bir özelliği kapatan ayarlar (posta ve depolama
+sağlayıcı, varsayılan dil, SEO/tohumlama anahtarları) geçersizse uyarı yazılıp güvenli varsayılana
+düşülür ve servis çalışır; enum hatalarında "bunu mu demek istediniz" önerisi verilir. Güvenliği veya
+çalışabilirliği etkileyen değerler (veritabanı adresi, JWT sırları) hâlâ ölümcüldür. Kısaca: ortam doğrulaması başarısızsa API açılışta durur ve **hangi değişkenin neden**
 reddedildiğini loga yazar (sırlar en az 32 karakter olmalı); veritabanına ulaşılamıyorsa sağlık ucu
 artık **503** döner. Parola döndürdüysen PostgreSQL'in `POSTGRES_PASSWORD` değerini yalnızca ilk
 kurulumda uyguladığını unutma — var olan bir birimde parola `ALTER USER` ile değiştirilir.
@@ -556,7 +559,11 @@ breaks the build; review or close that PR rather than the workflow.
 
 ### Deployment troubleshooting
 
-`docs/DEPLOY-TROUBLESHOOTING.md` covers the two reasons a deploy fails with `api-1 is unhealthy`: an
+`docs/DEPLOY-TROUBLESHOOTING.md` covers why a deploy fails with `api-1 is unhealthy`. Environment
+errors are now proportionate: a setting that merely disables a feature (mail or storage provider,
+default locale, SEO and seeding switches) falls back to its safe default with a warning — including a
+"did you mean" hint for enum typos — while values that affect safety or the ability to serve stay
+fatal. The two classic causes are: an
 invalid environment (the API stops at boot and names the offending variable; secrets need 32+
 characters) or an unreachable database (the health endpoint now answers **503**, so "healthy" means
 the service can actually serve). After rotating a database password, remember PostgreSQL only applies

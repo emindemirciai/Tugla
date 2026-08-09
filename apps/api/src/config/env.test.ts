@@ -44,3 +44,34 @@ describe('environment contract', () => {
     expect(full.payments).toBe(true);
   });
 });
+
+describe('environment failures are proportionate', () => {
+  it('starts with a safe default when an optional setting is misspelled', () => {
+    // The exact typo that took production down: MAIL_PROVIDER=stmp.
+    const config = loadEnv({
+      ...validProduction,
+      MAIL_PROVIDER: 'stmp',
+    } as NodeJS.ProcessEnv);
+    expect(config.MAIL_PROVIDER).toBe('log');
+  });
+
+  it('still refuses to start when a security-critical value is wrong', () => {
+    expect(() =>
+      loadEnv({
+        ...validProduction,
+        NODE_ENV: 'production',
+        JWT_ACCESS_SECRET: 'short',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(/JWT_ACCESS_SECRET/);
+  });
+
+  it('suggests the intended value for an enum typo', () => {
+    expect(() =>
+      loadEnv({
+        ...validProduction,
+        NODE_ENV: 'production',
+        STORAGE_PROVIDER: 'databse',
+      } as NodeJS.ProcessEnv),
+    ).not.toThrow();
+  });
+});
