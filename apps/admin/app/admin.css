@@ -6,20 +6,20 @@
    ========================================================================== */
 
 :root {
-  --paper: #f6f3ff;
+  --paper: #f7f9ff;
   --surface: #ffffff;
-  --surface-2: #f1ecfd;
-  --surface-3: #e8e1fb;
-  --line: #e2daf6;
-  --line-strong: #cec2ef;
+  --surface-2: #eef3ff;
+  --surface-3: #e3ecff;
+  --line: #dde6f7;
+  --line-strong: #c4d4ef;
 
-  --ink: #1b1533;
-  --ink-2: #423a63;
-  --ink-3: #6a6390;
+  --ink: #10203a;
+  --ink-2: #33455f;
+  --ink-3: #62748d;
 
-  --brand: #5b4be1;
-  --brand-deep: #3f31b5;
-  --brand-soft: #ece8ff;
+  --brand: #2f6bff;
+  --brand-deep: #1f4fd8;
+  --brand-soft: #e4edff;
   --mint: #12b886;
   --mint-soft: #e3f8f0;
   --amber: #f5a524;
@@ -691,20 +691,20 @@ button.primary:hover {
 
 /* ----- night ----------------------------------------------------------------- */
 :root[data-theme='night'] {
-  --paper: #14102b;
-  --surface: #1e1840;
-  --surface-2: #272052;
-  --surface-3: #322a63;
-  --line: #342c66;
-  --line-strong: #473d80;
+  --paper: #0d1526;
+  --surface: #152033;
+  --surface-2: #1c2b43;
+  --surface-3: #253651;
+  --line: #24354f;
+  --line-strong: #354866;
 
-  --ink: #f2eeff;
-  --ink-2: #cfc6f2;
-  --ink-3: #9c93c4;
+  --ink: #eef5ff;
+  --ink-2: #c3d3e8;
+  --ink-3: #8ba1bd;
 
-  --brand: #9b8bff;
-  --brand-deep: #b4a6ff;
-  --brand-soft: #2b2360;
+  --brand: #6ea8ff;
+  --brand-deep: #93c0ff;
+  --brand-soft: #1b2f4d;
   --mint: #4fd6a8;
   --mint-soft: #163a3a;
   --amber: #ffc266;
@@ -761,4 +761,20 @@ button.primary:hover {
 }
 .card-note a.admin-env {
   text-decoration: none;
+}
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+.theme-toggle:hover {
+  border-color: var(--brand);
+  color: var(--brand);
 }

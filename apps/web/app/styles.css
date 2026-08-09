@@ -7,23 +7,23 @@
    ========================================================================== */
 
 :root {
-  --paper: #f6f3ff;
-  --paper-warm: #fdfbff;
+  --paper: #f7f9ff;
+  --paper-warm: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f1ecfd;
-  --surface-3: #e8e1fb;
-  --line: #e2daf6;
-  --line-strong: #cec2ef;
+  --surface-2: #eef3ff;
+  --surface-3: #e3ecff;
+  --line: #dde6f7;
+  --line-strong: #c4d4ef;
 
-  --ink: #1b1533;
-  --ink-2: #423a63;
-  --ink-3: #6a6390;
+  --ink: #10203a;
+  --ink-2: #33455f;
+  --ink-3: #62748d;
 
-  --brand: #5b4be1;
-  --brand-deep: #3f31b5;
-  --brand-soft: #ece8ff;
-  --coral: #ff7a45;
-  --coral-soft: #ffece3;
+  --brand: #2f6bff;
+  --brand-deep: #1f4fd8;
+  --brand-soft: #e4edff;
+  --coral: #ff6b4a;
+  --coral-soft: #ffeae4;
   --mint: #12b886;
   --mint-soft: #e3f8f0;
   --amber: #f5a524;
@@ -314,8 +314,9 @@ code {
 /* ----- landing ------------------------------------------------------------ */
 .landing {
   background:
-    radial-gradient(1100px 520px at 82% -8%, #ffe9df 0%, rgba(255, 233, 223, 0) 62%),
-    radial-gradient(900px 480px at 4% 4%, #e6e0ff 0%, rgba(230, 224, 255, 0) 58%), var(--paper);
+    radial-gradient(1100px 520px at 84% -6%, #ffe4d6 0%, rgba(255, 228, 214, 0) 62%),
+    radial-gradient(900px 480px at 2% 2%, #d9e8ff 0%, rgba(217, 232, 255, 0) 58%),
+    radial-gradient(700px 420px at 60% 40%, #e6fbf4 0%, rgba(230, 251, 244, 0) 60%), var(--paper);
   min-height: 100dvh;
   padding-bottom: 60px;
 }
@@ -337,11 +338,20 @@ code {
   flex-direction: column;
   gap: 18px;
   align-items: center;
-  justify-content: flex-start;
+  /* Same measure *and* the same height as the playfield card: the copy spreads
+     across the column instead of ending halfway down beside a tall card. */
+  justify-content: space-between;
   text-align: center;
-  /* Identical measure and starting line to the playfield card. */
   width: min(400px, 100%);
-  padding-top: 4px;
+  min-height: min(620px, 100%);
+  padding: 4px 0 8px;
+}
+@media (max-width: 900px) {
+  .hero-copy {
+    min-height: 0;
+    justify-content: flex-start;
+    gap: 16px;
+  }
 }
 .hero-copy h1 {
   /* Capped so the message block stays the same height as the playfield card. */
@@ -1809,13 +1819,13 @@ textarea:focus {
   --line: #342c66;
   --line-strong: #473d80;
 
-  --ink: #f2eeff;
-  --ink-2: #cfc6f2;
-  --ink-3: #9c93c4;
+  --ink: #eef5ff;
+  --ink-2: #c3d3e8;
+  --ink-3: #8ba1bd;
 
-  --brand: #9b8bff;
-  --brand-deep: #b4a6ff;
-  --brand-soft: #2b2360;
+  --brand: #6ea8ff;
+  --brand-deep: #93c0ff;
+  --brand-soft: #1b2f4d;
   --coral: #ff9a6b;
   --coral-soft: #402440;
   --mint: #4fd6a8;
@@ -2151,4 +2161,27 @@ textarea:focus {
 }
 .confirm-box strong {
   font-size: 1rem;
+}
+
+/* ----- appearance toggle ------------------------------------------------------ */
+.theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+}
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: var(--brand);
+  color: var(--brand);
 }

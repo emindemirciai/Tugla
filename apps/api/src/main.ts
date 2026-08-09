@@ -76,7 +76,13 @@ async function bootstrap() {
   await app.listen(config.PORT, '0.0.0.0');
   logger.log(`${config.APP_NAME} API listening on port ${config.PORT} (${config.NODE_ENV})`);
 
-  if (config.SEED_ON_DEPLOY) seedContent(logger);
+  if (config.SEED_ON_DEPLOY) {
+    try {
+      seedContent(logger);
+    } catch (error) {
+      logger.error(`Content seeding skipped: ${String(error)}`);
+    }
+  }
 }
 
 /**
@@ -90,28 +96,41 @@ async function bootstrap() {
  * The seed is an upsert, so accounts, progress and scores are untouched.
  */
 function seedContent(logger: Logger) {
-  logger.log('Seeding generated content (SEED_ON_DEPLOY=true)…');
-  // Run the seed with the node binary already in this process and tsx from
-  // node_modules, rather than through pnpm. The API container is read-only and
-  // unprivileged, so anything that makes corepack fetch or write at runtime is
-  // avoidable risk; node executing a file needs neither.
-  const repoRoot = resolve(__dirname, '../../..');
-  const seed = spawn(
-    process.execPath,
-    [
-      require.resolve('tsx/cli', { paths: [repoRoot] }),
-      resolve(repoRoot, 'packages/database/prisma/seed.ts'),
-    ],
-    { cwd: repoRoot, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] },
-  );
-  let output = '';
-  seed.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
-  seed.stderr.on('data', (chunk: Buffer) => (output += chunk.toString()));
-  seed.on('error', (error) => logger.error(`Content seeding could not start: ${error.message}`));
-  seed.on('close', (code) => {
-    if (code === 0) logger.log('Content seeding finished.');
-    else logger.error(`Content seeding failed with code ${code}: ${output.trim().slice(-800)}`);
-  });
+  // Nothing in here may take the API down.
+  //
+  // The previous version resolved `tsx/cli` at call time. In the runtime image
+  // that module is not resolvable from the repository root, the throw escaped
+  // into bootstrap's catch, and the whole service exited — a content refresh
+  // killed the game and, with it, the admin panel. Seeding is a convenience: it
+  // gets one attempt, inside a guard, and any failure is logged and forgotten.
+  try {
+    const repoRoot = resolve(__dirname, '../../..');
+    logger.log('Seeding generated content (SEED_ON_DEPLOY=true)…');
+
+    const seed = spawn('pnpm', ['--filter', '@tugla/database', 'seed'], {
+      cwd: repoRoot,
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let output = '';
+    seed.stdout?.on('data', (chunk: Buffer) => (output += chunk.toString()));
+    seed.stderr?.on('data', (chunk: Buffer) => (output += chunk.toString()));
+    seed.on('error', (error) =>
+      logger.error(`Content seeding could not start: ${error.message}. The API is unaffected.`),
+    );
+    seed.on('close', (code) => {
+      if (code === 0) logger.log('Content seeding finished.');
+      else
+        logger.error(
+          `Content seeding failed with code ${code}. The API is unaffected. ${output.trim().slice(-600)}`,
+        );
+    });
+  } catch (error) {
+    logger.error(
+      `Content seeding could not be started: ${error instanceof Error ? error.message : String(error)}. The API is unaffected.`,
+    );
+  }
 }
 
 void bootstrap().catch((error: unknown) => {

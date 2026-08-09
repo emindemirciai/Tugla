@@ -2,44 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { t } from '../lib/i18n';
-import {
-  applyTheme,
-  readThemePreference,
-  setThemePreference,
-  type ThemePreference,
-} from '../lib/theme';
+import { applyTheme, readThemePreference, setThemePreference } from '../lib/theme';
 
-const OPTIONS: { value: ThemePreference; key: 'theme.day' | 'theme.night' | 'theme.system' }[] = [
-  { value: 'day', key: 'theme.day' },
-  { value: 'night', key: 'theme.night' },
-  { value: 'system', key: 'theme.system' },
-];
-
+/** One button, showing the mode it would switch to. */
 export function AdminThemeSwitcher() {
-  const [preference, setPreference] = useState<ThemePreference>('system');
+  const [resolved, setResolved] = useState<'day' | 'night'>('day');
 
   useEffect(() => {
-    const current = readThemePreference();
-    setPreference(current);
-    applyTheme(current);
+    applyTheme(readThemePreference());
+    setResolved(document.documentElement.dataset.theme === 'night' ? 'night' : 'day');
   }, []);
 
+  const next = resolved === 'night' ? 'day' : 'night';
+
   return (
-    <div className="lang-switch" role="group" aria-label={t('theme.label')}>
-      {OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={preference === option.value}
-          className={preference === option.value ? 'active' : ''}
-          onClick={() => {
-            setPreference(option.value);
-            setThemePreference(option.value);
-          }}
-        >
-          {t(option.key)}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={() => {
+        setThemePreference(next);
+        setResolved(next);
+      }}
+      aria-label={t(next === 'night' ? 'theme.toNight' : 'theme.toDay')}
+      title={t(next === 'night' ? 'theme.toNight' : 'theme.toDay')}
+    >
+      <span aria-hidden>{next === 'night' ? '☾' : '☀'}</span>
+    </button>
   );
 }

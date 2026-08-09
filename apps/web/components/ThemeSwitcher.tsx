@@ -7,43 +7,46 @@ import {
   readThemePreference,
   setThemePreference,
   watchSystemTheme,
-  type ThemePreference,
 } from '../lib/theme';
 
-const OPTIONS: { value: ThemePreference; key: 'theme.day' | 'theme.night' | 'theme.system' }[] = [
-  { value: 'day', key: 'theme.day' },
-  { value: 'night', key: 'theme.night' },
-  { value: 'system', key: 'theme.system' },
-];
-
-/** Three-way appearance control: daylight, night, or follow the device. */
+/**
+ * Appearance toggle.
+ *
+ * A three-way "Day / Night / Device" control asked the player to think about a
+ * setting they only ever want to flip. This is one button: it shows the mode you
+ * would switch *to*, and the first press adopts whatever the device was already
+ * doing as the starting point.
+ */
 export function ThemeSwitcher() {
   const { t } = useI18n();
-  const [preference, setPreference] = useState<ThemePreference>('system');
+  const [resolved, setResolved] = useState<'day' | 'night'>('day');
 
   useEffect(() => {
-    const current = readThemePreference();
-    setPreference(current);
-    applyTheme(current);
-    return watchSystemTheme(() => applyTheme('system'));
+    const preference = readThemePreference();
+    applyTheme(preference);
+    const current = () =>
+      (document.documentElement.dataset.theme === 'night' ? 'night' : 'day') as 'day' | 'night';
+    setResolved(current());
+    return watchSystemTheme(() => {
+      applyTheme('system');
+      setResolved(current());
+    });
   }, []);
 
+  const next = resolved === 'night' ? 'day' : 'night';
+
   return (
-    <div className="segmented" role="group" aria-label={t('theme.label')}>
-      {OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          className={preference === option.value ? 'active' : ''}
-          aria-pressed={preference === option.value}
-          onClick={() => {
-            setPreference(option.value);
-            setThemePreference(option.value);
-          }}
-        >
-          {t(option.key)}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={() => {
+        setThemePreference(next);
+        setResolved(next);
+      }}
+      aria-label={t(next === 'night' ? 'theme.toNight' : 'theme.toDay')}
+      title={t(next === 'night' ? 'theme.toNight' : 'theme.toDay')}
+    >
+      <span aria-hidden>{next === 'night' ? '☾' : '☀'}</span>
+    </button>
   );
 }

@@ -31,7 +31,10 @@ export const readThemePreference = (): ThemePreference => {
   } catch {
     /* storage unavailable */
   }
-  return 'system';
+  // Light by default. Following the device meant most visitors met a dark
+  // violet page, which read as gloomy; anyone who prefers dark flips one button
+  // and the choice is remembered.
+  return 'day';
 };
 
 const systemPrefersDark = () =>
@@ -67,4 +70,4 @@ export const watchSystemTheme = (onChange: () => void) => {
 };
 
 /** Runs before first paint; kept dependency-free and tiny on purpose. */
-export const themeBootstrapScript = `(function(){try{var p=localStorage.getItem('${THEME_STORAGE_KEY}')||'system';var d=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='day'?'day':p==='night'?'night':(d?'night':'day');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t==='night'?'dark':'light';}catch(e){document.documentElement.dataset.theme='day';}})();`;
+export const themeBootstrapScript = `(function(){try{var p=localStorage.getItem('${THEME_STORAGE_KEY}')||'day';var d=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='day'?'day':p==='night'?'night':(d?'night':'day');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t==='night'?'dark':'light';}catch(e){document.documentElement.dataset.theme='day';}})();`;

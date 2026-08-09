@@ -11,8 +11,7 @@ import { useI18n } from '../../../lib/i18n';
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { setUser, config } = useSession();
-  const oauthReady = config?.providers.googleAuth || config?.providers.appleAuth;
+  const { setUser } = useSession();
 
   return (
     <AuthForm
@@ -51,7 +50,6 @@ export default function LoginPage() {
             {t('auth.login.noAccount')}{' '}
             <Link href="/auth/register">{t('auth.login.registerLink')}</Link>
           </span>
-          {!oauthReady && <small className="provider-note">{t('auth.login.providerNote')}</small>}
         </>
       }
     />

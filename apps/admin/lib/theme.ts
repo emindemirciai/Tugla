@@ -26,7 +26,7 @@ export const readThemePreference = (): ThemePreference => {
   } catch {
     /* storage unavailable */
   }
-  return 'system';
+  return 'day';
 };
 
 export const applyTheme = (preference: ThemePreference) => {
@@ -48,4 +48,4 @@ export const setThemePreference = (preference: ThemePreference) => {
   applyTheme(preference);
 };
 
-export const themeBootstrapScript = `(function(){try{var p=localStorage.getItem('${THEME_STORAGE_KEY}')||'system';var d=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='day'?'day':p==='night'?'night':(d?'night':'day');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t==='night'?'dark':'light';}catch(e){document.documentElement.dataset.theme='day';}})();`;
+export const themeBootstrapScript = `(function(){try{var p=localStorage.getItem('${THEME_STORAGE_KEY}')||'day';var d=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='day'?'day':p==='night'?'night':(d?'night':'day');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t==='night'?'dark':'light';}catch(e){document.documentElement.dataset.theme='day';}})();`;

@@ -179,6 +179,14 @@ koyduğu için varsayılanlar cömerttir. `GET /api/health` sınırdan muaftır:
 yemez ve sınırlayıcı bir kesintiyi gizleyemez. Yük testi sınıra takılırsa betik ölçümü geçerli
 saymaz ve `rate_limited_requests` eşiğiyle çalışmayı düşürür.
 
+### Görünüm ve palet
+
+Varsayılan tema **aydınlık**. Önceden cihaz tercihi izleniyordu; çoğu cihaz karanlık olduğu için
+ziyaretçiler koyu menekşe bir sayfayla karşılaşıyor ve site kasvetli görünüyordu. Palet de tazelendi:
+gün ışığı artık soğuk beyaz-mavi, birincil renk elektrik mavisi (`#2f6bff`), karanlık mod menekşe
+değil arduvaz mavisi. Tema seçimi tek düğme — üstünde geçilecek modun simgesi (☀ / ☾) — ve tercih
+hatırlanır. Üç seçenekli "Gündüz / Gece / Cihaz" kontrolü kaldırıldı.
+
 ### Tasarım sistemi — "gün ışığı arcade"
 
 Arayüz tek bir jeton setinden beslenir (`apps/web/app/styles.css` ve `apps/admin/app/admin.css`
@@ -503,6 +511,13 @@ Logo and promotional artwork live in `apps/web/public/brand/` and are served str
 and the JSON-LD graph point at them. Game directories that ask for a 4:3 thumbnail can link
 `https://tugla.fun/brand/cover-400x300.png` directly — it is a separate composition rather than a
 downscale of the wide cover.
+
+### Appearance
+
+Light is the default. Following the device meant most visitors met a dark violet page, which read as
+gloomy. The palette moved with it: daylight is now a cool blue-white with an electric blue accent
+(`#2f6bff`), and dark mode is slate rather than plum. The three-way Day/Night/Device control is gone;
+one button shows the mode it switches to (☀ / ☾) and the choice is remembered.
 
 ### Gameplay and progression
 
