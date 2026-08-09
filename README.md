@@ -333,6 +333,14 @@ Dependabot açtığı çekme istekleri için de CI koşar. Bu koşuların kırm�
 yükseltmesinin gerçekten kırıcı olduğunu gösterir — iş akışının hatası değildir; ilgili PR
 incelenip kapatılmalı veya düzeltilmelidir.
 
+### Dağıtım sorun giderme
+
+`api-1 is unhealthy` ile düşen bir dağıtımın iki olası sebebi ve çözümü `docs/DEPLOY-TROUBLESHOOTING.md`
+dosyasındadır. Kısaca: ortam doğrulaması başarısızsa API açılışta durur ve **hangi değişkenin neden**
+reddedildiğini loga yazar (sırlar en az 32 karakter olmalı); veritabanına ulaşılamıyorsa sağlık ucu
+artık **503** döner. Parola döndürdüysen PostgreSQL'in `POSTGRES_PASSWORD` değerini yalnızca ilk
+kurulumda uyguladığını unutma — var olan bir birimde parola `ALTER USER` ile değiştirilir.
+
 ### Güvenlik olayı (2026-08-07) ve sertleştirme
 
 Web konteynerinin loglarında uzaktan kod çalıştırma ve `/tmp` altına yük indirme izleri bulundu;
@@ -545,6 +553,15 @@ failing — previously it turned red after every green push and sent a "run fail
 
 CI also runs for Dependabot pull requests. A red run there means the dependency bump genuinely
 breaks the build; review or close that PR rather than the workflow.
+
+### Deployment troubleshooting
+
+`docs/DEPLOY-TROUBLESHOOTING.md` covers the two reasons a deploy fails with `api-1 is unhealthy`: an
+invalid environment (the API stops at boot and names the offending variable; secrets need 32+
+characters) or an unreachable database (the health endpoint now answers **503**, so "healthy" means
+the service can actually serve). After rotating a database password, remember PostgreSQL only applies
+`POSTGRES_PASSWORD` when the data directory is created — change it with `ALTER USER` on an existing
+volume.
 
 ### Security incident (2026-08-07) and hardening
 

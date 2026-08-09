@@ -1,6 +1,7 @@
 import { SkipThrottle } from '@nestjs/throttler';
-import { Body, Controller, Get, Injectable, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Injectable, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { type Prisma } from '@tugla/database';
 import {
   APP_DEFAULTS,
@@ -111,8 +112,13 @@ export class PlatformController {
   @Public()
   @SkipThrottle()
   @Get('health')
-  health() {
-    return this.platform.health();
+  async health(@Res({ passthrough: true }) response: Response) {
+    const report = await this.platform.health();
+    // The container healthcheck reads the status code, so "up" has to mean the
+    // service can actually serve: without a database it cannot. Redis being
+    // down is degraded, not dead — the API keeps working without its cache.
+    if (report.status === 'error') response.status(503);
+    return report;
   }
 
   @Public()

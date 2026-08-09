@@ -115,7 +115,23 @@ function seedContent(logger: Logger) {
 }
 
 void bootstrap().catch((error: unknown) => {
-  // Configuration errors must be loud and fatal rather than a half-booted service.
-  console.error('API failed to start:', error);
+  // Configuration errors must be loud and fatal rather than a half-booted
+  // service — and they must say *which* variable is wrong. A rotated secret
+  // that is one character too short used to print a raw Zod object into the
+  // container log, which reads as "the API just died".
+  const issues = (error as { issues?: { path: (string | number)[]; message: string }[] }).issues;
+  if (Array.isArray(issues)) {
+    console.error('API failed to start: the environment is not valid.\n');
+    for (const issue of issues) {
+      console.error(`  ${issue.path.join('.') || '(root)'}: ${issue.message}`);
+    }
+    console.error(
+      '\nCheck these values in the deployment environment. Secrets must satisfy their minimum' +
+        ' length: JWT_ACCESS_SECRET, JWT_REFRESH_SECRET and SESSION_ENCRYPTION_KEY need at least' +
+        ' 32 characters, INTERNAL_API_KEY at least 16.',
+    );
+  } else {
+    console.error('API failed to start:', error);
+  }
   process.exit(1);
 });

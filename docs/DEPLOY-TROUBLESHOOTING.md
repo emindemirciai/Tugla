@@ -1,0 +1,62 @@
+# Dağıtım sorun giderme / Deployment troubleshooting
+
+## `dependency failed to start: container ... api-1 is unhealthy`
+
+İmajlar derlendi, konteyner başladı ama sağlık kontrolünü geçemedi. Sağlık ucu artık anlamlı:
+veritabanına ulaşamıyorsa **503** döner, Redis yoksa "degraded" ama 200 döner. Yani bu hata iki
+şeyden birini söyler.
+
+### 1. API süreci hiç ayağa kalkmadı (ortam doğrulaması)
+
+En sık sebep **döndürülmüş bir sırrın şema kuralına uymaması**. API, geçersiz ortamla yarım
+çalışmaz; açılışta durur ve hangi değişkenin neden reddedildiğini yazar:
+
+```
+Error: Invalid environment configuration:
+  - JWT_ACCESS_SECRET: String must contain at least 32 character(s)
+```
+
+Uzunluk kuralları:
+
+| Değişken                 | Kural                            |
+| ------------------------ | -------------------------------- |
+| `JWT_ACCESS_SECRET`      | en az 32 karakter                |
+| `JWT_REFRESH_SECRET`     | en az 32 karakter                |
+| `SESSION_ENCRYPTION_KEY` | en az 32 karakter                |
+| `INTERNAL_API_KEY`       | en az 16 karakter (isteğe bağlı) |
+
+Üretmek için: `openssl rand -hex 32`
+
+### 2. Süreç ayakta ama veritabanına bağlanamıyor
+
+**Parola döndürüldüyse en olası sebep budur.** PostgreSQL `POSTGRES_PASSWORD` değişkenini yalnızca
+veri dizini **ilk kez oluşturulurken** uygular. Var olan bir birimde parolayı değiştirmek, ortam
+değişkenini güncellemekle olmaz; veritabanının içinde değiştirilmelidir:
+
+```bash
+docker exec -it tugla-mha2ef-postgres-1 psql -U tugla -d tugla \
+  -c "ALTER USER tugla WITH PASSWORD 'yeni-parola';"
+```
+
+Sonra `POSTGRES_PASSWORD` ve `DATABASE_URL` değerlerini aynı parolaya getirip yeniden dağıt.
+Paroladaki `@ : / ? #` gibi karakterler `DATABASE_URL` içinde **yüzde kodlaması** ister; en kolayı
+bu karakterleri hiç kullanmamaktır (`openssl rand -hex 24`).
+
+Aynı tuzak MinIO için geçerli değildir: MinIO kök parolasını her açılışta ortamdan okur.
+
+### Sitenin ayakta kalması
+
+`web` ve `admin` artık API'nin _başlamasını_ bekler, _sağlıklı olmasını_ değil. API'de bir sorun
+olduğunda oyun bozulur ama site tamamen 404 vermez — daha önce iki kez böyle oldu.
+
+---
+
+## English summary
+
+`api-1 is unhealthy` means either the process never started (invalid environment — the log names the
+variable and its rule; secrets need 32+ characters) or it started but cannot reach PostgreSQL. After
+rotating a database password, remember that PostgreSQL only applies `POSTGRES_PASSWORD` when the
+data directory is first created: change it inside the database with `ALTER USER`, then update
+`POSTGRES_PASSWORD` and `DATABASE_URL`. Avoid `@ : / ? #` in generated passwords, or percent-encode
+them in the URL. `web` and `admin` now wait for the API to start rather than to be healthy, so an API
+problem degrades the game instead of taking the site off the internet.
