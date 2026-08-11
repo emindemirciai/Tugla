@@ -53,9 +53,6 @@ export default function HomePage() {
 
       <section className="hero shell">
         <div className="hero-copy">
-          <span className="eyebrow">{t('landing.hero.eyebrow')}</span>
-          <h1>{t('landing.hero.title')}</h1>
-          <p>{t('landing.hero.body')}</p>
           <LandingSignIn />
           <div className="trust-row">
             <span>WEB</span>
@@ -65,8 +62,6 @@ export default function HomePage() {
           </div>
         </div>
         <div className="hero-visual" aria-hidden>
-          <div className="orb orb-one" />
-          <div className="orb orb-two" />
           {/*
             Animated demo board. The ball path and the paddle share one 6s
             timeline, so the paddle is always where the ball lands: the bounce
@@ -104,6 +99,12 @@ export default function HomePage() {
             <div className="preview-paddle" />
           </div>
         </div>
+      </section>
+
+      <section className="hero-pitch shell">
+        <span className="eyebrow">{t('landing.hero.eyebrow')}</span>
+        <h1>{t('landing.hero.title')}</h1>
+        <p>{t('landing.hero.body')}</p>
       </section>
 
       <section className="stats shell" id="systems">

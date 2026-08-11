@@ -179,6 +179,11 @@ tablo `/play` ekranının en üstünde görünür. Uç nokta herkese açıktır:
 oyuncuyla oyun arasında fazladan bir sayfa yüklemesi yok. Zaten girişli bir ziyaretçi form yerine
 "devam et" düğmesi görür. Kayıt kendi sayfasında kalır, çünkü daha fazla bilgi ister.
 
+Düzen: solda oyun animasyonu, sağda giriş formu, iki sütun eşit genişlikte ve aynı hizadan başlar.
+Başlık ve tanıtım metni ikisinin **altında**, tam genişlikte durur — üstteyken formu sayfanın
+aşağısına itiyor ve animasyonu bir metin duvarının yanına bırakıyordu. Telefonda form öne geçer,
+animasyon altına iner: geri dönen oyuncunun aradığı şey form.
+
 Arka planda üç yavaş renk alanı gezinir; döngüler 44–60 saniye sürer, içeriğin üzerinden geçmez ve
 `prefers-reduced-motion` açıkken tamamen durur — derinlik hissi verir, dikkat çalmaz.
 
@@ -591,8 +596,10 @@ submitted in `DAILY` mode land on the `daily:<date>` board (best score of the da
 
 The header carries only the brand on the left and the language and theme controls on the right. Sign
 in and register links are gone because the sign-in form itself lives on the landing page; a visitor
-who is already signed in sees a "continue" button instead. Three slow colour fields drift behind the
-page (44–60s cycles, never crossing the content, frozen under `prefers-reduced-motion`). Heading
+who is already signed in sees a "continue" button instead. The animation sits on the left and the form on the right, in two equal columns
+that start on the same line, with the headline and pitch below both at full width. On a phone the
+form comes first and the animation follows. Three slow colour fields drift behind the page (44–60s
+cycles, never crossing the content, frozen under `prefers-reduced-motion`). Heading
 line-height moved from 1.12 to 1.24 because Turkish descenders were clipped and lines touched.
 
 ### Site analytics
