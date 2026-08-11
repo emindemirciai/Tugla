@@ -42,12 +42,31 @@ Bu yüzden aynı dalı iki farklı marka için dağıtmak iki sorun üretir:
 2. `analiz.yillikizin.com` aynı dala bakıyorsa, bir sonraki dağıtımda o da Konferans sürümüne
    döner — "bozuldu" denen şey büyük olasılıkla budur.
 
+Giriş ekranındaki "Konferans Analiz — Yalnızca Konferans platform yöneticisi hesabıyla giriş
+yapılabilir" metni de bunun kanıtı: pano, kimliği ve giriş kaynağını koddan alıyor.
+
 **Kalıcı çözüm:** her marka için ayrı bir dal (`deploy/tugla`, `deploy/yillikizin`) tutup Dokploy'da
 Branch alanını ona sabitlemek; marka adları ve varsayılan API adresi ortam değişkenine taşınana kadar
 tek dal birden çok markayı taşıyamaz.
 
 **Hızlı çözüm:** `KONFERANS_API_URL` değerini kendi API adresinle doldur; giriş akışı en azından
-kendi sunucuna gider.
+kendi sunucuna gider. Ancak marka adı, çerez adı ve sağlık yanıtı kodda sabit kaldığı için ekranda
+hâlâ "Konferans Analiz" yazar.
+
+### Markayı ortam değişkenine taşımak için değişecek dosyalar
+
+Panonun deposunda şu dört yer markayı sabitliyor; hepsi tek bir `ANALYZE_BRAND_NAME` /
+`ANALYZE_SESSION_COOKIE` / `ANALYZE_AUTH_API_URL` üçlüsüne bağlanabilir:
+
+| Dosya                              | Sabit                                                                   |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `src/middleware.ts`                | `konferans_analytics_session` çerez adı, `api.konferans.io` varsayılanı |
+| `src/app/api/auth/login/route.ts`  | aynı çerez adı ve API varsayılanı                                       |
+| `src/app/api/auth/logout/route.ts` | çerez adı                                                               |
+| `src/app/api/health/route.ts`      | `{"name":"Konferans Analiz"}`                                           |
+
+Bu üç değişken eklenene kadar tek dal birden fazla markayı taşıyamaz; marka başına dal en güvenli
+yoldur.
 
 ## Başlatma komutu uyarısı
 

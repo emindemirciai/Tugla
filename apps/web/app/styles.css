@@ -2200,3 +2200,62 @@ textarea:focus {
 .oauth-button iframe {
   margin: 0 auto !important;
 }
+
+/* Google's guideline design: white surface, their four-colour mark, our layout. */
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  padding: 11px 18px;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+  background: #ffffff;
+  color: #3c4043;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.google-button:hover {
+  background: #f7f8f8;
+  border-color: #d2d5d9;
+}
+
+/* Same contrast pass for the player app in dark mode. */
+:root[data-theme='night'] input,
+:root[data-theme='night'] select,
+:root[data-theme='night'] textarea {
+  background: #0f1a2c;
+  border-color: #35486a;
+  color: var(--ink);
+}
+:root[data-theme='night'] input::placeholder,
+:root[data-theme='night'] textarea::placeholder {
+  color: #7b90ab;
+}
+:root[data-theme='night'] input:focus,
+:root[data-theme='night'] textarea:focus,
+:root[data-theme='night'] select:focus {
+  background: #142339;
+}
+:root[data-theme='night'] .lang-switch,
+:root[data-theme='night'] .segmented {
+  background: #16243a;
+}
+:root[data-theme='night'] .lang-switch button.active,
+:root[data-theme='night'] .segmented button.active {
+  background: var(--surface-3);
+  color: var(--brand-deep);
+}
+:root[data-theme='night'] .theme-toggle {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+:root[data-theme='night'] .google-button {
+  background: #ffffff;
+  color: #3c4043;
+}

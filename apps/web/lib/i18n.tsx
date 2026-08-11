@@ -369,6 +369,9 @@ const tr = {
   'daily.replayAck': 'Anladım: bu oyun sonraki bölümü açmaz.',
   'auth.or': 'veya',
   'auth.google.pending': 'Google hesabın doğrulanıyor…',
+  'auth.google.continue': 'Google ile devam et',
+  'auth.google.unavailable':
+    'Google girişi bu kurulumda henüz yapılandırılmadı. E-posta ve parolayla devam edebilirsin.',
   'auth.verify.codeTitle': 'E-postanı doğrula',
   'auth.verify.codeBody':
     '{email} adresine 6 haneli bir doğrulama kodu gönderdik. Kod 30 dakika geçerlidir.',
@@ -749,6 +752,9 @@ const en: Record<TranslationKey, string> = {
   'daily.replayAck': 'I understand this run will not unlock the next level.',
   'auth.or': 'or',
   'auth.google.pending': 'Verifying your Google account…',
+  'auth.google.continue': 'Continue with Google',
+  'auth.google.unavailable':
+    'Google sign-in is not configured on this deployment yet. Please continue with email and password.',
   'auth.verify.codeTitle': 'Verify your email',
   'auth.verify.codeBody':
     'We sent a 6-digit verification code to {email}. It stays valid for 30 minutes.',
