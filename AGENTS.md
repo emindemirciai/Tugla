@@ -85,3 +85,25 @@ git config user.email "289519189+emindemirciai@users.noreply.github.com"
 
 Push: `git push origin main`. Geçmiş bir kez yeniden yazıldıysa (marka temizliği gibi)
 `git push --force-with-lease origin main` gerekir; bunu yalnızca bilinçli olarak yap.
+
+### Oturum sonu teslim bloğu (zorunlu biçim)
+
+Depoyu Antigravity IDE gönderiyor. IDE'nin commit mesajını kendi başına yeniden yazmaması veya
+dosyalara dokunmaması için, her oturumun raporu tam olarak şu üç parçayla bitmelidir:
+
+1. **"hiçbir şeyi değiştirmeden commitleyip pushla"** cümlesi — birebir, tırnak içinde. IDE'ye
+   verilecek talimat budur; eksik bırakılırsa IDE kendi düzenlemesini yapabilir.
+2. Önerilen commit mesajı (yukarıdaki biçimde, tek satır başlık).
+3. `git push origin main` komutu.
+
+Örnek:
+
+> **"hiçbir şeyi değiştirmeden commitleyip pushla"** — öneri:
+>
+> ```
+> feat: konu — ayrıntı (alanlar) · v3.8
+> ```
+>
+> ```bash
+> git push origin main
+> ```
