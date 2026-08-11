@@ -73,14 +73,23 @@ export function GoogleSignIn({ onDone }: { onDone: () => void }) {
         if (response.credential) void handleCredential(response.credential);
       },
     });
+    // Google's own button, sized to the form.
+    //
+    // The mark and its four colours have to come from Google — a hand-drawn
+    // gradient button with a white "G" would break their branding rules and is
+    // the kind of thing that gets an OAuth client suspended. What we can
+    // control is the shape, the width and where it sits, so the button matches
+    // the rest of the form instead of floating at a fixed 320px.
+    const width = Math.min(400, Math.max(240, container.current.offsetWidth || 320));
     window.google.accounts.id.renderButton(container.current, {
       type: 'standard',
-      theme: 'outline',
+      theme: 'filled_blue',
       size: 'large',
-      shape: 'pill',
+      shape: 'rectangular',
       text: 'continue_with',
+      logo_alignment: 'left',
       locale,
-      width: 320,
+      width,
     });
   }, [enabled, scriptReady, clientId, locale, handleCredential]);
 

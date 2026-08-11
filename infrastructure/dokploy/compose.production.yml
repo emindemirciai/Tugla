@@ -7,6 +7,11 @@
 # web/admin wait for the API to *start*, not to be healthy: an API that is
 # briefly unhealthy should degrade the game, not remove the whole site from
 # the internet.
+#
+# The analytics dashboard sits behind the 'analytics' profile. Run it here with
+#   docker compose --profile analytics up -d analytics
+# or, as production does, deploy that repository as its own application and
+# leave this service switched off.
 name: tugla
 x-app-environment: &id003
   NODE_ENV: production
@@ -295,6 +300,8 @@ services:
     cap_drop: *id002
     tmpfs:
       - /tmp:noexec,nosuid,size=32m
+    profiles:
+      - analytics
 volumes:
   postgres_data: null
   redis_data: null

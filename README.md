@@ -1,4 +1,32 @@
-# Tuğla
+# Tuğla.fun
+
+<p align="center">
+  <img src="apps/web/public/brand/logo-wordmark.png" alt="Tuğla.fun" width="360">
+</p>
+
+<p align="center">
+  <img src="apps/web/public/brand/cover-1200x630.png" alt="Tuğla.fun — tuğlaları kır, fırtınayı çoğalt" width="720">
+</p>
+
+<p align="center">
+  <img src="apps/web/public/brand/cover-400x300.png" alt="Oyun listeleme görseli / listing artwork" width="300">
+  &nbsp;
+  <img src="apps/web/public/brand/logo-512.png" alt="Uygulama ikonu / app icon" width="120">
+</p>
+
+<p align="center">
+  <strong>10 dünya · 500 bölüm · 500 eş zamanlı top · 120 Hz deterministik fizik</strong><br>
+  <a href="https://tugla.fun">tugla.fun</a> ·
+  <a href="#lisans-ve-kaynak-bildirimi">MIT</a> ·
+  <a href="SECURITY.md">Güvenlik politikası / Security policy</a>
+</p>
+
+> Arayüzün tamamını tarayıcıda görmek için `pnpm build:preview` çalıştırıp
+> `preview/ui-preview.html` dosyasını aç: on ekran, gerçek derlenmiş CSS ile, TR/EN ve
+> aydınlık/karanlık anahtarlarıyla.
+>
+> Run `pnpm build:preview` and open `preview/ui-preview.html` to see ten screens rendered with the
+> real compiled stylesheets, with TR/EN and light/dark switches.
 
 > Kod adı **Tuğla** — tüm marka/isim ayarları tek merkezden (`.env` + `pnpm rename-project`) değiştirilebilir.
 > Codename **Tuğla** — every brand/name setting is driven from one place (`.env` + `pnpm rename-project`).
@@ -143,6 +171,15 @@ Her UTC gününde yayınlanmış kampanya bölümlerinden biri **tarihin hash'iy
 bölümü oynar, hiçbir yerde takvim tutulmaz ve seçim destek için tekrar üretilebilir. `DAILY` modunda
 gönderilen doğrulanmış skorlar `daily:<tarih>` tablosuna yazılır (günün en iyisi), bölüm seçimi ve
 tablo `/play` ekranının en üstünde görünür. Uç nokta herkese açıktır: `GET /api/game/daily`.
+
+### Analitik dağıtımı
+
+Pano ayrı bir Dokploy uygulaması olarak çalışır; bu depodaki `analytics` servisi artık `analytics`
+profili arkasındadır ve varsayılan olarak açılmaz. Dokploy'daki değişken adları, panonun okuduğu
+adlarla birebir olmalıdır (`ANALYZE_*`, `ANALYTICS_*` değil) ve pano `standalone` derlendiği için
+başlatma komutu `node .next/standalone/server.js` olmalıdır. Ayrıntı, Konferans'a özel parçaların
+neden başka bir markanın panosunu etkilediği ve tugla.fun izleyicisinin nasıl bağlanacağı:
+[`docs/ANALYTICS.md`](docs/ANALYTICS.md).
 
 ### Site analitiği
 

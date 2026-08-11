@@ -2185,3 +2185,18 @@ textarea:focus {
   border-color: var(--brand);
   color: var(--brand);
 }
+
+/* Google's rendered button is an iframe with a fixed intrinsic width; the
+   wrapper centres it and gives it the same rhythm as the form controls. */
+.oauth-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.oauth-button > div {
+  width: 100% !important;
+  max-width: 400px;
+}
+.oauth-button iframe {
+  margin: 0 auto !important;
+}
