@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { LandingSignIn } from '../components/LandingSignIn';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import type { CSSProperties } from 'react';
 import { LanguageSwitcher, useI18n } from '../lib/i18n';
 
@@ -27,19 +29,26 @@ export default function HomePage() {
 
   return (
     <main className="landing">
+      <div className="landing-backdrop" aria-hidden>
+        <i />
+        <i />
+        <i />
+      </div>
+
+      {/*
+        Brand on the left, preferences on the right, nothing in between. Sign in
+        and register moved into the hero: the form is the reason to be here, so
+        it should not be a link to somewhere else.
+      */}
       <nav className="nav shell">
         <Link className="brand" href="/" aria-label={appName}>
           <Image src="/brand/logo.svg" alt="" width={30} height={30} priority />
           {appName.toUpperCase()}
         </Link>
         <div className="nav-links">
-          <Link href="/auth/login">{t('landing.nav.signIn')}</Link>
-          <Link href="/auth/register">{t('landing.nav.register')}</Link>
           <LanguageSwitcher compact />
+          <ThemeSwitcher />
         </div>
-        <Link className="button button-quiet" href="/play">
-          {t('landing.nav.play')}
-        </Link>
       </nav>
 
       <section className="hero shell">
@@ -47,14 +56,7 @@ export default function HomePage() {
           <span className="eyebrow">{t('landing.hero.eyebrow')}</span>
           <h1>{t('landing.hero.title')}</h1>
           <p>{t('landing.hero.body')}</p>
-          <div className="hero-actions">
-            <Link className="button button-primary" href="/play">
-              {t('landing.hero.cta')} <span aria-hidden>↗</span>
-            </Link>
-            <Link className="button button-quiet" href="/auth/register">
-              {t('landing.hero.secondary')}
-            </Link>
-          </div>
+          <LandingSignIn />
           <div className="trust-row">
             <span>WEB</span>
             <span>PWA</span>

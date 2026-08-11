@@ -11,7 +11,9 @@ interface Analytics {
   economy: { reason: string; total: number }[];
 }
 
-const analyticsUrl = process.env.NEXT_PUBLIC_ANALYTICS_URL?.trim();
+const analyticsUrl = (
+  process.env.NEXT_PUBLIC_ANALYZE_URL ?? process.env.NEXT_PUBLIC_ANALYTICS_URL
+)?.trim();
 
 export default function AnalyticsPage() {
   const { data, loading, error } = useAdminData<Analytics>('/admin/system/analytics?days=14');

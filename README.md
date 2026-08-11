@@ -172,6 +172,19 @@ bölümü oynar, hiçbir yerde takvim tutulmaz ve seçim destek için tekrar ür
 gönderilen doğrulanmış skorlar `daily:<tarih>` tablosuna yazılır (günün en iyisi), bölüm seçimi ve
 tablo `/play` ekranının en üstünde görünür. Uç nokta herkese açıktır: `GET /api/game/daily`.
 
+### Açılış sayfası
+
+Üst çubuk artık yalnızca iki şey taşır: solda marka, sağda dil ve tema anahtarı. "Giriş yap" ve
+"Kayıt ol" bağlantıları kaldırıldı çünkü **giriş formunun kendisi açılış sayfasında**: geri dönen bir
+oyuncuyla oyun arasında fazladan bir sayfa yüklemesi yok. Zaten girişli bir ziyaretçi form yerine
+"devam et" düğmesi görür. Kayıt kendi sayfasında kalır, çünkü daha fazla bilgi ister.
+
+Arka planda üç yavaş renk alanı gezinir; döngüler 44–60 saniye sürer, içeriğin üzerinden geçmez ve
+`prefers-reduced-motion` açıkken tamamen durur — derinlik hissi verir, dikkat çalmaz.
+
+Başlık satır yüksekliği 1.12'den 1.24'e çıkarıldı: Türkçe metinde `ğ` ve `ç` inişleri kırpılıyor ve
+satırlar birbirine değiyordu.
+
 ### Analitik dağıtımı
 
 Pano ayrı bir Dokploy uygulaması olarak çalışır; bu depodaki `analytics` servisi artık `analytics`
@@ -183,11 +196,13 @@ neden başka bir markanın panosunu etkilediği ve tugla.fun izleyicisinin nası
 
 ### Site analitiği
 
-Ziyaretçi istatistikleri üçüncü taraf bir servisle değil, projenin kendi panosuyla toplanır:
-[Analyze.Your.Site](https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-).
-`analytics` servisi bu depoyu `ANALYTICS_REF` sürümünden derler, olayları kendi biriminde JSON olarak
+Ziyaretçi istatistikleri üçüncü taraf bir servisle değil, projenin kendi panosuyla toplanır —
+**Analyze Your Site (Siteni Analiz Et)**:
+[Analyze Your Site (Siteni Analiz Et)](https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-).
+Depodaki `analytics` servisi (yalnızca `analytics` profiliyle açılır) bu depoyu `ANALYZE_REF`
+sürümünden derler, olayları kendi biriminde JSON olarak
 saklar ve yalnızca `WEB_URL` kaynağından olay kabul eder. Oyuncu uygulaması izleme betiğini
-**yalnızca `NEXT_PUBLIC_ANALYTICS_URL` doluysa** ekler; boşsa hiçbir sayfada hiçbir izleyici yoktur.
+**yalnızca `NEXT_PUBLIC_ANALYZE_URL` doluysa** ekler; boşsa hiçbir sayfada hiçbir izleyici yoktur.
 Yönetim panelindeki Analitik ekranı oyun verisini gösterir ve yapılandırılmışsa trafik panosuna
 bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
 
@@ -572,13 +587,22 @@ same level, no schedule is stored anywhere and the pick is reproducible for supp
 submitted in `DAILY` mode land on the `daily:<date>` board (best score of the day). Public endpoint:
 `GET /api/game/daily`.
 
+### Landing page
+
+The header carries only the brand on the left and the language and theme controls on the right. Sign
+in and register links are gone because the sign-in form itself lives on the landing page; a visitor
+who is already signed in sees a "continue" button instead. Three slow colour fields drift behind the
+page (44–60s cycles, never crossing the content, frozen under `prefers-reduced-motion`). Heading
+line-height moved from 1.12 to 1.24 because Turkish descenders were clipped and lines touched.
+
 ### Site analytics
 
-Traffic statistics come from the project's own dashboard
-([Analyze.Your.Site](https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-)) instead of
-a third-party service. The `analytics` compose service builds it from a pinned ref, stores events as
+Traffic statistics come from the project's own dashboard —
+[Analyze Your Site (Siteni Analiz Et)](https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-) —
+rather than a third-party service. Variable names follow the dashboard's own `ANALYZE_*` prefix on
+both sides. The `analytics` compose service builds it from a pinned ref, stores events as
 JSON on its own volume and accepts events only from `WEB_URL`. The player app injects the tracker
-**only** when `NEXT_PUBLIC_ANALYTICS_URL` is set — otherwise no page carries any tracker at all.
+**only** when `NEXT_PUBLIC_ANALYZE_URL` is set — otherwise no page carries any tracker at all.
 
 ### Seasons and notifications
 

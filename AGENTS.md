@@ -45,7 +45,7 @@ pnpm build:preview          # preview/ui-preview.html
 - **`COPY --from=...` kaynağı var olmak zorundadır.** Depo dışı bir kaynak ağacından (klonlanan
   proje) kopyalanan yol, derleme aşamasında `RUN mkdir -p` ile garanti edilmeli; yoksa tüm compose
   derlemesi düşer. Aynı kontrol `pnpm check:docker` içinde.
-- `WEB_URL`, `APP_NAME`, `APP_TAGLINE`, `DEFAULT_LOCALE`, `NEXT_PUBLIC_ANALYTICS_URL` metadata'ya
+- `WEB_URL`, `APP_NAME`, `APP_TAGLINE`, `DEFAULT_LOCALE`, `NEXT_PUBLIC_ANALYZE_URL` metadata'ya
   build sırasında gömülür → Docker **build argümanıdır**.
 
 ## Kurallar / Rules

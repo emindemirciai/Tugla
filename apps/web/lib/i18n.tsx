@@ -178,7 +178,6 @@ const tr = {
   'account.deleteFailed': 'Hesap silme başarısız oldu.',
 
   // landing
-  'landing.nav.play': 'Oyna',
   'landing.nav.signIn': 'Giriş yap',
   'landing.nav.register': 'Kayıt ol',
   'landing.hero.eyebrow': 'MODERN TUĞLA KIRMA',
@@ -186,7 +185,6 @@ const tr = {
   'landing.hero.body':
     '10 dünya, 500 el yapımı bölüm, boss savaşları ve 500 topa kadar büyüyen zincir reaksiyonlar. Deterministik fizik sayesinde her skor sunucuda yeniden oynatılarak doğrulanır.',
   'landing.hero.cta': 'Hemen oyna',
-  'landing.hero.secondary': 'Hesap oluştur',
   'landing.stats.worlds': 'dünya',
   'landing.stats.levels': 'bölüm',
   'landing.stats.balls': 'eşzamanlı top',
@@ -370,6 +368,9 @@ const tr = {
   'auth.or': 'veya',
   'auth.google.pending': 'Google hesabın doğrulanıyor…',
   'auth.google.continue': 'Google ile devam et',
+  'landing.auth.welcomeBack': 'Tekrar hoş geldin, {name}.',
+  'landing.auth.noAccount': 'Hesabın yok mu?',
+  'landing.auth.guestPeek': 'Önce bölümlere göz at',
   'auth.google.unavailable':
     'Google girişi bu kurulumda henüz yapılandırılmadı. E-posta ve parolayla devam edebilirsin.',
   'auth.verify.codeTitle': 'E-postanı doğrula',
@@ -569,7 +570,6 @@ const en: Record<TranslationKey, string> = {
   'account.deleteButton': 'Delete account permanently',
   'account.deleteFailed': 'Account deletion failed.',
 
-  'landing.nav.play': 'Play',
   'landing.nav.signIn': 'Sign in',
   'landing.nav.register': 'Sign up',
   'landing.hero.eyebrow': 'MODERN BRICK BREAKER',
@@ -577,7 +577,6 @@ const en: Record<TranslationKey, string> = {
   'landing.hero.body':
     '10 worlds, 500 handcrafted levels, boss fights and chain reactions that grow to 500 balls. Deterministic physics means every score is replayed and verified on the server.',
   'landing.hero.cta': 'Play now',
-  'landing.hero.secondary': 'Create account',
   'landing.stats.worlds': 'worlds',
   'landing.stats.levels': 'levels',
   'landing.stats.balls': 'simultaneous balls',
@@ -753,6 +752,9 @@ const en: Record<TranslationKey, string> = {
   'auth.or': 'or',
   'auth.google.pending': 'Verifying your Google account…',
   'auth.google.continue': 'Continue with Google',
+  'landing.auth.welcomeBack': 'Welcome back, {name}.',
+  'landing.auth.noAccount': 'No account yet?',
+  'landing.auth.guestPeek': 'Browse the levels first',
   'auth.google.unavailable':
     'Google sign-in is not configured on this deployment yet. Please continue with email and password.',
   'auth.verify.codeTitle': 'Verify your email',

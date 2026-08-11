@@ -130,18 +130,18 @@ archive and perform a quarterly restore drill.
 Traffic statistics come from the project's own dashboard rather than a third-party service:
 <https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et->
 
-- The `analytics` service builds that repository from `ANALYTICS_REPO` at `ANALYTICS_REF` using
+- The `analytics` service builds that repository from `ANALYZE_REPO` at `ANALYZE_REF` using
   `infrastructure/docker/Dockerfile.analytics` (the upstream repo ships no Dockerfile).
 - Events are stored as JSON on the `analytics_data` volume (`ANALYZE_DATA_DIR=/data`,
-  capped by `ANALYTICS_MAX_EVENTS`). There is no database dependency.
+  capped by `ANALYZE_MAX_EVENTS`). There is no database dependency.
 - `ANALYZE_ALLOWED_ORIGIN` is set to `WEB_URL`, so only the player site may post events.
-- The player app injects the tracker **only** when `NEXT_PUBLIC_ANALYTICS_URL` is set. Because Next.js
+- The player app injects the tracker **only** when `NEXT_PUBLIC_ANALYZE_URL` is set. Because Next.js
   bakes public variables at build time, it is passed as a build argument as well — after changing it,
   rebuild the web image.
 - The admin panel's Analytics screen links to the dashboard when configured and says plainly that it
   is off when it is not.
 
-Pin `ANALYTICS_REF` to a tag or commit for reproducible deployments; `main` follows upstream — an
+Pin `ANALYZE_REF` to a tag or commit for reproducible deployments; `main` follows upstream — an
 upstream change can otherwise break a deployment that touched none of your own code.
 
 The image is built against a repository we do not control, so the Dockerfile only assumes what the

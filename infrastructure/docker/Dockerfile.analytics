@@ -1,4 +1,4 @@
-# Analyze.Your.Site — the project's own site-analytics dashboard.
+# Analyze Your Site (Siteni Analiz Et) — the project's own analytics dashboard.
 #
 # The upstream repository ships no Dockerfile, so this image clones a pinned ref
 # and builds it. Events are stored as JSON on disk (ANALYZE_DATA_DIR), which is
@@ -6,11 +6,11 @@
 #
 #   Repo: https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-
 FROM node:24-alpine AS build
-ARG ANALYTICS_REPO=https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git
-ARG ANALYTICS_REF=main
+ARG ANALYZE_REPO=https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git
+ARG ANALYZE_REF=main
 RUN apk add --no-cache git
 WORKDIR /src
-RUN git clone --depth 1 --branch "$ANALYTICS_REF" "$ANALYTICS_REPO" .
+RUN git clone --depth 1 --branch "$ANALYZE_REF" "$ANALYZE_REPO" .
 RUN npm ci --no-audit --no-fund
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build

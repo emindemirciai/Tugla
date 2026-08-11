@@ -74,8 +74,11 @@ h1,
 h2,
 h3 {
   letter-spacing: -0.025em;
-  line-height: 1.12;
+  /* 1.12 clipped descenders on ğ and ç and let successive lines touch; Turkish
+     copy needs more room than an English mock-up suggests. */
+  line-height: 1.24;
   margin: 0;
+  text-wrap: balance;
 }
 h1 {
   font-size: clamp(1.85rem, 5vw, 3.2rem);
@@ -355,7 +358,9 @@ code {
 }
 .hero-copy h1 {
   /* Capped so the message block stays the same height as the playfield card. */
-  font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+  font-size: clamp(1.6rem, 2.9vw, 2.2rem);
+  line-height: 1.22;
+  padding-bottom: 0.08em;
 }
 .hero-copy p {
   color: var(--ink-2);
@@ -2258,4 +2263,113 @@ textarea:focus {
 :root[data-theme='night'] .google-button {
   background: #ffffff;
   color: #3c4043;
+}
+
+/* ----- landing sign-in --------------------------------------------------------- */
+.landing-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.landing-auth form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.landing-auth-submit {
+  width: 100%;
+  margin-top: 2px;
+}
+.landing-auth-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.86rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+.landing-auth .oauth-block {
+  margin-top: 0;
+}
+
+/* ----- animated backdrop -------------------------------------------------------
+   Three slow-moving colour fields behind the page. Movement is under 60s per
+   cycle and never crosses the content, so it reads as depth rather than motion
+   competing with the copy; prefers-reduced-motion freezes it entirely. */
+.landing-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.landing-backdrop i {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+}
+.landing-backdrop i:nth-child(1) {
+  width: 46vw;
+  height: 46vw;
+  background: #7fb0ff;
+  top: -12vw;
+  left: -8vw;
+  animation: drift-a 44s ease-in-out infinite alternate;
+}
+.landing-backdrop i:nth-child(2) {
+  width: 38vw;
+  height: 38vw;
+  background: #ffc9a8;
+  bottom: -10vw;
+  right: -6vw;
+  animation: drift-b 52s ease-in-out infinite alternate;
+}
+.landing-backdrop i:nth-child(3) {
+  width: 30vw;
+  height: 30vw;
+  background: #9de9d0;
+  top: 44%;
+  left: 52%;
+  animation: drift-c 60s ease-in-out infinite alternate;
+}
+@keyframes drift-a {
+  to {
+    transform: translate3d(6vw, 8vh, 0) scale(1.12);
+  }
+}
+@keyframes drift-b {
+  to {
+    transform: translate3d(-7vw, -6vh, 0) scale(1.08);
+  }
+}
+@keyframes drift-c {
+  to {
+    transform: translate3d(-9vw, 5vh, 0) scale(0.9);
+  }
+}
+:root[data-theme='night'] .landing-backdrop i {
+  opacity: 0.32;
+}
+:root[data-theme='night'] .landing-backdrop i:nth-child(1) {
+  background: #2b4f8f;
+}
+:root[data-theme='night'] .landing-backdrop i:nth-child(2) {
+  background: #7a3f57;
+}
+:root[data-theme='night'] .landing-backdrop i:nth-child(3) {
+  background: #245c53;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-backdrop i {
+    animation: none !important;
+  }
 }

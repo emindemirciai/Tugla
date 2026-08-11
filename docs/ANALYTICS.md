@@ -9,13 +9,15 @@ varsayılan olarak **çalışmaz** — iki dağıtımın aynı alan adı için y
 
 ## Dokploy'da doğru ortam değişkenleri
 
-Uygulama şu adları okur. Ekran görüntüsündeki `ANALYTICS_*` adları **yanlıştır**; hiçbiri
-uygulamaya ulaşmaz ve veri, bağlanan birime değil varsayılan yola yazılır:
+Panonun kendi adı **Analyze Your Site (Siteni Analiz Et)** ve okuduğu değişkenler `ANALYZE_*`
+önekiyle başlar. Dokploy ekranındaki `ANALYTICS_*` adları bu yüzden hiçbir işe yaramaz: veri,
+bağlanan birime değil varsayılan yola yazılır ve izin verilen kaynak ayarı hiç uygulanmaz. Bu depoda
+da tüm değişkenler aynı önekle yeniden adlandırıldı, böylece iki taraf tek bir isimlendirme kullanır:
 
 | Yanlış (etkisiz)           | Doğru                    |
 | -------------------------- | ------------------------ |
 | `ANALYTICS_DATA_DIR`       | `ANALYZE_DATA_DIR`       |
-| `ANALYTICS_MAX_EVENTS`     | `ANALYZE_MAX_EVENTS`     |
+| `ANALYZE_MAX_EVENTS`       | `ANALYZE_MAX_EVENTS`     |
 | `ANALYTICS_ALLOWED_ORIGIN` | `ANALYZE_ALLOWED_ORIGIN` |
 | `ANALYTICS_GEO_LOOKUP`     | `ANALYZE_GEO_LOOKUP`     |
 
@@ -82,12 +84,12 @@ Dokploy → General → Start Command alanına `node .next/standalone/server.js`
 
 ## tugla.fun tarafındaki izleyici
 
-Oyuncu uygulaması izleme betiğini yalnızca `NEXT_PUBLIC_ANALYTICS_URL` doluysa ekler. Değer derleme
+Oyuncu uygulaması izleme betiğini yalnızca `NEXT_PUBLIC_ANALYZE_URL` doluysa ekler. Değer derleme
 sırasında gömüldüğü için **web imajı yeniden derlenmelidir**:
 
 ```env
-NEXT_PUBLIC_ANALYTICS_URL=https://analiz.tugla.fun
-NEXT_PUBLIC_ANALYTICS_SITE=tugla.fun
+NEXT_PUBLIC_ANALYZE_URL=https://analiz.tugla.fun
+NEXT_PUBLIC_ANALYZE_SITE=tugla.fun
 ```
 
 Betiğin kendisi `https://analiz.tugla.fun/api/tracker` adresinden yüklenir ve olayları
@@ -107,5 +109,5 @@ Konferans-specific pieces (session cookie name, health payload, and a login that
 Konferans and why redeploying the same branch changes the yillikizin site as well. Keep a branch per
 brand, or move those names into environment variables. Finally, the app builds standalone but starts
 with `next start`; set the start command to `node .next/standalone/server.js`. On the game side, set
-`NEXT_PUBLIC_ANALYTICS_URL` and rebuild the web image, because public variables are baked at build
+`NEXT_PUBLIC_ANALYZE_URL` and rebuild the web image, because public variables are baked at build
 time.
