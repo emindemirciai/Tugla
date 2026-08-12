@@ -52,6 +52,12 @@ export default function HomePage() {
       </nav>
 
       <section className="hero shell">
+        <div className="hero-pitch">
+          <span className="eyebrow">{t('landing.hero.eyebrow')}</span>
+          <h1>{t('landing.hero.title')}</h1>
+          <p>{t('landing.hero.body')}</p>
+        </div>
+
         <div className="hero-copy">
           <LandingSignIn />
           <div className="trust-row">
@@ -99,12 +105,6 @@ export default function HomePage() {
             <div className="preview-paddle" />
           </div>
         </div>
-      </section>
-
-      <section className="hero-pitch shell">
-        <span className="eyebrow">{t('landing.hero.eyebrow')}</span>
-        <h1>{t('landing.hero.title')}</h1>
-        <p>{t('landing.hero.body')}</p>
       </section>
 
       <section className="stats shell" id="systems">

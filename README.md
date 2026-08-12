@@ -179,10 +179,14 @@ tablo `/play` ekranının en üstünde görünür. Uç nokta herkese açıktır:
 oyuncuyla oyun arasında fazladan bir sayfa yüklemesi yok. Zaten girişli bir ziyaretçi form yerine
 "devam et" düğmesi görür. Kayıt kendi sayfasında kalır, çünkü daha fazla bilgi ister.
 
-Düzen: solda oyun animasyonu, sağda giriş formu, iki sütun eşit genişlikte ve aynı hizadan başlar.
-Başlık ve tanıtım metni ikisinin **altında**, tam genişlikte durur — üstteyken formu sayfanın
-aşağısına itiyor ve animasyonu bir metin duvarının yanına bırakıyordu. Telefonda form öne geçer,
-animasyon altına iner: geri dönen oyuncunun aradığı şey form.
+Düzen üç sütun: solda oyun animasyonu, **ortada** başlık ve tanıtım metni, sağda giriş formu. Dış iki
+sütun aynı genişlikte (320 px), orta sütun biraz daha geniştir çünkü düzyazı forma göre daha çok
+ölçü ister. Dar ekranda metin iki sütunun üstüne, telefonda ise sıralama belge sırasına döner:
+metin, form, animasyon.
+
+Arka plandaki hareketli katman `.landing-backdrop` içinde ve `z-index: -1` ile durur; `.landing`
+bilinçli olarak **saydamdır**, çünkü opak bir arka plan bu katmanın tam üzerine boyanır — animasyonun
+görünmemesinin sebebi buydu.
 
 Arka planda üç yavaş renk alanı gezinir; döngüler 44–60 saniye sürer, içeriğin üzerinden geçmez ve
 `prefers-reduced-motion` açıkken tamamen durur — derinlik hissi verir, dikkat çalmaz.
@@ -596,9 +600,12 @@ submitted in `DAILY` mode land on the `daily:<date>` board (best score of the da
 
 The header carries only the brand on the left and the language and theme controls on the right. Sign
 in and register links are gone because the sign-in form itself lives on the landing page; a visitor
-who is already signed in sees a "continue" button instead. The animation sits on the left and the form on the right, in two equal columns
-that start on the same line, with the headline and pitch below both at full width. On a phone the
-form comes first and the animation follows. Three slow colour fields drift behind the page (44–60s
+who is already signed in sees a "continue" button instead. Three columns: the animation on the left, the headline and pitch in the middle,
+the sign-in form on the right. The outer columns share one width; the middle is wider because prose
+needs more measure than a form. Narrow screens put the pitch across the top, and a phone falls back
+to document order. The drifting layer lives in `.landing-backdrop` at `z-index: -1`, and `.landing`
+is deliberately transparent — an opaque background there paints straight over it, which is why the
+animation was invisible. Three slow colour fields drift behind the page (44–60s
 cycles, never crossing the content, frozen under `prefers-reduced-motion`). Heading
 line-height moved from 1.12 to 1.24 because Turkish descenders were clipped and lines touched.
 

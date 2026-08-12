@@ -316,31 +316,39 @@ code {
 
 /* ----- landing ------------------------------------------------------------ */
 .landing {
-  background:
-    radial-gradient(1100px 520px at 84% -6%, #ffe4d6 0%, rgba(255, 228, 214, 0) 62%),
-    radial-gradient(900px 480px at 2% 2%, #d9e8ff 0%, rgba(217, 232, 255, 0) 58%),
-    radial-gradient(700px 420px at 60% 40%, #e6fbf4 0%, rgba(230, 251, 244, 0) 60%), var(--paper);
+  /* Deliberately transparent. The drifting fields live in .landing-backdrop at
+     z-index -1; an opaque background here would paint straight over them, which
+     is exactly why the animation was invisible. The page colour comes from
+     body. */
+  background: transparent;
+  position: relative;
   min-height: 100dvh;
   padding-bottom: 60px;
 }
 .hero {
   display: grid;
-  /* Animation left, sign-in right, both the same width and both starting on the
-     same line. The pitch moved out of this row entirely (.hero-pitch below), so
-     neither column has to stretch to match a block of prose. */
-  grid-template-columns: repeat(2, minmax(0, 340px));
-  gap: 32px;
-  align-items: start;
+  /* Three columns: animation, pitch, sign-in. The outer two are the same width
+     so neither panel dominates; the pitch takes the middle and can be wider,
+     because prose needs more measure than a form does. */
+  grid-template-columns: minmax(0, 320px) minmax(0, 380px) minmax(0, 320px);
+  gap: 28px;
+  align-items: center;
   justify-content: center;
   justify-items: center;
-  padding: 32px 20px 24px;
+  padding: 40px 20px 32px;
 }
 .hero-visual {
   order: 1;
 }
-.hero-copy {
+.hero-pitch {
   order: 2;
 }
+.hero-copy {
+  order: 3;
+}
+/* Document order is pitch → form → animation: that is the order a screen reader
+   should hear and the order a phone should stack. `order` only rearranges the
+   desktop grid, where the animation belongs on the left. */
 .hero-copy {
   display: flex;
   flex-direction: column;
@@ -2349,37 +2357,51 @@ textarea:focus {
 }
 
 /* ----- hero pitch ---------------------------------------------------------------
-   The headline used to sit above the sign-in form, which pushed the form down
-   the page and left the animation beside a wall of prose. Below both panels it
-   gets the full measure and reads as a caption for what the visitor just saw. */
+   The message sits between the animation and the sign-in form: it explains what
+   the board on the left is, and what the form on the right gets you. */
 .hero-pitch {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   text-align: center;
-  padding: 8px 20px 48px;
+  width: 100%;
 }
 .hero-pitch h1 {
-  max-width: 22ch;
+  max-width: 18ch;
 }
 .hero-pitch p {
   color: var(--ink-2);
-  font-size: 1.02rem;
-  max-width: 58ch;
+  font-size: 1rem;
+  max-width: 40ch;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1080px) {
+  /* Two columns: the pitch spans both, above the panels. */
   .hero {
-    grid-template-columns: minmax(0, 360px);
-    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 340px));
   }
-  /* On a phone the form comes first: it is the reason a returning player is
-     here, and the animation is decoration. */
+  .hero-pitch {
+    order: 1;
+    grid-column: 1 / -1;
+  }
   .hero-visual {
     order: 2;
   }
   .hero-copy {
-    order: 1;
+    order: 3;
+  }
+}
+@media (max-width: 760px) {
+  .hero {
+    grid-template-columns: minmax(0, 380px);
+    gap: 22px;
+  }
+  /* One column, in document order: pitch, then the form a returning player came
+     for, then the board. */
+  .hero-pitch,
+  .hero-copy,
+  .hero-visual {
+    order: initial;
   }
 }
