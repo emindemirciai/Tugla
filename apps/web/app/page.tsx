@@ -117,10 +117,6 @@ export default function HomePage() {
       </section>
 
       <section className="world-section shell" id="features">
-        <div>
-          <span className="eyebrow">{t('landing.worlds.title')}</span>
-          <h2>{t('landing.worlds.body')}</h2>
-        </div>
         <div className="world-cards">
           {features.map((feature, index) => (
             <article key={feature.title} className={`world-card world-${index + 1}`} tabIndex={0}>

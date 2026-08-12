@@ -184,6 +184,11 @@ sütun aynı genişlikte (320 px), orta sütun biraz daha geniştir çünkü dü
 ölçü ister. Dar ekranda metin iki sütunun üstüne, telefonda ise sıralama belge sırasına döner:
 metin, form, animasyon.
 
+Başlık satır yüksekliği 1.32'dir. Daha düşük değerlerde ardışık satırların **seçim kutuları**
+kesişiyor ve sayfa seçildiğinde metin üst üste binmiş gibi görünüyordu; Türkçe iniş harfleri (ğ, ç)
+ve noktasız ı bunu belirginleştiriyor. Seçim rengi de markanın doygun mavisi yerine yumuşak tonuna
+alındı, çünkü koyu zemin üzerinde vurguladığı metni okunmaz hâle getiriyordu.
+
 Arka plandaki hareketli katman `.landing-backdrop` içinde ve `z-index: -1` ile durur; `.landing`
 bilinçli olarak **saydamdır**, çünkü opak bir arka plan bu katmanın tam üzerine boyanır — animasyonun
 görünmemesinin sebebi buydu.
@@ -603,7 +608,9 @@ in and register links are gone because the sign-in form itself lives on the land
 who is already signed in sees a "continue" button instead. Three columns: the animation on the left, the headline and pitch in the middle,
 the sign-in form on the right. The outer columns share one width; the middle is wider because prose
 needs more measure than a form. Narrow screens put the pitch across the top, and a phone falls back
-to document order. The drifting layer lives in `.landing-backdrop` at `z-index: -1`, and `.landing`
+to document order. Headings use a 1.32 line-height: below roughly 1.3 the _selection_ boxes of consecutive lines
+intersect, so selecting the page looked like overlapping text, and Turkish descenders make it worse.
+The drifting layer lives in `.landing-backdrop` at `z-index: -1`, and `.landing`
 is deliberately transparent — an opaque background there paints straight over it, which is why the
 animation was invisible. Three slow colour fields drift behind the page (44–60s
 cycles, never crossing the content, frozen under `prefers-reduced-motion`). Heading
