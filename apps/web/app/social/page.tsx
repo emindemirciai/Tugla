@@ -27,6 +27,27 @@ export default function SocialPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Message composer state: only one friend at a time, so a stray click cannot
+  // send a half-written note to the wrong person.
+  const [messageTo, setMessageTo] = useState<string | null>(null);
+  const [messageBody, setMessageBody] = useState('');
+  const [messageNote, setMessageNote] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+
+  const send = async (userId: string) => {
+    setSending(true);
+    setMessageNote(null);
+    try {
+      await socialApi.sendMessage(userId, messageBody.trim());
+      setMessageTo(null);
+      setMessageBody('');
+      setMessageNote(t('social.message.sent'));
+    } catch (sendError) {
+      setMessageNote(sendError instanceof Error ? sendError.message : t('common.unexpectedError'));
+    } finally {
+      setSending(false);
+    }
+  };
 
   const loadFriends = useCallback(async () => {
     setLoading(true);
@@ -122,6 +143,11 @@ export default function SocialPage() {
         ))}
 
       <h2 className="hub-section">{t('social.friends')}</h2>
+      {messageNote && (
+        <p className="banner" role="status">
+          {messageNote}
+        </p>
+      )}
       <HubStatus loading={loading} error={error} />
       {!loading && friends.length === 0 ? (
         <p className="loading-note">{t('social.noFriends')}</p>
@@ -130,13 +156,60 @@ export default function SocialPage() {
           {friends.map((friendship) => {
             const other =
               friendship.requesterId === user?.id ? friendship.addressee : friendship.requester;
+            const composing = messageTo === other.id;
             return (
-              <li key={friendship.id} className="card card-row">
-                <div>
-                  <strong>{other.displayName}</strong>
-                  <span className="muted"> @{other.username}</span>
+              <li key={friendship.id} className="card">
+                <div className="card-foot">
+                  <div>
+                    <strong>{other.displayName}</strong>
+                    <span className="muted"> @{other.username}</span>
+                  </div>
+                  <div className="card-actions">
+                    <span className="tag tag-ok">{friendship.status}</span>
+                    <button
+                      type="button"
+                      className="button-quiet"
+                      onClick={() => {
+                        setMessageTo(composing ? null : other.id);
+                        setMessageBody('');
+                        setMessageNote(null);
+                      }}
+                    >
+                      {composing ? t('social.message.cancel') : t('social.message.open')}
+                    </button>
+                  </div>
                 </div>
-                <span className="tag tag-ok">{friendship.status}</span>
+
+                {composing && (
+                  <form
+                    className="message-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void send(other.id);
+                    }}
+                  >
+                    <label className="auth-field">
+                      <span>{t('social.message.label', { name: other.displayName })}</span>
+                      <textarea
+                        value={messageBody}
+                        onChange={(event) => setMessageBody(event.target.value.slice(0, 1000))}
+                        rows={3}
+                        maxLength={1000}
+                        required
+                      />
+                      <small>{t('social.message.hint')}</small>
+                    </label>
+                    <div className="card-actions">
+                      <button
+                        type="submit"
+                        className="button button-primary"
+                        disabled={sending || messageBody.trim().length === 0}
+                      >
+                        {sending ? t('common.processing') : t('social.message.send')}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </li>
             );
           })}

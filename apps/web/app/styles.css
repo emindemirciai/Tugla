@@ -2419,3 +2419,11 @@ textarea:focus {
   background: #2a4a7a;
   color: #ffffff;
 }
+
+.message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}

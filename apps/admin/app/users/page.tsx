@@ -98,6 +98,25 @@ export default function UsersPage() {
           row.riskScore,
           formatDate(row.createdAt),
           <div key="actions" className="admin-actions">
+            {row.status !== 'DELETED' && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  const title = window.prompt(t('users.messageTitlePrompt'));
+                  if (!title?.trim()) return;
+                  const body = window.prompt(t('users.messageBodyPrompt'));
+                  if (!body?.trim()) return;
+                  void run(
+                    `/admin/operations/users/${row.id}/message`,
+                    { method: 'POST', body: { title: title.trim(), body: body.trim() } },
+                    t('users.messageSent'),
+                  );
+                }}
+              >
+                {t('users.message')}
+              </button>
+            )}
             {canModerate && row.status !== 'SUSPENDED' && row.status !== 'DELETED' && (
               <button
                 type="button"

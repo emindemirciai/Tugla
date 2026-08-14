@@ -585,6 +585,64 @@ try {
     );
   }
 
+  console.log('\nDirect messages');
+  const adminProfile = await call('/auth/me', { token: adminToken });
+  const strangerMessage = await call('/social/messages', {
+    method: 'POST',
+    token,
+    body: { userId: adminProfile.body?.id, body: 'hello there' },
+  });
+  check(
+    'messaging a non-friend is refused',
+    strangerMessage.status === 400,
+    `status ${strangerMessage.status}`,
+  );
+
+  const selfMessage = await call('/social/messages', {
+    method: 'POST',
+    token,
+    body: { userId: profile.body?.id, body: 'note to self' },
+  });
+  check(
+    'messaging yourself is refused',
+    selfMessage.status === 400,
+    `status ${selfMessage.status}`,
+  );
+
+  const emptyMessage = await call('/social/messages', {
+    method: 'POST',
+    token,
+    body: { userId: adminProfile.body?.id, body: '   ' },
+  });
+  check('an empty message is refused', emptyMessage.status === 400);
+
+  const staffMessage = await call(`/admin/operations/users/${profile.body?.id}/message`, {
+    method: 'POST',
+    token: adminToken,
+    body: { title: 'Please update your display name', body: 'It breaks the naming rules.' },
+  });
+  check(
+    'staff can message a player',
+    staffMessage.status === 201 || staffMessage.status === 200,
+    `status ${staffMessage.status}`,
+  );
+
+  const inboxAfterStaff = await call('/notifications', { token });
+  const staffNotice = (inboxAfterStaff.body?.items ?? []).find(
+    (item) => item.type === 'ADMIN_MESSAGE',
+  );
+  check('the staff message reaches the player inbox', Boolean(staffNotice));
+
+  const messageAudit = await call('/admin/system/audit?limit=50', { token: adminToken });
+  const messageEntry = (messageAudit.body?.items ?? []).find(
+    (row) => row.action === 'ADMIN_MESSAGE_SENT',
+  );
+  check('the message is recorded in the audit log', Boolean(messageEntry));
+  check(
+    'the audit entry does not carry the message body',
+    !JSON.stringify(messageEntry?.after ?? {}).includes('naming rules'),
+  );
+
   console.log('\nThe daily challenge does not advance the campaign');
   const dailyGate = await call('/game/levels?world=1&limit=3', { token });
   const dailyLevelId = daily.body?.level?.id;

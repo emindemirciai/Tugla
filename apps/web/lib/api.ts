@@ -434,6 +434,11 @@ export const socialApi = {
   follow: (userId: string) => api('/social/follow', { method: 'POST', body: { userId } }),
   unfollow: (userId: string) => api(`/social/follow/${userId}`, { method: 'DELETE' }),
   requestFriend: (userId: string) => api('/social/friends', { method: 'POST', body: { userId } }),
+  sendMessage: (userId: string, body: string) =>
+    api<{ id: string; sentAt: string }>('/social/messages', {
+      method: 'POST',
+      body: { userId, body },
+    }),
   acceptFriend: (id: string) => api(`/social/friends/${id}/accept`, { method: 'POST' }),
   friends: () => api<{ items: Record<string, unknown>[] }>('/social/friends'),
   leaderboard: (boardKey: string) =>

@@ -38,6 +38,7 @@ const NAV = [
   },
   { href: '/flags', label: t('nav.flags'), roles: null },
   { href: '/analytics', label: t('nav.analytics'), roles: null },
+  { href: '/messages', label: t('nav.messages'), roles: null },
   { href: '/audit', label: t('nav.audit'), roles: null },
   { href: '/system', label: t('nav.system'), roles: null },
 ] as const;

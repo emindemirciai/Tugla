@@ -168,6 +168,52 @@ export class AdminOperationsController {
     return user;
   }
 
+  /**
+   * Staff message to a player.
+   *
+   * Support often needs to ask for a correction — a wrong email, a name that
+   * breaks the rules — and the only channels were a ban or nothing. The message
+   * lands in the player's inbox and the action is recorded, so a moderator can
+   * always answer "who contacted this player, and when".
+   */
+  @Post('users/:id/message')
+  @Roles(UserRole.SUPPORT, UserRole.GAME_ADMIN, UserRole.SUPER_ADMIN)
+  async message(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    const data = z
+      .object({
+        title: z.string().trim().min(1).max(120),
+        body: z.string().trim().min(1).max(2000),
+      })
+      .parse(body);
+
+    const user = await this.db.user.findUnique({ where: { id }, select: { id: true } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const notification = await this.db.notification.create({
+      data: {
+        userId: id,
+        type: 'ADMIN_MESSAGE',
+        title: data.title,
+        body: data.body,
+        data: { fromStaff: true },
+      },
+      select: { id: true, createdAt: true },
+    });
+
+    // The audit entry keeps the subject but not the body: a moderator reviewing
+    // staff activity needs to see that contact happened, not to re-read it.
+    await this.audit.fromRequest(request, 'ADMIN_MESSAGE_SENT', 'User', id, null, {
+      title: data.title,
+      length: data.body.length,
+    });
+
+    return { id: notification.id, sentAt: notification.createdAt };
+  }
+
   @Post('users/:id/unban')
   @Roles(UserRole.GAME_ADMIN, UserRole.SUPER_ADMIN)
   async unban(@Param('id') id: string, @Req() request: AuthenticatedRequest) {

@@ -88,6 +88,67 @@ export class SocialService {
     });
     return friendship;
   }
+
+  /**
+   * Sends a direct message to an accepted friend.
+   *
+   * Messages are delivered as inbox notifications rather than a new table:
+   * a message to a player *is* something in their inbox, and reusing the model
+   * keeps read state, listing and deletion-on-account-removal working with no
+   * new code. The audit trail records who wrote to whom and nothing else —
+   * moderators asked for a log, not a mailbox they can read.
+   */
+  async sendMessage(senderId: string, input: unknown) {
+    const data = z
+      .object({
+        userId: z.string().uuid(),
+        body: z.string().trim().min(1).max(1000),
+      })
+      .parse(input);
+
+    if (senderId === data.userId) throw new BadRequestException('Cannot message yourself');
+
+    const friendship = await this.database.client.friendship.findFirst({
+      where: {
+        status: 'ACCEPTED',
+        OR: [
+          { requesterId: senderId, addresseeId: data.userId },
+          { requesterId: data.userId, addresseeId: senderId },
+        ],
+      },
+      select: { id: true },
+    });
+    if (!friendship) throw new BadRequestException('You can only message accepted friends');
+
+    const sender = await this.database.client.user.findUnique({
+      where: { id: senderId },
+      select: { username: true, displayName: true },
+    });
+
+    const notification = await this.database.client.notification.create({
+      data: {
+        userId: data.userId,
+        type: 'DIRECT_MESSAGE',
+        title: sender?.displayName ?? 'New message',
+        body: data.body,
+        data: { fromUserId: senderId, fromUsername: sender?.username ?? null },
+      },
+      select: { id: true, createdAt: true },
+    });
+
+    // Metadata only: the message body never reaches the audit log.
+    await this.database.client.auditLog.create({
+      data: {
+        actorId: senderId,
+        action: 'DIRECT_MESSAGE_SENT',
+        targetType: 'User',
+        targetId: data.userId,
+        after: { notificationId: notification.id, length: data.body.length },
+      },
+    });
+
+    return { id: notification.id, sentAt: notification.createdAt };
+  }
 }
 
 @Controller('social')
@@ -138,6 +199,11 @@ export class SocialController {
   @Post('friends/:id/accept')
   accept(@Req() request: AuthenticatedRequest, @Param('id') friendshipId: string) {
     return this.social.acceptFriend(request.user.sub, friendshipId);
+  }
+
+  @Post('messages')
+  sendMessage(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.social.sendMessage(request.user.sub, body);
   }
 
   @Get('friends')

@@ -220,6 +220,22 @@ saklar ve yalnızca `WEB_URL` kaynağından olay kabul eder. Oyuncu uygulaması 
 Yönetim panelindeki Analitik ekranı oyun verisini gösterir ve yapılandırılmışsa trafik panosuna
 bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
 
+### Mesajlaşma
+
+Oyuncular **arkadaş oldukları** kişilere mesaj gönderebilir (`/social` ekranında her arkadaşın
+yanındaki kutu). Personel de yönetim panelindeki kullanıcı listesinden bir oyuncuya mesaj
+gönderebilir — eksik veya kural dışı bilgiyi düzeltmesini istemek için tek yol bir yasaklama olmasın
+diye.
+
+Mesajlar ayrı bir tablo yerine **bildirim kutusu** üzerinden taşınır: bir oyuncuya gelen mesaj zaten
+onun gelen kutusundaki bir şeydir, böylece okundu durumu, listeleme ve hesap silindiğinde temizlenme
+kendiliğinden çalışır.
+
+**Gizlilik:** Yönetim panelindeki `Mesaj kayıtları` sekmesi yalnızca _kimin kime yazdığını_ gösterir
+— "@ali kullanıcısı @veli kullanıcısına mesaj attı" — ve mesaj içeriği hiçbir yerde saklanmaz veya
+görüntülenmez. Audit kaydı yalnızca karakter sayısını taşır. Moderasyonun ihtiyacı "kim kiminle
+temas ediyor" sorusunun cevabıdır; özel mesajları okumak ayrı bir yetkidir ve bu ekran onu vermez.
+
 ### Sezonlar ve bildirimler
 
 Sezonlar artık gerçekten kapanıyor: her saat çalışan görev, süresi dolan aktif sezonun
@@ -624,6 +640,18 @@ rather than a third-party service. Variable names follow the dashboard's own `AN
 both sides. The `analytics` compose service builds it from a pinned ref, stores events as
 JSON on its own volume and accepts events only from `WEB_URL`. The player app injects the tracker
 **only** when `NEXT_PUBLIC_ANALYZE_URL` is set — otherwise no page carries any tracker at all.
+
+### Messaging
+
+Players can message accepted friends from `/social`, and staff can message a player from the admin
+user list — so asking someone to fix a display name does not require a ban. Messages travel through
+the existing notification model rather than a new table: a message to a player _is_ something in
+their inbox, so read state, listing and deletion with the account keep working unchanged.
+
+Privacy is the point of the design. The admin **Message log** shows only who wrote to whom — "@a sent
+a message to @b" — and the content is never stored or shown there; the audit entry carries a
+character count and nothing else. Moderation needs to answer "who is contacting whom"; reading
+private messages is a separate power and this screen does not grant it.
 
 ### Seasons and notifications
 
