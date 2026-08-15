@@ -137,6 +137,9 @@ export function GameCanvas({
 
     const audio = new GameAudio();
     audio.enabled = settings.soundEnabled;
+    // Entering a level is itself a click, and activation is sticky for the
+    // document, so the device can usually be opened right away.
+    if (settings.soundEnabled) audio.unlock();
     const quality = resolveQuality(settings.quality);
     const renderer = new GameRenderer(
       mount,
@@ -205,6 +208,9 @@ export function GameCanvas({
       // pointer stream and the paddle freezes — which is exactly how the game
       // behaved on phones. The canvas also sets touch-action: none.
       event.preventDefault();
+      // Opening the audio device needs a real gesture; this is the earliest one
+      // in a level, so the very first paddle hit already has sound.
+      audio.unlock();
       pointerActive = true;
       pointerOrigin = event.clientX;
       renderer.domElement.setPointerCapture(event.pointerId);
@@ -230,6 +236,7 @@ export function GameCanvas({
       pointerActive = false;
     };
     const onKeyDown = (event: KeyboardEvent) => {
+      audio.unlock();
       const paddle = engine.snapshot.paddle;
       if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
         engine.setPaddleTarget(paddle.targetX - 1.1);

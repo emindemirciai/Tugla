@@ -220,6 +220,21 @@ saklar ve yalnızca `WEB_URL` kaynağından olay kabul eder. Oyuncu uygulaması 
 Yönetim panelindeki Analitik ekranı oyun verisini gösterir ve yapılandırılmışsa trafik panosuna
 bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
 
+### Profil düzenleme ve ses
+
+Oyuncu hesabındaki **görünen ad ve kullanıcı adı düzenlenebilir**; e-posta adresi değildir. Hesabın
+sahibi olan adresi değiştirmek bir doğrulama akışıdır, profil düzenlemesi değil — bu yüzden e-posta
+yalnızca durumuyla birlikte gösterilir ve doğrulanmamışsa oradan yeni kod istenebilir. Ad değişikliği
+7 günde bir yapılabilir ve kullanıcı adı benzersizliği sunucuda kontrol edilir. Personel de yönetim
+panelinden bir oyuncunun adını düzeltebilir; bu, oyuncunun kendi 7 günlük hakkını harcamaz ve audit
+log'a `USER_PROFILE_EDIT` olarak yazılır.
+
+**Ses:** Bölüm başında ses gelmiyordu. İki sebebi vardı: `AudioContext` askıya alınmış başlıyor ve
+`resume()` eşzamansız, dolayısıyla ilk sesler henüz başlamamış bir saate göre planlanıyordu; ayrıca
+hız sınırlayıcı ses saatini kullanıyordu ve askıdaki bağlamda o saat sıfırda donduğu için **her sesi**
+eliyordu. Ses cihazı artık bölüme girildiği anda ve ilk dokunuş/tuşta açılıyor, hız sınırı ise duvar
+saatiyle çalışıyor. Dört birim test bunu koruyor.
+
 ### Mesajlaşma
 
 Oyuncular **arkadaş oldukları** kişilere mesaj gönderebilir (`/social` ekranında her arkadaşın
@@ -640,6 +655,19 @@ rather than a third-party service. Variable names follow the dashboard's own `AN
 both sides. The `analytics` compose service builds it from a pinned ref, stores events as
 JSON on its own volume and accepts events only from `WEB_URL`. The player app injects the tracker
 **only** when `NEXT_PUBLIC_ANALYZE_URL` is set — otherwise no page carries any tracker at all.
+
+### Profile editing and audio
+
+Display name and username are editable; the email address is not — changing the address that owns an
+account is a verification flow, so it is shown with its state instead. Renames are limited to one per
+week and usernames are checked for uniqueness server-side. Staff can correct a player's name from the
+admin panel without spending that player's weekly change, recorded as `USER_PROFILE_EDIT`.
+
+Audio was silent at the start of a level for two reasons: an `AudioContext` starts suspended and
+`resume()` is asynchronous, so the first sounds were scheduled against a clock that had not started;
+and the rate limiter used that same clock, which stays at zero while suspended, so it rejected every
+sound. The device is now opened on entering a level and on the first input, and rate limiting runs on
+the wall clock. Four unit tests pin the behaviour.
 
 ### Messaging
 

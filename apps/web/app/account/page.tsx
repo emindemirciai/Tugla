@@ -20,10 +20,39 @@ interface DeviceSession {
 export default function AccountPage() {
   const router = useRouter();
   const { t, locale } = useI18n();
-  const { user, loading, signOut } = useSession();
+  const { user, loading, signOut, setUser } = useSession();
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [providers, setProviders] = useState<{ provider: string }[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Seed the form once the profile arrives, and re-seed after a successful save
+  // so the disabled state reflects what the server actually stored.
+  useEffect(() => {
+    if (!user) return;
+    setDisplayName(user.displayName);
+    setUsername(user.username);
+  }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    setMessage(null);
+    try {
+      const updated = await authApi.updateProfile({
+        displayName: displayName.trim(),
+        username: username.trim(),
+      });
+      setUser(updated);
+      setMessage(t('account.profileSaved'));
+    } catch (saveError) {
+      setMessage(saveError instanceof Error ? saveError.message : t('common.unexpectedError'));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
   const [confirmDelete, setConfirmDelete] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -101,11 +130,53 @@ export default function AccountPage() {
 
       <section className="account-section">
         <h2>{t('account.profile')}</h2>
+        {/*
+          Name and handle are editable here; the e-mail address is not. Changing
+          the address that owns an account is a verification flow, not a profile
+          edit — it is shown with its state so an unverified address is obvious.
+        */}
+        <form
+          className="profile-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveProfile();
+          }}
+        >
+          <label className="auth-field">
+            <span>{t('account.displayName')}</span>
+            <input
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              minLength={2}
+              maxLength={40}
+              required
+            />
+          </label>
+          <label className="auth-field">
+            <span>{t('account.username')}</span>
+            <input
+              value={username}
+              onChange={(event) => setUsername(event.target.value.toLowerCase())}
+              minLength={3}
+              maxLength={24}
+              pattern="[a-z0-9][a-z0-9._\-]*[a-z0-9]"
+              required
+            />
+            <small>{t('account.usernameHint')}</small>
+          </label>
+          <button
+            type="submit"
+            className="button button-primary"
+            disabled={
+              savingProfile ||
+              (displayName.trim() === user.displayName && username.trim() === user.username)
+            }
+          >
+            {savingProfile ? t('common.processing') : t('account.saveProfile')}
+          </button>
+        </form>
+
         <dl className="account-facts">
-          <dt>{t('account.displayName')}</dt>
-          <dd>{user.displayName}</dd>
-          <dt>{t('account.username')}</dt>
-          <dd>@{user.username}</dd>
           <dt>{t('account.email')}</dt>
           <dd>
             {user.email}{' '}
@@ -132,6 +203,7 @@ export default function AccountPage() {
             )}
           </dd>
         </dl>
+        <p className="muted">{t('account.emailLocked')}</p>
       </section>
 
       <section className="account-section">

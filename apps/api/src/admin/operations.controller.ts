@@ -13,6 +13,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { type Prisma, UserRole, UserStatus } from '@tugla/database';
 import { pageSchema, userRoles } from '@tugla/shared';
+import { usernameSchema } from '@tugla/shared';
 import { z } from 'zod';
 import { env, providerStatus } from '../config/env';
 import {
@@ -212,6 +213,54 @@ export class AdminOperationsController {
     });
 
     return { id: notification.id, sentAt: notification.createdAt };
+  }
+
+  /**
+   * Staff correction of a player's public name or handle.
+   *
+   * Support needs this for the cases a message cannot solve — an offensive
+   * handle, or a player who simply cannot fix it themselves. The player's
+   * rename cooldown is not touched, because being corrected by staff should not
+   * cost them their own next change.
+   */
+  @Patch('users/:id/profile')
+  @Roles(UserRole.SUPPORT, UserRole.GAME_ADMIN, UserRole.SUPER_ADMIN)
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    const data = z
+      .object({
+        displayName: z.string().trim().min(2).max(40).optional(),
+        username: usernameSchema.optional(),
+      })
+      .refine((value) => value.displayName || value.username, {
+        message: 'Provide a display name or a username',
+      })
+      .parse(body);
+
+    const existing = await this.db.user.findUnique({
+      where: { id },
+      select: { id: true, username: true, displayName: true },
+    });
+    if (!existing) throw new NotFoundException('User not found');
+
+    if (data.username && data.username !== existing.username) {
+      const taken = await this.db.user.findUnique({
+        where: { username: data.username },
+        select: { id: true },
+      });
+      if (taken) throw new BadRequestException('That username is already taken');
+    }
+
+    const user = await this.db.user.update({
+      where: { id },
+      data,
+      select: { id: true, username: true, displayName: true },
+    });
+    await this.audit.fromRequest(request, 'USER_PROFILE_EDIT', 'User', id, existing, user);
+    return user;
   }
 
   @Post('users/:id/unban')

@@ -585,6 +585,45 @@ try {
     );
   }
 
+  console.log('\nProfile editing');
+  const renamed = await call('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: { displayName: 'Smoke Renamed', username: `smoke-${Date.now().toString(36)}` },
+  });
+  check('a player can rename themselves', renamed.status === 200, `status ${renamed.status}`);
+  check('the new display name is returned', renamed.body?.displayName === 'Smoke Renamed');
+
+  const badUsername = await call('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: { username: 'Not Valid!' },
+  });
+  check('an invalid username is refused', badUsername.status === 400);
+
+  const emailChange = await call('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: { email: 'someone-else@example.com' },
+  });
+  const emailAfter = await call('/auth/me', { token });
+  check(
+    'the email address cannot be changed through the profile',
+    emailAfter.body?.email !== 'someone-else@example.com',
+    `status ${emailChange.status}`,
+  );
+
+  const staffRename = await call(`/admin/operations/users/${profile.body?.id}/profile`, {
+    method: 'PATCH',
+    token: adminToken,
+    body: { displayName: 'Staff Corrected' },
+  });
+  check(
+    'staff can correct a player name',
+    staffRename.status === 200,
+    `status ${staffRename.status}`,
+  );
+
   console.log('\nDirect messages');
   const adminProfile = await call('/auth/me', { token: adminToken });
   const strangerMessage = await call('/social/messages', {

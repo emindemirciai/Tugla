@@ -538,18 +538,30 @@ export class AuthService {
 
   async updateProfile(userId: string, input: unknown) {
     const data = updateProfileSchema.parse(input);
-    if (data.displayName) {
+
+    // Renaming is rate limited, not forbidden: a name is how other players
+    // recognise you, and swapping it daily is how impersonation works. The
+    // e-mail address is deliberately absent from this schema — changing the
+    // address that owns an account is a verification flow, not a profile edit.
+    if (data.displayName || data.username) {
       const user = await this.db.user.findUniqueOrThrow({ where: { id: userId } });
       const lastChange = user.lastUsernameChangedAt?.getTime() ?? 0;
       if (Date.now() - lastChange < 7 * 24 * 60 * 60 * 1000 && user.lastUsernameChangedAt) {
-        throw new BadRequestException('Display name can only change once every 7 days');
+        throw new BadRequestException('Your name can only change once every 7 days');
+      }
+      if (data.username && data.username !== user.username) {
+        const taken = await this.db.user.findUnique({
+          where: { username: data.username },
+          select: { id: true },
+        });
+        if (taken) throw new BadRequestException('That username is already taken');
       }
     }
     const user = await this.db.user.update({
       where: { id: userId },
       data: {
         ...data,
-        ...(data.displayName ? { lastUsernameChangedAt: new Date() } : {}),
+        ...(data.displayName || data.username ? { lastUsernameChangedAt: new Date() } : {}),
       },
     });
     return this.publicUser(user);

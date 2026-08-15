@@ -151,6 +151,11 @@ const tr = {
   'account.profile': 'Profil',
   'account.displayName': 'Görünen ad',
   'account.username': 'Kullanıcı adı',
+  'account.usernameHint':
+    'Küçük harf, rakam, nokta, tire ve alt çizgi. Adını 7 günde bir değiştirebilirsin.',
+  'account.saveProfile': 'Profili kaydet',
+  'account.profileSaved': 'Profilin güncellendi.',
+  'account.emailLocked': 'E-posta adresi buradan değiştirilemez; hesabın sahibi olan adres budur.',
   'account.email': 'E-posta',
   'account.verified': 'doğrulandı',
   'account.sendVerification': 'doğrulama bağlantısı gönder',
@@ -548,6 +553,12 @@ const en: Record<TranslationKey, string> = {
   'account.profile': 'Profile',
   'account.displayName': 'Display name',
   'account.username': 'Username',
+  'account.usernameHint':
+    'Lowercase letters, numbers, dot, dash and underscore. You can change your name once every 7 days.',
+  'account.saveProfile': 'Save profile',
+  'account.profileSaved': 'Your profile was updated.',
+  'account.emailLocked':
+    'The email address cannot be changed here; it is the address that owns the account.',
   'account.email': 'Email',
   'account.verified': 'verified',
   'account.sendVerification': 'send verification link',

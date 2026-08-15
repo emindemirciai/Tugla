@@ -172,8 +172,22 @@ export const linkProviderSchema = z.object({
   identityToken: z.string().min(40).max(8192),
 });
 
+/**
+ * Usernames appear in leaderboards, mentions and message logs, so they are
+ * lowercase, unambiguous and never confusable with an id: letters, digits,
+ * dot, dash and underscore only.
+ */
+export const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3)
+  .max(24)
+  .regex(/^[a-z0-9][a-z0-9._-]*[a-z0-9]$/, 'Use letters, numbers, dot, dash or underscore');
+
 export const updateProfileSchema = z.object({
   displayName: z.string().trim().min(2).max(40).optional(),
+  username: usernameSchema.optional(),
   locale: z.enum(['tr', 'en']).optional(),
   searchVisible: z.boolean().optional(),
   marketingConsent: z.boolean().optional(),

@@ -10,11 +10,39 @@ import type { GameEvent } from '@tugla/game-engine';
  * context is created lazily on first use because browsers require a user
  * gesture before audio may start.
  */
+/**
+ * Per-sound rate limit: at most one of each kind every 30ms, so a 500-ball
+ * cascade cannot stack 500 oscillators. Pure and time-injected so it can be
+ * tested without a browser.
+ */
+export const SOUND_INTERVAL_MS = 30;
+
+export const shouldPlay = (last: Map<string, number>, key: string, nowMs: number) => {
+  const previous = last.get(key);
+  if (previous !== undefined && nowMs - previous < SOUND_INTERVAL_MS) return false;
+  last.set(key, nowMs);
+  return true;
+};
+
 export class GameAudio {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private lastPlay = new Map<string, number>();
   enabled = true;
+
+  /**
+   * Opens the audio device on a user gesture.
+   *
+   * A freshly created AudioContext starts suspended, and `resume()` is
+   * asynchronous — so the first sounds of a level were scheduled against a
+   * clock that had not started yet and were lost. Call this from a real
+   * interaction (pointer down, key press) and the device is already running by
+   * the time the ball touches anything.
+   */
+  unlock() {
+    const context = this.ensureContext();
+    if (context && context.state !== 'running') void context.resume();
+  }
 
   private ensureContext() {
     if (typeof window === 'undefined') return null;
@@ -43,10 +71,14 @@ export class GameAudio {
     if (!this.enabled) return;
     const context = this.ensureContext();
     if (!context || !this.master) return;
+
+    // Rate limiting runs on the wall clock, not the audio clock. A suspended
+    // context keeps currentTime at 0, so every sound compared 0 against 0 and
+    // the guard silently swallowed all of them — which is exactly what "no
+    // sound at the start of a level" looked like.
+    if (!shouldPlay(this.lastPlay, key, performance.now())) return;
+
     const now = context.currentTime;
-    const last = this.lastPlay.get(key) ?? 0;
-    if (now - last < 0.03) return;
-    this.lastPlay.set(key, now);
 
     const oscillator = context.createOscillator();
     const gain = context.createGain();

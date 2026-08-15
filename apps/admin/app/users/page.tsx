@@ -103,6 +103,31 @@ export default function UsersPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => {
+                  const displayName = window.prompt(t('users.editNamePrompt'), row.displayName);
+                  if (displayName === null) return;
+                  const username = window.prompt(t('users.editUsernamePrompt'), row.username);
+                  if (username === null) return;
+                  void run(
+                    `/admin/operations/users/${row.id}/profile`,
+                    {
+                      method: 'PATCH',
+                      body: {
+                        displayName: displayName.trim(),
+                        username: username.trim().toLowerCase(),
+                      },
+                    },
+                    t('users.profileSaved'),
+                  );
+                }}
+              >
+                {t('users.editProfile')}
+              </button>
+            )}
+            {row.status !== 'DELETED' && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
                   const title = window.prompt(t('users.messageTitlePrompt'));
                   if (!title?.trim()) return;
                   const body = window.prompt(t('users.messageBodyPrompt'));

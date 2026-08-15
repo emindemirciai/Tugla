@@ -2427,3 +2427,10 @@ textarea:focus {
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+}

@@ -81,8 +81,10 @@ export function AdminShell({ title, children }: { title: string; children: React
           <AdminThemeSwitcher />
         </div>
         <footer>
-          <span title={user.email}>
-            {user.displayName}
+          {/* Name above, role below: as one inline span the two ran together
+              and read as "Emin DEMİRCİSUPER_ADMIN". */}
+          <span className="admin-identity" title={user.email}>
+            <strong>{user.displayName}</strong>
             <small>{user.role}</small>
           </span>
           <button type="button" onClick={() => void signOut().then(() => router.push('/login'))}>

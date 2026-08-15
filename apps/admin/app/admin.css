@@ -969,3 +969,78 @@ button.primary:hover {
     max-height: 40vh;
   }
 }
+
+.admin-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.admin-identity strong {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-identity small {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  color: var(--ink-3);
+}
+
+/* ----- overview: figures that lead somewhere ---------------------------------- */
+.stat-link {
+  text-decoration: none;
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.stat-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand);
+  box-shadow: var(--shadow);
+}
+.stat-icon,
+.section-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+/* A count that needs attention should look different from one that does not. */
+.stat-alert {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+.stat-alert strong {
+  color: #96650a;
+}
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+.section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease;
+}
+.section-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand);
+}
+.section-card strong {
+  font-size: 0.95rem;
+}
