@@ -169,8 +169,14 @@ sunucu gibi doğrulayan testler eklendi.
 
 Her UTC gününde yayınlanmış kampanya bölümlerinden biri **tarihin hash'iyle** seçilir: herkes aynı
 bölümü oynar, hiçbir yerde takvim tutulmaz ve seçim destek için tekrar üretilebilir. `DAILY` modunda
-gönderilen doğrulanmış skorlar `daily:<tarih>` tablosuna yazılır (günün en iyisi), bölüm seçimi ve
-tablo `/play` ekranının en üstünde görünür. Uç nokta herkese açıktır: `GET /api/game/daily`.
+gönderilen doğrulanmış skorlar `daily:<tarih>` tablosuna yazılır (günün en iyisi). Uç nokta herkese
+açıktır: `GET /api/game/daily`.
+
+Oynandığında **yalnızca o bölümün kilidi açılır**: oyuncu ona dönüp tekrar oynayabilir, ama
+kampanyada **bir sonraki bölüm açılmaz** ve bölüm tamamlanmış sayılmaz. Kural sunucuda uygulanır;
+ilerleme yalnızca `CAMPAIGN` modundaki tamamlanmış oturumlara bakar. Bölüm listesinde ✓ kampanyada
+tamamlanmış, ★ günün bölümü olarak oynanmış demektir. Aynı gün tekrar oynamak için onay kutusunu
+işaretlemek gerekir, çünkü bu oyun günlük tabloyu yalnızca daha iyi bir skorda günceller.
 
 ### Açılış sayfası
 
@@ -475,14 +481,6 @@ tek şart telif ve lisans bildirimini korumaktır. Kodun kopyalanmasını istemi
 seçimdir; o durumda tescilli (proprietary) bir lisans metni gerekir. Marka adı, logo ve görseller
 zaten MIT kapsamında değildir.
 
-### Günün bölümü kampanyayı açmaz
-
-Günün bölümü bir kampanya bölümünü yeniden kullanır, ama oynanışı kampanya ilerlemesine **saymaz**:
-kilit sorguları yalnızca `CAMPAIGN` modundaki tamamlanmış oturumları sayar. Böylece her gün bedava
-bir bölüm açılmaz. Aynı günde tekrar oynamak serbesttir; oyuncu önce onay kutusunu işaretleyip
-"tekrar oyna" demek zorundadır, çünkü bu oyun yalnızca daha iyi bir skor yaparsa günlük tabloyu
-günceller.
-
 ### İki dillilik nasıl güvence altında
 
 TR ve EN desteği "yazıldı ve umulur ki çalışıyor" durumunda bırakılmadı; her commit'te testle
@@ -625,13 +623,6 @@ server's verification run uses the identical value. Every level is listed but lo
 previous one is cleared, enforced server-side. Boards are drawn from ten distinct silhouettes spread
 evenly across the campaign, each world has its own palette and each level its own paddle colour.
 
-### Daily challenge
-
-One published campaign level is picked per UTC day from a hash of the date, so everyone plays the
-same level, no schedule is stored anywhere and the pick is reproducible for support. Verified runs
-submitted in `DAILY` mode land on the `daily:<date>` board (best score of the day). Public endpoint:
-`GET /api/game/daily`.
-
 ### Landing page
 
 The header carries only the brand on the left and the language and theme controls on the right. Sign
@@ -668,6 +659,18 @@ Audio was silent at the start of a level for two reasons: an `AudioContext` star
 and the rate limiter used that same clock, which stays at zero while suspended, so it rejected every
 sound. The device is now opened on entering a level and on the first input, and rate limiting runs on
 the wall clock. Four unit tests pin the behaviour.
+
+### Daily challenge
+
+One published campaign level is picked per UTC day from a hash of the date, so everyone plays the
+same level, no schedule is stored anywhere and the pick is reproducible for support. Verified runs in
+`DAILY` mode land on the `daily:<date>` board (best score of the day). Public endpoint:
+`GET /api/game/daily`.
+
+Playing it unlocks **only that level** — the player can return and replay it — but it never opens the
+next one and does not count as completed. The rule is enforced server-side: progression looks at
+completed `CAMPAIGN` sessions only, while a `DAILY` session opens its own level and nothing else. In
+the grid, ✓ means cleared in the campaign and ★ means played as the daily challenge.
 
 ### Messaging
 
@@ -742,12 +745,6 @@ disabled source maps make it harder to read, not impossible, and blocking right-
 nothing while harming usability — so it was not done. MIT also means anyone may copy and reuse the
 code as long as the notice is kept; if that is not the intent, a proprietary licence is the correct
 tool. Brand name, logo and artwork are outside the licence either way.
-
-### The daily challenge never unlocks a level
-
-It reuses a campaign level but does not count towards campaign progress: unlock queries only look at
-completed `CAMPAIGN` sessions. Replaying it the same day is allowed, behind a confirmation with an
-acknowledgement tick, because the run only improves the daily board if it beats the previous score.
 
 ### How bilingual support is guaranteed
 

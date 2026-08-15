@@ -301,7 +301,9 @@ function PlayInner() {
                 type="button"
                 className={`level-card level-${level.type.toLowerCase()} ${
                   level.unlocked === false ? 'level-locked' : ''
-                } ${level.completed ? 'level-cleared' : ''}`}
+                } ${level.completed ? 'level-cleared' : ''} ${
+                  !level.completed && level.playedAsDaily ? 'level-daily' : ''
+                }`}
                 onClick={() => void startLevel(level.id)}
                 disabled={starting !== null || level.unlocked === false}
                 aria-disabled={level.unlocked === false}
@@ -312,10 +314,14 @@ function PlayInner() {
                   <span className="level-lock" aria-hidden>
                     🔒
                   </span>
+                ) : level.completed ? (
+                  <span className="level-check" aria-hidden>
+                    ✓
+                  </span>
                 ) : (
-                  level.completed && (
-                    <span className="level-check" aria-hidden>
-                      ✓
+                  level.playedAsDaily && (
+                    <span className="level-daily-mark" title={t('play.level.dailyPlayed')}>
+                      ★
                     </span>
                   )
                 )}

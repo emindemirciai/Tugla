@@ -682,27 +682,38 @@ try {
     !JSON.stringify(messageEntry?.after ?? {}).includes('naming rules'),
   );
 
-  console.log('\nThe daily challenge does not advance the campaign');
-  const dailyGate = await call('/game/levels?world=1&limit=3', { token });
+  console.log('\nThe daily challenge opens its own level only');
   const dailyLevelId = daily.body?.level?.id;
-  const beforeUnlocked = (dailyGate.body?.items ?? []).map((item) => item.unlocked);
 
   if (dailyLevelId) {
-    // A finished DAILY session is written directly: the point is the unlock
-    // rule, not the physics, and an instant simulation would be refused by the
-    // anti-cheat for good reason.
+    // A finished DAILY session is written directly: the point here is the
+    // unlock rule, not the physics, and an instant simulation would be refused
+    // by the anti-cheat for good reason.
     await call('/game/sessions', {
       method: 'POST',
       token,
       body: { levelId: dailyLevelId, mode: 'DAILY' },
     });
-    const afterDaily = await call('/game/levels?world=1&limit=3', { token });
-    check(
-      'playing the daily level leaves campaign locks untouched',
-      JSON.stringify((afterDaily.body?.items ?? []).map((item) => item.unlocked)) ===
-        JSON.stringify(beforeUnlocked),
-      JSON.stringify((afterDaily.body?.items ?? []).map((item) => item.unlocked)),
-    );
+
+    const daysLevel = await call(`/game/levels?limit=200`, { token });
+    const dailyRow = (daysLevel.body?.items ?? []).find((item) => item.id === dailyLevelId);
+    if (dailyRow) {
+      const nextRow = (daysLevel.body?.items ?? []).find(
+        (item) => item.world === dailyRow.world && item.index === dailyRow.index + 1,
+      );
+      check(
+        'the level played as the daily challenge is not counted as campaign progress',
+        dailyRow.completed === false,
+        `completed=${dailyRow.completed}`,
+      );
+      if (nextRow && dailyRow.index > 1) {
+        check(
+          'the level after the daily one stays locked',
+          nextRow.unlocked === false,
+          `unlocked=${nextRow.unlocked}`,
+        );
+      }
+    }
   }
 
   console.log('\nCommunity levels');

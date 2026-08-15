@@ -89,6 +89,7 @@ const tr = {
   'play.level.locked': 'Kilitli',
   'play.level.lockedHint': 'Önceki bölümü tamamla',
   'play.level.cleared': 'Tamamlandı',
+  'play.level.dailyPlayed': 'Günün bölümü olarak oynandı; bu bölüm açık ama sonraki kilitli',
   'play.level.starting': 'Başlatılıyor…',
   'play.badge.miniBoss': 'MİNİ BOSS',
   'play.badge.worldBoss': 'DÜNYA BOSSU',
@@ -367,7 +368,8 @@ const tr = {
   'daily.player': 'Oyuncu',
   'daily.score': 'Skor',
   'daily.unavailable': 'Günün bölümü şu an hazırlanıyor.',
-  'daily.noUnlock': 'Günün bölümü kampanya ilerlemeni etkilemez; sonraki bölümü açmaz.',
+  'daily.noUnlock':
+    'Günün bölümü yalnızca oynadığın bölümün kilidini açar; kampanyada sonraki bölümü açmaz.',
   'daily.replayTitle': 'Tekrar oynamak istediğine emin misin?',
   'daily.replayBody':
     'Bugün bu bölümü {score} puanla bitirdin. Yeniden oynarsan günlük tablodaki skorun yalnızca daha iyisini yaparsan güncellenir.',
@@ -492,6 +494,8 @@ const en: Record<TranslationKey, string> = {
   'play.level.locked': 'Locked',
   'play.level.lockedHint': 'Finish the previous level',
   'play.level.cleared': 'Cleared',
+  'play.level.dailyPlayed':
+    'Played as the daily challenge: this level is open, the next one is not',
   'play.level.starting': 'Starting…',
   'play.badge.miniBoss': 'MINI BOSS',
   'play.badge.worldBoss': 'WORLD BOSS',
@@ -761,7 +765,7 @@ const en: Record<TranslationKey, string> = {
   'daily.score': 'Score',
   'daily.unavailable': 'The daily level is being prepared.',
   'daily.noUnlock':
-    'The daily challenge does not affect campaign progress; it never unlocks the next level.',
+    'The daily challenge unlocks only the level you played; it never opens the next one.',
   'daily.replayTitle': 'Play it again?',
   'daily.replayBody':
     'You finished today with {score} points. Replaying only updates your daily score if you beat it.',

@@ -93,15 +93,19 @@ export class GameService {
         select: { id: true },
       });
       if (previous) {
-        const cleared = await this.db.gameSession.count({
-          where: {
-            userId,
-            status: 'COMPLETED',
-            mode: 'CAMPAIGN',
-            levelId: { in: [previous.id, level.id] },
-          },
-        });
-        if (!cleared) throw new BadRequestException('Finish the previous level first');
+        const [advanced, replayable] = await Promise.all([
+          // The previous level cleared in the campaign opens this one.
+          this.db.gameSession.count({
+            where: { userId, status: 'COMPLETED', mode: 'CAMPAIGN', levelId: previous.id },
+          }),
+          // This level already cleared — in either mode — stays open for replay.
+          this.db.gameSession.count({
+            where: { userId, status: 'COMPLETED', levelId: level.id },
+          }),
+        ]);
+        if (!advanced && !replayable) {
+          throw new BadRequestException('Finish the previous level first');
+        }
       }
     }
 
@@ -789,25 +793,31 @@ export class GameController {
     // including across world boundaries (level indexes run 1..500). The check
     // runs server-side; hiding a button in the client would not be a rule.
     const userId = request.user?.sub;
-    const completed = userId
-      ? new Set(
-          (
-            await this.database.client.gameSession.findMany({
-              where: {
-                userId,
-                status: 'COMPLETED',
-                // Only campaign runs advance the campaign. The daily challenge
-                // reuses a campaign level, so counting it would hand players a
-                // free unlock every day.
-                mode: 'CAMPAIGN',
-                levelId: { in: levels.map((level) => level.id) },
-              },
-              select: { levelId: true },
-              distinct: ['levelId'],
-            })
-          ).map((session) => session.levelId),
-        )
-      : new Set<string>();
+    // Typed explicitly rather than inferred: the shape is fixed by the select
+    // above, and stating it keeps this readable without chasing generated types.
+    const sessions: { levelId: string; mode: string }[] = userId
+      ? await this.database.client.gameSession.findMany({
+          where: {
+            userId,
+            status: 'COMPLETED',
+            levelId: { in: levels.map((level) => level.id) },
+          },
+          select: { levelId: true, mode: true },
+        })
+      : [];
+
+    // Two different meanings, deliberately kept apart:
+    //  - a campaign clear advances the campaign and opens the next level;
+    //  - a daily clear opens only the level it was played on. The daily
+    //    challenge reuses a campaign level, so counting it as progression would
+    //    hand out a free unlock every day — but pretending the player never
+    //    played it is equally wrong, and the level stayed locked behind them.
+    const completed = new Set(
+      sessions.filter((session) => session.mode === 'CAMPAIGN').map((session) => session.levelId),
+    );
+    const playedAsDaily = new Set(
+      sessions.filter((session) => session.mode === 'DAILY').map((session) => session.levelId),
+    );
 
     // A level is also open when the previous index was completed, which needs
     // the neighbour even if it fell outside this page.
@@ -848,8 +858,14 @@ export class GameController {
       const unlocked =
         level.index === 1 ||
         completed.has(level.id) ||
+        playedAsDaily.has(level.id) ||
         (previousId ? completedPrevious.has(previousId) : false);
-      return { ...level, unlocked, completed: completed.has(level.id) };
+      return {
+        ...level,
+        unlocked,
+        completed: completed.has(level.id),
+        playedAsDaily: playedAsDaily.has(level.id),
+      };
     });
 
     return { items, nextCursor: levels.at(-1)?.id ?? null };

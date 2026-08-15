@@ -224,6 +224,8 @@ export interface LevelSummary {
   /** Server-side progression gate; a locked level cannot be started. */
   unlocked?: boolean;
   completed?: boolean;
+  /** Cleared as the daily challenge: open for replay, but not progression. */
+  playedAsDaily?: boolean;
   id: string;
   slug: string;
   name: string;
