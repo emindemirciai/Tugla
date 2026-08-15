@@ -228,18 +228,29 @@ bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
 
 ### Profil düzenleme ve ses
 
-Oyuncu hesabındaki **görünen ad ve kullanıcı adı düzenlenebilir**; e-posta adresi değildir. Hesabın
+Hesap ekranı alan alan etiketli bir formdur: görünen ad, kullanıcı adı, e-posta ve parola. **Görünen
+ad ve kullanıcı adı düzenlenebilir**; e-posta adresi değildir. Hesabın
 sahibi olan adresi değiştirmek bir doğrulama akışıdır, profil düzenlemesi değil — bu yüzden e-posta
 yalnızca durumuyla birlikte gösterilir ve doğrulanmamışsa oradan yeni kod istenebilir. Ad değişikliği
 7 günde bir yapılabilir ve kullanıcı adı benzersizliği sunucuda kontrol edilir. Personel de yönetim
 panelinden bir oyuncunun adını düzeltebilir; bu, oyuncunun kendi 7 günlük hakkını harcamaz ve audit
 log'a `USER_PROFILE_EDIT` olarak yazılır.
 
+Parola aynı ekrandan değiştirilir. Kaydedildiğinde diğer tüm cihazlardaki oturumlar sunucu tarafında
+kapatılır ve bu, düğmenin altında yazılıdır — oyuncunun bunu telefonunda fark etmesi kötü bir sürpriz
+olurdu.
+
 **Ses:** Bölüm başında ses gelmiyordu. İki sebebi vardı: `AudioContext` askıya alınmış başlıyor ve
 `resume()` eşzamansız, dolayısıyla ilk sesler henüz başlamamış bir saate göre planlanıyordu; ayrıca
 hız sınırlayıcı ses saatini kullanıyordu ve askıdaki bağlamda o saat sıfırda donduğu için **her sesi**
 eliyordu. Ses cihazı artık bölüme girildiği anda ve ilk dokunuş/tuşta açılıyor, hız sınırı ise duvar
 saatiyle çalışıyor. Dört birim test bunu koruyor.
+
+### Yönetim panelinde gezinme
+
+Kenar çubuğundaki her bağlantı, genel bakıştaki kartıyla **aynı simgeyi** taşır: iki ekran tek bir
+görsel sözlük öğretir, iki ayrı değil. Sağ üstteki ortam rozeti kaldırıldı — personelin zaten bildiği
+bir şeyi her ekranın köşesinden tekrar etmenin değeri yoktu.
 
 ### Mesajlaşma
 
@@ -649,7 +660,8 @@ JSON on its own volume and accepts events only from `WEB_URL`. The player app in
 
 ### Profile editing and audio
 
-Display name and username are editable; the email address is not — changing the address that owns an
+The account screen is a labelled form: display name, username, email and password. Display name and
+username are editable; the email address is not — changing the address that owns an
 account is a verification flow, so it is shown with its state instead. Renames are limited to one per
 week and usernames are checked for uniqueness server-side. Staff can correct a player's name from the
 admin panel without spending that player's weekly change, recorded as `USER_PROFILE_EDIT`.
@@ -671,6 +683,12 @@ Playing it unlocks **only that level** — the player can return and replay it �
 next one and does not count as completed. The rule is enforced server-side: progression looks at
 completed `CAMPAIGN` sessions only, while a `DAILY` session opens its own level and nothing else. In
 the grid, ✓ means cleared in the campaign and ★ means played as the daily challenge.
+
+### Admin navigation
+
+Every sidebar link carries the same icon as its card on the overview, so the two screens teach one
+visual vocabulary rather than two. The environment badge in the corner is gone: it repeated something
+staff already knew, on every screen.
 
 ### Messaging
 

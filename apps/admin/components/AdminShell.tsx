@@ -9,38 +9,47 @@ import { AdminThemeSwitcher } from './AdminThemeSwitcher';
 import { t } from '../lib/i18n';
 
 const NAV = [
-  { href: '/', label: t('nav.overview'), roles: null },
+  { href: '/', icon: '🏠', label: t('nav.overview'), roles: null },
   {
     href: '/levels',
+    icon: '🧱',
     label: t('nav.levels'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
-  { href: '/users', label: t('nav.users'), roles: null },
-  { href: '/moderation', label: t('nav.moderation'), roles: null },
-  { href: '/support', label: t('nav.support'), roles: null },
-  { href: '/tasks', label: t('nav.tasks'), roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'] },
+  { href: '/users', icon: '👥', label: t('nav.users'), roles: null },
+  { href: '/moderation', icon: '🚩', label: t('nav.moderation'), roles: null },
+  { href: '/support', icon: '✉️', label: t('nav.support'), roles: null },
+  {
+    href: '/tasks',
+    icon: '🎯',
+    label: t('nav.tasks'),
+    roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
+  },
   {
     href: '/achievements',
+    icon: '🏆',
     label: t('nav.achievements'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
   {
     href: '/economy',
+    icon: '🛒',
     label: t('nav.economy'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
-  { href: '/leagues', label: t('nav.leagues'), roles: null },
-  { href: '/seasons', label: t('nav.seasons'), roles: ['GAME_ADMIN', 'SUPER_ADMIN'] },
+  { href: '/leagues', icon: '📊', label: t('nav.leagues'), roles: null },
+  { href: '/seasons', icon: '🗓️', label: t('nav.seasons'), roles: ['GAME_ADMIN', 'SUPER_ADMIN'] },
   {
     href: '/announcements',
+    icon: '📣',
     label: t('nav.announcements'),
     roles: ['CONTENT_EDITOR', 'GAME_ADMIN', 'SUPER_ADMIN'],
   },
-  { href: '/flags', label: t('nav.flags'), roles: null },
-  { href: '/analytics', label: t('nav.analytics'), roles: null },
-  { href: '/messages', label: t('nav.messages'), roles: null },
-  { href: '/audit', label: t('nav.audit'), roles: null },
-  { href: '/system', label: t('nav.system'), roles: null },
+  { href: '/flags', icon: '🎛️', label: t('nav.flags'), roles: null },
+  { href: '/analytics', icon: '📈', label: t('nav.analytics'), roles: null },
+  { href: '/messages', icon: '💬', label: t('nav.messages'), roles: null },
+  { href: '/audit', icon: '📜', label: t('nav.audit'), roles: null },
+  { href: '/system', icon: '🩺', label: t('nav.system'), roles: null },
 ] as const;
 
 /** Panel chrome: every sidebar entry is a real route with a real page. */
@@ -72,6 +81,11 @@ export function AdminShell({ title, children }: { title: string; children: React
               href={item.href}
               className={pathname === item.href ? 'active' : ''}
             >
+              {/* Same icon as the overview card for this destination: the two
+                  screens should teach one vocabulary, not two. */}
+              <span className="nav-icon" aria-hidden>
+                {item.icon}
+              </span>
               {item.label}
             </Link>
           ))}
@@ -95,7 +109,6 @@ export function AdminShell({ title, children }: { title: string; children: React
       <main className="admin-main">
         <header className="admin-header">
           <h1>{title}</h1>
-          <span className="admin-env">{process.env.NEXT_PUBLIC_ENVIRONMENT ?? 'development'}</span>
         </header>
         <div className="admin-content">{children}</div>
       </main>

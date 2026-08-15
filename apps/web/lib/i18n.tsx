@@ -152,6 +152,8 @@ const tr = {
   'account.profile': 'Profil',
   'account.displayName': 'Görünen ad',
   'account.username': 'Kullanıcı adı',
+  'account.displayNameHint': 'Diğer oyuncuların gördüğü ad. 7 günde bir değiştirilebilir.',
+  'account.notVerified': 'Doğrulanmadı',
   'account.usernameHint':
     'Küçük harf, rakam, nokta, tire ve alt çizgi. Adını 7 günde bir değiştirebilirsin.',
   'account.saveProfile': 'Profili kaydet',
@@ -162,6 +164,13 @@ const tr = {
   'account.sendVerification': 'doğrulama bağlantısı gönder',
   'account.verificationSent': 'Doğrulama e-postası gönderildi.',
   'account.verificationUnavailable': 'E-posta servisi yapılandırılmadığı için gönderilemedi.',
+  'account.password': 'Parola',
+  'account.currentPassword': 'Mevcut parola',
+  'account.newPassword': 'Yeni parola',
+  'account.newPasswordHint':
+    'En az 10 karakter. Kaydettiğinde diğer tüm cihazlardaki oturumlar kapanır.',
+  'account.savePassword': 'Parolayı güncelle',
+  'account.passwordChanged': 'Parolan güncellendi ve diğer cihazlardaki oturumlar kapatıldı.',
   'account.providers': 'Bağlı sağlayıcılar',
   'account.providersNone': 'Yalnızca e-posta + parola.',
   'account.providersNote':
@@ -557,6 +566,8 @@ const en: Record<TranslationKey, string> = {
   'account.profile': 'Profile',
   'account.displayName': 'Display name',
   'account.username': 'Username',
+  'account.displayNameHint': 'The name other players see. Can be changed once every 7 days.',
+  'account.notVerified': 'Not verified',
   'account.usernameHint':
     'Lowercase letters, numbers, dot, dash and underscore. You can change your name once every 7 days.',
   'account.saveProfile': 'Save profile',
@@ -568,6 +579,12 @@ const en: Record<TranslationKey, string> = {
   'account.sendVerification': 'send verification link',
   'account.verificationSent': 'Verification email sent.',
   'account.verificationUnavailable': 'Could not send: the email service is not configured.',
+  'account.password': 'Password',
+  'account.currentPassword': 'Current password',
+  'account.newPassword': 'New password',
+  'account.newPasswordHint': 'At least 10 characters. Saving signs you out on every other device.',
+  'account.savePassword': 'Update password',
+  'account.passwordChanged': 'Your password was updated and other devices were signed out.',
   'account.providers': 'Linked providers',
   'account.providersNone': 'Email + password only.',
   'account.providersNote':

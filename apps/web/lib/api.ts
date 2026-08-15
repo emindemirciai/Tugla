@@ -200,6 +200,11 @@ export const authApi = {
   },
   updateProfile: (input: Record<string, unknown>) =>
     api<PublicUser>('/auth/me', { method: 'PATCH', body: input }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api<{ changed: boolean }>('/auth/password/change', {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+    }),
   sessions: () => api<{ items: Record<string, unknown>[] }>('/auth/sessions'),
   revokeSession: (id: string) => api(`/auth/sessions/${id}`, { method: 'DELETE' }),
   exportData: () => api<Record<string, unknown>>('/auth/export'),

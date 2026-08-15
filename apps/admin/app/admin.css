@@ -1044,3 +1044,17 @@ button.primary:hover {
 .section-card strong {
   font-size: 0.95rem;
 }
+
+/* Sidebar icons: fixed width so the labels line up in a column. */
+.admin-sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.nav-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}

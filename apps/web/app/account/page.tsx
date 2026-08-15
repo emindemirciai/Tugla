@@ -27,6 +27,28 @@ export default function AccountPage() {
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  const changePassword = async () => {
+    setSavingPassword(true);
+    setMessage(null);
+    try {
+      await authApi.changePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      // Every other device is signed out server-side; say so rather than
+      // letting the player discover it on their phone later.
+      setMessage(t('account.passwordChanged'));
+    } catch (passwordError) {
+      setMessage(
+        passwordError instanceof Error ? passwordError.message : t('common.unexpectedError'),
+      );
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
   // Seed the form once the profile arrives, and re-seed after a successful save
   // so the disabled state reflects what the server actually stored.
@@ -142,8 +164,10 @@ export default function AccountPage() {
             void saveProfile();
           }}
         >
-          <label className="auth-field">
-            <span>{t('account.displayName')}</span>
+          <label className="profile-field">
+            <span className="profile-label">
+              <span aria-hidden>👤</span> {t('account.displayName')}
+            </span>
             <input
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
@@ -151,9 +175,13 @@ export default function AccountPage() {
               maxLength={40}
               required
             />
+            <small className="profile-hint">{t('account.displayNameHint')}</small>
           </label>
-          <label className="auth-field">
-            <span>{t('account.username')}</span>
+
+          <label className="profile-field">
+            <span className="profile-label">
+              <span aria-hidden>@</span> {t('account.username')}
+            </span>
             <input
               value={username}
               onChange={(event) => setUsername(event.target.value.toLowerCase())}
@@ -162,11 +190,53 @@ export default function AccountPage() {
               pattern="[a-z0-9][a-z0-9._\-]*[a-z0-9]"
               required
             />
-            <small>{t('account.usernameHint')}</small>
+            <small className="profile-hint">{t('account.usernameHint')}</small>
           </label>
+
+          {/*
+            The address is shown, never edited. Changing the address that owns an
+            account is a verification flow, and a field that looks editable but
+            silently is not would be worse than a locked one that says why.
+          */}
+          <div className="profile-field">
+            <span className="profile-label">
+              <span aria-hidden>✉️</span> {t('account.email')}
+            </span>
+            <input value={user.email} readOnly disabled aria-describedby="email-locked" />
+            <small className="profile-hint profile-locked" id="email-locked">
+              <span aria-hidden>🔒</span> {t('account.emailLocked')}
+            </small>
+            <div className="profile-email-state">
+              {user.emailVerified ? (
+                <span className="tag tag-ok">{t('account.verified')}</span>
+              ) : (
+                <>
+                  <span className="tag tag-review">{t('account.notVerified')}</span>
+                  <button
+                    type="button"
+                    className="button-quiet"
+                    onClick={() =>
+                      void authApi
+                        .requestVerification(user.email)
+                        .then((result) =>
+                          setMessage(
+                            result.sent
+                              ? t('account.verificationSent')
+                              : t('account.verificationUnavailable'),
+                          ),
+                        )
+                    }
+                  >
+                    {t('account.sendVerification')}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
           <button
             type="submit"
-            className="button button-primary"
+            className="button button-primary profile-save"
             disabled={
               savingProfile ||
               (displayName.trim() === user.displayName && username.trim() === user.username)
@@ -175,35 +245,51 @@ export default function AccountPage() {
             {savingProfile ? t('common.processing') : t('account.saveProfile')}
           </button>
         </form>
+      </section>
 
-        <dl className="account-facts">
-          <dt>{t('account.email')}</dt>
-          <dd>
-            {user.email}{' '}
-            {user.emailVerified ? (
-              <span className="tag tag-ok">{t('account.verified')}</span>
-            ) : (
-              <button
-                type="button"
-                className="button-quiet"
-                onClick={() =>
-                  void authApi
-                    .requestVerification(user.email)
-                    .then((result) =>
-                      setMessage(
-                        result.sent
-                          ? t('account.verificationSent')
-                          : t('account.verificationUnavailable'),
-                      ),
-                    )
-                }
-              >
-                {t('account.sendVerification')}
-              </button>
-            )}
-          </dd>
-        </dl>
-        <p className="muted">{t('account.emailLocked')}</p>
+      <section className="account-section">
+        <h2>{t('account.password')}</h2>
+        <form
+          className="profile-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void changePassword();
+          }}
+        >
+          <label className="profile-field">
+            <span className="profile-label">
+              <span aria-hidden>🔒</span> {t('account.currentPassword')}
+            </span>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <label className="profile-field">
+            <span className="profile-label">
+              <span aria-hidden>🔑</span> {t('account.newPassword')}
+            </span>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={10}
+              required
+            />
+            <small className="profile-hint">{t('account.newPasswordHint')}</small>
+          </label>
+          <button
+            type="submit"
+            className="button button-primary profile-save"
+            disabled={savingPassword || !currentPassword || newPassword.length < 10}
+          >
+            {savingPassword ? t('common.processing') : t('account.savePassword')}
+          </button>
+        </form>
       </section>
 
       <section className="account-section">
