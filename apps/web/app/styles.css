@@ -2542,3 +2542,17 @@ textarea:focus {
   opacity: 0;
   pointer-events: none;
 }
+
+/* Name beside a face, aligned on the text baseline rather than the image. */
+.identity-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.avatar-inline {
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}

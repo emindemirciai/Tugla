@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { GameCanvas, type CompletionSummary } from '../../components/GameCanvas';
+import { Avatar } from '../../components/Avatar';
 import { HubTabs } from '../../components/PlayerNav';
 import { gameApi, type LevelSummary, type SessionStart } from '../../lib/api';
 import { cacheLevel, flushOfflineRuns, pendingOfflineRuns } from '../../lib/offline';
@@ -244,8 +245,13 @@ function PlayInner() {
                   <tr key={row.user.id}>
                     <td>{index + 1}</td>
                     <td>
-                      {row.user.displayName}
-                      <span className="muted"> @{row.user.username}</span>
+                      <span className="identity-row">
+                        <Avatar user={row.user} size={24} />
+                        <span>
+                          {row.user.displayName}
+                          <span className="muted"> @{row.user.username}</span>
+                        </span>
+                      </span>
                     </td>
                     <td>{row.score.toLocaleString(locale)}</td>
                   </tr>

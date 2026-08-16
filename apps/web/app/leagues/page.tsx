@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { HubStatus, PlayerShell } from '../../components/PlayerNav';
 import { progressionApi, socialApi } from '../../lib/api';
 import { useRequirePlayer } from '../../lib/guard';
+import { Avatar } from '../../components/Avatar';
 import { useI18n } from '../../lib/i18n';
 
 type League = Awaited<ReturnType<typeof progressionApi.league>>;
@@ -90,9 +91,14 @@ export default function LeaguesPage() {
                 <tr key={row.userId} className={row.isSelf ? 'self-row' : ''}>
                   <td>{row.rank}</td>
                   <td>
-                    {row.displayName}
-                    <span className="muted"> @{row.username}</span>
-                    {row.isSelf && <span className="tag tag-ok"> {t('leagues.you')}</span>}
+                    <span className="identity-row">
+                      <Avatar user={row} size={26} />
+                      <span>
+                        {row.displayName}
+                        <span className="muted"> @{row.username}</span>
+                        {row.isSelf && <span className="tag tag-ok"> {t('leagues.you')}</span>}
+                      </span>
+                    </span>
                   </td>
                   <td>{row.score.toLocaleString(locale)}</td>
                 </tr>
@@ -119,8 +125,13 @@ export default function LeaguesPage() {
               <tr key={row.user.id}>
                 <td>{index + 1}</td>
                 <td>
-                  {row.user.displayName}
-                  <span className="muted"> @{row.user.username}</span>
+                  <span className="identity-row">
+                    <Avatar user={row.user} size={26} />
+                    <span>
+                      {row.user.displayName}
+                      <span className="muted"> @{row.user.username}</span>
+                    </span>
+                  </span>
                 </td>
                 <td>{row.score.toLocaleString(locale)}</td>
               </tr>

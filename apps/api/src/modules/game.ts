@@ -365,7 +365,15 @@ export class GameService {
         gameSession: {
           include: {
             level: { select: { id: true, name: true, definition: true } },
-            user: { select: { id: true, username: true, displayName: true } },
+            user: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatarUrl: true,
+                providerAvatarUrl: true,
+              },
+            },
           },
         },
       },
@@ -494,7 +502,15 @@ export class CommunityService {
         difficulty: true,
         estimatedSeconds: true,
         publishedAt: true,
-        author: { select: { id: true, username: true, displayName: true } },
+        author: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            providerAvatarUrl: true,
+          },
+        },
         ratings: { select: { liked: true, userId: true } },
       },
     });
@@ -717,7 +733,15 @@ export class DailyChallengeService {
       take: 20,
       select: {
         score: true,
-        user: { select: { id: true, username: true, displayName: true } },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            providerAvatarUrl: true,
+          },
+        },
       },
     });
 

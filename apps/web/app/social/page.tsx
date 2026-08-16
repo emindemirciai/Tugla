@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { HubStatus, PlayerShell } from '../../components/PlayerNav';
 import { socialApi } from '../../lib/api';
 import { useRequirePlayer } from '../../lib/guard';
+import { Avatar } from '../../components/Avatar';
 import { useI18n } from '../../lib/i18n';
 
 interface FriendRow {
@@ -160,9 +161,12 @@ export default function SocialPage() {
             return (
               <li key={friendship.id} className="card">
                 <div className="card-foot">
-                  <div>
-                    <strong>{other.displayName}</strong>
-                    <span className="muted"> @{other.username}</span>
+                  <div className="identity-row">
+                    <Avatar user={other} />
+                    <span>
+                      <strong>{other.displayName}</strong>
+                      <span className="muted"> @{other.username}</span>
+                    </span>
                   </div>
                   <div className="card-actions">
                     <span className="tag tag-ok">{friendship.status}</span>

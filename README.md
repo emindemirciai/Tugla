@@ -238,6 +238,10 @@ Nesne depolama yapılandırılmışsa görsel kovaya yazılır; değilse kendi t
 üzerinden servis edilir. Her iki durumda da `avatarUrl` bir URL taşır, bu yüzden akışın geri kalanı
 aynı kalır.
 
+Fotoğraf yalnızca hesap ekranında değil, göründüğü her yerde: oyuncu başlığında, arkadaş listesinde,
+arama sonuçlarında, lig tablolarında ve günün bölümü sıralamasında. Fotoğrafı olmayan oyuncu için baş
+harfi gösterilir — yirmi satırlık bir listede yirmi özdeş siluet hiçbir bilgi taşımaz.
+
 Kullanıcı modelinde iki alan var ve bu bilinçli: `providerAvatarUrl` sağlayıcının (Google) verdiği
 fotoğraf, `avatarUrl` ise oyuncunun yüklediği. Google ile her girişte **yalnızca sağlayıcı alanı**
 tazelenir; oyuncunun kendi seçimi asla üzerine yazılmaz — aksi hâlde her giriş, kişinin bilinçli
@@ -697,6 +701,10 @@ a safeguard — the server re-validates everything (declared type against the fi
 plus a hard 2 MB ceiling), because nothing a client claims can be trusted. With object storage
 configured the image goes to the bucket; otherwise it is kept in its own table and served through the
 API, and either way `avatarUrl` ends up holding a URL.
+
+The picture appears wherever a player does: the hub header, friend lists, search results, league
+tables and the daily board. Players without one get their initial rather than a silhouette, because
+twenty identical placeholders carry no information.
 
 Two columns, deliberately: `providerAvatarUrl` is what Google supplied and `avatarUrl` is what the
 player uploaded. Signing in refreshes **only the provider column**, so a player's own picture is never

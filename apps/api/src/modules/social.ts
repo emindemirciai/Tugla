@@ -214,8 +214,24 @@ export class SocialController {
         OR: [{ requesterId: request.user.sub }, { addresseeId: request.user.sub }],
       },
       include: {
-        requester: { select: { id: true, username: true, displayName: true } },
-        addressee: { select: { id: true, username: true, displayName: true } },
+        requester: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            providerAvatarUrl: true,
+          },
+        },
+        addressee: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            providerAvatarUrl: true,
+          },
+        },
       },
     });
     return { items };
@@ -229,7 +245,15 @@ export class SocialController {
       orderBy: { score: 'desc' },
       take: page.limit,
       include: {
-        user: { select: { id: true, username: true, displayName: true } },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            providerAvatarUrl: true,
+          },
+        },
       },
     });
     return { items };

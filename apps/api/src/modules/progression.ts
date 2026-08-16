@@ -673,7 +673,17 @@ export class ProgressionController {
         league: true,
         members: {
           orderBy: { score: 'desc' },
-          include: { user: { select: { id: true, username: true, displayName: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatarUrl: true,
+                providerAvatarUrl: true,
+              },
+            },
+          },
         },
       },
     });

@@ -1,5 +1,6 @@
 'use client';
 
+import { Avatar } from './Avatar';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -58,7 +59,10 @@ export function PlayerShell({ title, children }: { title: string; children: Reac
         </Link>
         <nav className="nav-links">
           <LanguageSwitcher compact />
-          <Link href="/account">{user?.displayName ?? t('hub.account')}</Link>
+          <Link href="/account" className="identity-row">
+            {user && <Avatar user={user} size={26} />}
+            {user?.displayName ?? t('hub.account')}
+          </Link>
           <button
             type="button"
             className="button-quiet"

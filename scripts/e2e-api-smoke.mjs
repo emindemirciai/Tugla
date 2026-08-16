@@ -666,6 +666,17 @@ try {
     `status ${staffRename.status}`,
   );
 
+  console.log('\nAvatars travel with public profiles');
+  const searchWithAvatar = await call(`/social/search?query=${encodeURIComponent('smoke')}`, {
+    token,
+  });
+  const searchRow = (searchWithAvatar.body?.items ?? [])[0];
+  check(
+    'player search carries the avatar fields',
+    searchRow === undefined || ('avatarUrl' in searchRow && 'providerAvatarUrl' in searchRow),
+    JSON.stringify(searchRow ?? {}).slice(0, 120),
+  );
+
   console.log('\nDirect messages');
   const adminProfile = await call('/auth/me', { token: adminToken });
   const strangerMessage = await call('/social/messages', {
