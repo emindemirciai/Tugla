@@ -117,6 +117,7 @@ model User {
   // undo the player's own picture.
   avatarUrl             String?
   providerAvatarUrl     String?
+  avatarImage           AvatarImage?
   riskScore             Int                  @default(0)
   bannedUntil           DateTime?
   banReason             String?
@@ -518,6 +519,21 @@ model Purchase {
   updatedAt     DateTime    @updatedAt
   user          User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   item          CatalogItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+}
+
+/**
+ * Avatar bytes for deployments without object storage.
+ *
+ * Kept in its own table rather than a column on User: the image is large,
+ * rarely read and never needed by the queries that load a player, so putting it
+ * beside them would drag it into every session lookup.
+ */
+model AvatarImage {
+  userId    String   @id
+  mimeType  String
+  bytes     Bytes
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {

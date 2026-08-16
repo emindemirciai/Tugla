@@ -1,5 +1,16 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Injectable,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+  StreamableFile,
+} from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
-import { Body, Controller, Get, Injectable, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { type Prisma } from '@tugla/database';
@@ -107,6 +118,26 @@ export class PlatformController {
 
   private get db() {
     return this.database.client;
+  }
+
+  /**
+   * Serves an avatar stored in the database.
+   *
+   * Public and cacheable: an avatar is shown next to a player's name on
+   * leaderboards and in messages, so requiring a token would mean every list
+   * needed one round trip per row.
+   */
+  @Public()
+  @Get('users/:id/avatar')
+  async avatar(@Param('id') id: string, @Res({ passthrough: true }) response: Response) {
+    const image = await this.db.avatarImage.findUnique({ where: { userId: id } });
+    if (!image) {
+      response.status(404);
+      return { error: 'No avatar' };
+    }
+    response.setHeader('Content-Type', image.mimeType);
+    response.setHeader('Cache-Control', 'public, max-age=300');
+    return new StreamableFile(Buffer.from(image.bytes));
   }
 
   @Public()

@@ -586,26 +586,47 @@ try {
   }
 
   console.log('\nProfile editing');
-  const avatarSet = await call('/auth/me', {
-    method: 'PATCH',
-    token,
-    body: { avatarUrl: 'https://example.com/avatar.png' },
-  });
-  check(
-    'a player can set their own picture',
-    avatarSet.body?.avatarUrl === 'https://example.com/avatar.png',
-  );
-  check('the picture is marked as the player’s own', avatarSet.body?.ownAvatar === true);
+  // A one pixel PNG, the smallest thing that still has valid magic bytes.
+  const tinyPng =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-  const avatarCleared = await call('/auth/me', { method: 'PATCH', token, body: { avatarUrl: '' } });
-  check('clearing falls back to the provider picture', avatarCleared.body?.ownAvatar === false);
-
-  const badAvatar = await call('/auth/me', {
-    method: 'PATCH',
+  const avatarSet = await call('/auth/me/avatar', {
+    method: 'POST',
     token,
-    body: { avatarUrl: 'not-a-url' },
+    body: { data: tinyPng },
   });
-  check('an invalid picture URL is refused', badAvatar.status === 400);
+  check('a player can upload a picture', avatarSet.status < 300, `status ${avatarSet.status}`);
+  check('the upload is marked as the player’s own', avatarSet.body?.ownAvatar === true);
+  check('an avatar URL is returned', Boolean(avatarSet.body?.avatarUrl));
+
+  if (avatarSet.body?.avatarUrl?.startsWith('/api/users/')) {
+    const served = await fetch(`${BASE.replace(/\/api$/, '')}${avatarSet.body.avatarUrl}`);
+    check('the stored picture is served back', served.status === 200, `status ${served.status}`);
+    check(
+      'it is served as an image',
+      (served.headers.get('content-type') ?? '').startsWith('image/'),
+    );
+  }
+
+  const lyingType = await call('/auth/me/avatar', {
+    method: 'POST',
+    token,
+    // Declares PNG, contains text: the magic-byte check must catch it.
+    body: {
+      data: `data:image/png;base64,${Buffer.from('this is not a png at all').toString('base64')}`,
+    },
+  });
+  check('a file that lies about its type is refused', lyingType.status === 400);
+
+  const notAnImage = await call('/auth/me/avatar', {
+    method: 'POST',
+    token,
+    body: { data: 'https://example.com/avatar.png' },
+  });
+  check('a plain URL is not accepted as an upload', notAnImage.status === 400);
+
+  const removedAvatar = await call('/auth/me/avatar', { method: 'DELETE', token });
+  check('removing falls back to the provider picture', removedAvatar.body?.ownAvatar === false);
 
   const renamed = await call('/auth/me', {
     method: 'PATCH',

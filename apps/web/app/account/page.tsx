@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { describeAvatarError, prepareAvatar } from '../../lib/avatar';
 import { authApi } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { ThemeSwitcher } from '../../components/ThemeSwitcher';
@@ -27,6 +28,42 @@ export default function AccountPage() {
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const uploadAvatar = async (file: File) => {
+    const problem = describeAvatarError(file);
+    if (problem) {
+      setMessage(t(problem === 'type' ? 'account.avatarBadType' : 'account.avatarTooLarge'));
+      return;
+    }
+    setUploading(true);
+    setMessage(null);
+    try {
+      const prepared = await prepareAvatar(file);
+      const updated = await authApi.uploadAvatar(prepared.dataUrl);
+      setUser(updated);
+      setAvatarUrl(updated.avatarUrl ?? '');
+      setMessage(t('account.avatarSaved'));
+    } catch (uploadError) {
+      setMessage(uploadError instanceof Error ? uploadError.message : t('common.unexpectedError'));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    setUploading(true);
+    try {
+      const updated = await authApi.removeAvatar();
+      setUser(updated);
+      setAvatarUrl(updated.avatarUrl ?? '');
+      setMessage(t('account.avatarRemoved'));
+    } catch (removeError) {
+      setMessage(removeError instanceof Error ? removeError.message : t('common.unexpectedError'));
+    } finally {
+      setUploading(false);
+    }
+  };
   const [savingProfile, setSavingProfile] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -68,7 +105,6 @@ export default function AccountPage() {
       const updated = await authApi.updateProfile({
         displayName: displayName.trim(),
         username: username.trim(),
-        avatarUrl: avatarUrl.trim(),
       });
       setUser(updated);
       setMessage(t('account.profileSaved'));
@@ -181,18 +217,35 @@ export default function AccountPage() {
               <span className="profile-label">
                 <span aria-hidden>🖼️</span> {t('account.avatar')}
               </span>
-              <input
-                type="url"
-                value={avatarUrl}
-                placeholder="https://…"
-                onChange={(event) => setAvatarUrl(event.target.value)}
-                maxLength={500}
-              />
+
+              <label className="button avatar-upload">
+                {uploading ? t('common.processing') : t('account.avatarChoose')}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  disabled={uploading}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = '';
+                    if (file) void uploadAvatar(file);
+                  }}
+                />
+              </label>
+
+              {/* The constraints are stated up front rather than discovered
+                  through a rejection after a slow upload. */}
+              <small className="profile-hint">{t('account.avatarRules')}</small>
               <small className="profile-hint">
                 {user.ownAvatar ? t('account.avatarOwn') : t('account.avatarProvider')}
               </small>
+
               {user.ownAvatar && (
-                <button type="button" className="button-quiet" onClick={() => setAvatarUrl('')}>
+                <button
+                  type="button"
+                  className="button-quiet"
+                  disabled={uploading}
+                  onClick={() => void removeAvatar()}
+                >
                   {t('account.avatarReset')}
                 </button>
               )}
@@ -274,9 +327,7 @@ export default function AccountPage() {
             className="button button-primary profile-save"
             disabled={
               savingProfile ||
-              (displayName.trim() === user.displayName &&
-                username.trim() === user.username &&
-                avatarUrl.trim() === (user.avatarUrl ?? ''))
+              (displayName.trim() === user.displayName && username.trim() === user.username)
             }
           >
             {savingProfile ? t('common.processing') : t('account.saveProfile')}

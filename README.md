@@ -228,8 +228,18 @@ bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
 
 ### Profil fotoğrafı
 
+Oyuncu hesap ekranından **fotoğraf yükleyebilir**: PNG, JPEG veya WEBP, en fazla 2 MB. Görsel
+tarayıcıda kare olacak şekilde ortadan kırpılır ve 256×256 boyutuna küçültülür — 6 MB'lık bir telefon
+fotoğrafı yaklaşık 40 KB'a iner. Bu bir güvenlik önlemi değil, nezakettir: sunucu her şeyi yeniden
+doğrular (bildirilen tür, dosyanın kendi imza baytlarıyla karşılaştırılır ve 2 MB tavanı uygulanır),
+çünkü istemciden gelen hiçbir iddiaya güvenilmez.
+
+Nesne depolama yapılandırılmışsa görsel kovaya yazılır; değilse kendi tablosunda tutulup API
+üzerinden servis edilir. Her iki durumda da `avatarUrl` bir URL taşır, bu yüzden akışın geri kalanı
+aynı kalır.
+
 Kullanıcı modelinde iki alan var ve bu bilinçli: `providerAvatarUrl` sağlayıcının (Google) verdiği
-fotoğraf, `avatarUrl` ise oyuncunun kendi seçtiği. Google ile her girişte **yalnızca sağlayıcı alanı**
+fotoğraf, `avatarUrl` ise oyuncunun yüklediği. Google ile her girişte **yalnızca sağlayıcı alanı**
 tazelenir; oyuncunun kendi seçimi asla üzerine yazılmaz — aksi hâlde her giriş, kişinin bilinçli
 tercihini sessizce geri alırdı. Görüntülenen fotoğraf `avatarUrl ?? providerAvatarUrl` sırasıyla
 çözülür; hesap ekranında hangisinin geçerli olduğu yazar ve "Google fotoğrafına dön" düğmesi kendi
@@ -669,8 +679,15 @@ JSON on its own volume and accepts events only from `WEB_URL`. The player app in
 
 ### Profile picture
 
+Players can **upload a picture**: PNG, JPEG or WEBP, up to 2 MB. The browser centre-crops it to a
+square and resizes to 256×256, turning a 6 MB phone photo into roughly 40 KB. That is a courtesy, not
+a safeguard — the server re-validates everything (declared type against the file's own magic bytes,
+plus a hard 2 MB ceiling), because nothing a client claims can be trusted. With object storage
+configured the image goes to the bucket; otherwise it is kept in its own table and served through the
+API, and either way `avatarUrl` ends up holding a URL.
+
 Two columns, deliberately: `providerAvatarUrl` is what Google supplied and `avatarUrl` is what the
-player chose. Signing in refreshes **only the provider column**, so a player's own picture is never
+player uploaded. Signing in refreshes **only the provider column**, so a player's own picture is never
 undone by their next Google sign-in. The displayed picture resolves as `avatarUrl ?? providerAvatarUrl`;
 the account screen says which one is in use, and clearing the field returns to the provider picture.
 

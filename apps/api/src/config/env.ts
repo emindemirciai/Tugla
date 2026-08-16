@@ -75,6 +75,9 @@ const schema = z.object({
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
+  // Public base URL for objects that are served directly to browsers (avatars).
+  // Empty means the bucket is private and images are proxied through the API.
+  S3_PUBLIC_URL: z.string().url().optional(),
   S3_FORCE_PATH_STYLE: z
     .string()
     .default('true')

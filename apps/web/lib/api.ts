@@ -204,6 +204,9 @@ export const authApi = {
   },
   updateProfile: (input: Record<string, unknown>) =>
     api<PublicUser>('/auth/me', { method: 'PATCH', body: input }),
+  uploadAvatar: (dataUrl: string) =>
+    api<PublicUser>('/auth/me/avatar', { method: 'POST', body: { data: dataUrl } }),
+  removeAvatar: () => api<PublicUser>('/auth/me/avatar', { method: 'DELETE' }),
   changePassword: (currentPassword: string, newPassword: string) =>
     api<{ changed: boolean }>('/auth/password/change', {
       method: 'POST',

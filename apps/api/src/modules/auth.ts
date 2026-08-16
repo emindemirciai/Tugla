@@ -46,11 +46,37 @@ import {
   type AuthenticatedRequest,
 } from '../services/core';
 import { MailService } from '../services/mail';
+import { StorageService } from '../services/storage';
 
 const refreshSchema = z.object({ refreshToken: z.string().min(20).max(400).optional() });
 
 const googleKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 const appleKeys = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
+
+/**
+ * Avatar limits.
+ *
+ * Two megabytes decoded is generous for a 256px avatar and small enough that a
+ * malicious upload cannot exhaust memory; base64 inflates by about a third, so
+ * the string bound is set accordingly.
+ */
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+const AVATAR_MAX_BASE64 = Math.ceil((AVATAR_MAX_BYTES * 4) / 3) + 128;
+
+/** Verifies the declared image type against the file's own magic bytes. */
+const signatureMatches = (mimeType: string, bytes: Buffer) => {
+  if (mimeType === 'image/png') {
+    return bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  }
+  if (mimeType === 'image/jpeg') {
+    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  // WEBP: "RIFF" .... "WEBP"
+  return (
+    bytes.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    bytes.subarray(8, 12).toString('ascii') === 'WEBP'
+  );
+};
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 // A short code needs a short life; players can always request a new one.
@@ -72,6 +98,7 @@ export class AuthService {
     private readonly mail: MailService,
     private readonly redis: RedisService,
     private readonly audit: AuditService,
+    private readonly storage: StorageService,
   ) {}
 
   private get db() {
@@ -584,6 +611,66 @@ export class AuthService {
     return this.publicUser(user);
   }
 
+  /**
+   * Stores an uploaded avatar.
+   *
+   * The browser has already cropped and re-encoded the picture, but nothing
+   * client-side can be trusted, so the payload is checked here too: declared
+   * type against the actual magic bytes, and a hard byte ceiling. Where object
+   * storage is configured the image goes to the bucket; otherwise it is kept in
+   * its own table and served back through the API. Either way `avatarUrl` ends
+   * up holding a URL, so everything downstream stays identical.
+   */
+  async setAvatar(userId: string, input: unknown) {
+    const data = z.object({ data: z.string().min(32).max(AVATAR_MAX_BASE64) }).parse(input);
+
+    const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(data.data);
+    if (!match) throw new BadRequestException('Send a PNG, JPEG or WEBP data URL');
+
+    const mimeType = match[1]!;
+    const bytes = Buffer.from(match[2]!, 'base64');
+    if (bytes.byteLength > AVATAR_MAX_BYTES) {
+      throw new BadRequestException('The image is larger than 2 MB');
+    }
+    if (!signatureMatches(mimeType, bytes)) {
+      throw new BadRequestException('The file contents do not match the declared image type');
+    }
+
+    const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+    const key = `avatars/${userId}-${Date.now().toString(36)}.${extension}`;
+    const stored = await this.storage.put(key, bytes, mimeType);
+    const publicUrl = stored ? this.storage.publicUrl(key) : null;
+
+    let avatarUrl: string;
+    if (stored && publicUrl) {
+      avatarUrl = publicUrl;
+      await this.db.avatarImage.deleteMany({ where: { userId } });
+    } else {
+      await this.db.avatarImage.upsert({
+        where: { userId },
+        update: { mimeType, bytes },
+        create: { userId, mimeType, bytes },
+      });
+      // Cache-busting suffix: the URL is stable per user, so without it a
+      // browser would keep showing the previous picture.
+      avatarUrl = `/api/users/${userId}/avatar?v=${Date.now().toString(36)}`;
+    }
+
+    const user = await this.db.user.update({ where: { id: userId }, data: { avatarUrl } });
+    return this.publicUser(user);
+  }
+
+  /** Removes the player's own picture, falling back to the provider's. */
+  async clearAvatar(userId: string) {
+    await this.db.avatarImage.deleteMany({ where: { userId } });
+    const user = await this.db.user.update({ where: { id: userId }, data: { avatarUrl: null } });
+    return this.publicUser(user);
+  }
+
+  async avatarBytes(userId: string) {
+    return this.db.avatarImage.findUnique({ where: { userId } });
+  }
+
   async sessions(userId: string, currentSessionId: string) {
     const items = await this.db.refreshSession.findMany({
       where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
@@ -895,6 +982,16 @@ export class AuthController {
   @Patch('me')
   updateProfile(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
     return this.auth.updateProfile(request.user.sub, body);
+  }
+
+  @Post('me/avatar')
+  setAvatar(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
+    return this.auth.setAvatar(request.user.sub, body);
+  }
+
+  @Delete('me/avatar')
+  clearAvatar(@Req() request: AuthenticatedRequest) {
+    return this.auth.clearAvatar(request.user.sub);
   }
 
   @Get('providers')

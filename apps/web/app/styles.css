@@ -2528,3 +2528,17 @@ textarea:focus {
 .avatar-controls .button-quiet {
   align-self: flex-start;
 }
+
+/* The file input itself is hidden: browsers style it inconsistently and the
+   label is a better target anyway. */
+.avatar-upload {
+  align-self: flex-start;
+  cursor: pointer;
+}
+.avatar-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

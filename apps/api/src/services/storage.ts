@@ -35,7 +35,7 @@ export class StorageService {
    */
   async put(
     key: string,
-    body: string,
+    body: string | Buffer,
     contentType = 'application/json',
   ): Promise<StoredObject | null> {
     const config = env();
@@ -56,7 +56,11 @@ export class StorageService {
     if (!response.ok) {
       throw new Error(`Object storage rejected the upload (${response.status})`);
     }
-    return { key, size: Buffer.byteLength(body), provider: 's3' };
+    return {
+      key,
+      size: typeof body === 'string' ? Buffer.byteLength(body) : body.byteLength,
+      provider: 's3',
+    };
   }
 
   async get(key: string): Promise<string | null> {
@@ -75,7 +79,19 @@ export class StorageService {
   }
 
   /** Minimal AWS SigV4 signer — enough for PUT/GET object operations. */
-  private async signHeaders(method: string, url: string, body: string, contentType: string) {
+  /** Public URL of a stored object, when the bucket is served publicly. */
+  publicUrl(key: string) {
+    const config = env();
+    const base = (config.S3_PUBLIC_URL ?? '').replace(/\/$/, '');
+    return base ? `${base}/${key}` : null;
+  }
+
+  private async signHeaders(
+    method: string,
+    url: string,
+    body: string | Buffer,
+    contentType: string,
+  ) {
     const config = env();
     const { createHmac } = await import('node:crypto');
     const parsed = new URL(url);

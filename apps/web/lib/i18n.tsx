@@ -153,6 +153,13 @@ const tr = {
   'account.displayName': 'Görünen ad',
   'account.username': 'Kullanıcı adı',
   'account.avatar': 'Profil fotoğrafı',
+  'account.avatarChoose': 'Fotoğraf yükle',
+  'account.avatarRules':
+    'PNG, JPEG veya WEBP · en fazla 2 MB · kare olacak şekilde ortadan kırpılır ve 256×256 boyutuna küçültülür.',
+  'account.avatarBadType': 'Yalnızca PNG, JPEG veya WEBP yükleyebilirsin.',
+  'account.avatarTooLarge': 'Dosya çok büyük. 10 MB altında bir görsel seç.',
+  'account.avatarSaved': 'Profil fotoğrafın güncellendi.',
+  'account.avatarRemoved': 'Profil fotoğrafın kaldırıldı.',
   'account.avatarOwn': 'Kendi seçtiğin fotoğraf kullanılıyor; Google ile her girişte değişmez.',
   'account.avatarProvider':
     'Şu an Google hesabındaki fotoğraf kullanılıyor. Buraya bir bağlantı yazarsan kendi seçimin geçerli olur.',
@@ -572,6 +579,13 @@ const en: Record<TranslationKey, string> = {
   'account.displayName': 'Display name',
   'account.username': 'Username',
   'account.avatar': 'Profile picture',
+  'account.avatarChoose': 'Upload a picture',
+  'account.avatarRules':
+    'PNG, JPEG or WEBP · up to 2 MB · centre-cropped to a square and resized to 256×256.',
+  'account.avatarBadType': 'Please choose a PNG, JPEG or WEBP file.',
+  'account.avatarTooLarge': 'That file is too large. Choose an image under 10 MB.',
+  'account.avatarSaved': 'Your profile picture was updated.',
+  'account.avatarRemoved': 'Your profile picture was removed.',
   'account.avatarOwn': 'Your own picture is in use; signing in with Google will not replace it.',
   'account.avatarProvider':
     'Currently using the picture from your Google account. Enter a link here to use your own instead.',
