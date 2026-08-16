@@ -188,6 +188,12 @@ export const usernameSchema = z
 export const updateProfileSchema = z.object({
   displayName: z.string().trim().min(2).max(40).optional(),
   username: usernameSchema.optional(),
+  /**
+   * A picture the player chose. An empty string clears it, which falls back to
+   * whatever the identity provider supplied — that is the only way back to the
+   * Google picture once you have replaced it.
+   */
+  avatarUrl: z.union([z.string().url().max(500), z.literal('')]).optional(),
   locale: z.enum(['tr', 'en']).optional(),
   searchVisible: z.boolean().optional(),
   marketingConsent: z.boolean().optional(),

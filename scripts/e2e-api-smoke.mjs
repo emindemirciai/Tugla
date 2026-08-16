@@ -586,6 +586,27 @@ try {
   }
 
   console.log('\nProfile editing');
+  const avatarSet = await call('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: { avatarUrl: 'https://example.com/avatar.png' },
+  });
+  check(
+    'a player can set their own picture',
+    avatarSet.body?.avatarUrl === 'https://example.com/avatar.png',
+  );
+  check('the picture is marked as the player’s own', avatarSet.body?.ownAvatar === true);
+
+  const avatarCleared = await call('/auth/me', { method: 'PATCH', token, body: { avatarUrl: '' } });
+  check('clearing falls back to the provider picture', avatarCleared.body?.ownAvatar === false);
+
+  const badAvatar = await call('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: { avatarUrl: 'not-a-url' },
+  });
+  check('an invalid picture URL is refused', badAvatar.status === 400);
+
   const renamed = await call('/auth/me', {
     method: 'PATCH',
     token,

@@ -111,6 +111,12 @@ model User {
   marketingConsent      Boolean              @default(false)
   acceptedTermsAt       DateTime
   lastUsernameChangedAt DateTime?
+  // Avatar: `avatarUrl` is what the player chose, `providerAvatarUrl` is what
+  // the identity provider last supplied. A provider refresh may overwrite the
+  // second, never the first — otherwise every Google sign-in would silently
+  // undo the player's own picture.
+  avatarUrl             String?
+  providerAvatarUrl     String?
   riskScore             Int                  @default(0)
   bannedUntil           DateTime?
   banReason             String?

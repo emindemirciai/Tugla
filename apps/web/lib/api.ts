@@ -110,6 +110,10 @@ export const restoreSession = () => refreshSession();
 // ----- typed helpers ---------------------------------------------------------
 
 export interface PublicUser {
+  /** Resolved picture: the player's own if set, otherwise the provider's. */
+  avatarUrl?: string | null;
+  /** True when the current picture is the player's own choice. */
+  ownAvatar?: boolean;
   id: string;
   email: string;
   username: string;

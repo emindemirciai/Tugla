@@ -306,6 +306,8 @@ export class AuthService {
         subject: String(verified.payload.sub ?? ''),
         email: String(verified.payload.email ?? '').toLowerCase(),
         emailVerified: verified.payload.email_verified === true,
+        // Google supplies a profile picture; Apple does not.
+        picture: typeof verified.payload.picture === 'string' ? verified.payload.picture : null,
       };
     }
     if (!config.APPLE_CLIENT_ID) throw new BadRequestException('Apple sign-in is not configured');
@@ -318,6 +320,7 @@ export class AuthService {
       email: String(verified.payload.email ?? '').toLowerCase(),
       emailVerified:
         verified.payload.email_verified === true || verified.payload.email_verified === 'true',
+      picture: null,
     };
   }
 
@@ -364,6 +367,7 @@ export class AuthService {
             ),
             displayName: data.displayName ?? identity.email.split('@')[0] ?? 'Player',
             emailVerifiedAt: identity.emailVerified ? new Date() : null,
+            providerAvatarUrl: identity.picture,
             acceptedTermsAt: new Date(),
             accounts: { create: { provider, providerAccountId: identity.subject } },
             progress: { create: {} },
@@ -384,6 +388,17 @@ export class AuthService {
     ) {
       throw new ForbiddenException('Account is suspended');
     }
+
+    // Refresh the provider's picture, never the player's own. Writing to
+    // avatarUrl here would undo a picture the player deliberately chose, on
+    // every single sign-in.
+    if (identity.picture && identity.picture !== user.providerAvatarUrl) {
+      user = await this.db.user.update({
+        where: { id: user.id },
+        data: { providerAvatarUrl: identity.picture },
+      });
+    }
+
     return { user: this.publicUser(user), merged, ...(await this.issueTokens(user, meta)) };
   }
 
@@ -561,6 +576,8 @@ export class AuthService {
       where: { id: userId },
       data: {
         ...data,
+        // An empty string means "use the provider's picture again".
+        ...(data.avatarUrl !== undefined ? { avatarUrl: data.avatarUrl || null } : {}),
         ...(data.displayName || data.username ? { lastUsernameChangedAt: new Date() } : {}),
       },
     });
@@ -702,6 +719,8 @@ export class AuthService {
     emailVerifiedAt?: Date | null;
     searchVisible?: boolean;
     marketingConsent?: boolean;
+    avatarUrl?: string | null;
+    providerAvatarUrl?: string | null;
   }) {
     return {
       id: user.id,
@@ -713,6 +732,10 @@ export class AuthService {
       emailVerified: Boolean(user.emailVerifiedAt),
       searchVisible: user.searchVisible ?? true,
       marketingConsent: user.marketingConsent ?? false,
+      // The player's own picture wins; the provider's is the fallback. Both are
+      // exposed so the account screen can say where the current one came from.
+      avatarUrl: user.avatarUrl ?? user.providerAvatarUrl ?? null,
+      ownAvatar: Boolean(user.avatarUrl),
     };
   }
 }

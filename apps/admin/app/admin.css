@@ -1058,3 +1058,12 @@ button.primary:hover {
   line-height: 1;
   flex: 0 0 auto;
 }
+
+a.admin-brand {
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-sm);
+}
+a.admin-brand:hover strong {
+  color: var(--brand);
+}

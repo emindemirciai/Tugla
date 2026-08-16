@@ -2495,3 +2495,36 @@ textarea:focus {
 .profile-save {
   width: 100%;
 }
+
+/* ----- avatar ------------------------------------------------------------------- */
+.avatar-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line-strong);
+  flex: 0 0 auto;
+}
+.avatar-empty {
+  display: grid;
+  place-items: center;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.avatar-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.avatar-controls .button-quiet {
+  align-self: flex-start;
+}

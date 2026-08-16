@@ -152,6 +152,11 @@ const tr = {
   'account.profile': 'Profil',
   'account.displayName': 'Görünen ad',
   'account.username': 'Kullanıcı adı',
+  'account.avatar': 'Profil fotoğrafı',
+  'account.avatarOwn': 'Kendi seçtiğin fotoğraf kullanılıyor; Google ile her girişte değişmez.',
+  'account.avatarProvider':
+    'Şu an Google hesabındaki fotoğraf kullanılıyor. Buraya bir bağlantı yazarsan kendi seçimin geçerli olur.',
+  'account.avatarReset': 'Google fotoğrafına dön',
   'account.displayNameHint': 'Diğer oyuncuların gördüğü ad. 7 günde bir değiştirilebilir.',
   'account.notVerified': 'Doğrulanmadı',
   'account.usernameHint':
@@ -566,6 +571,11 @@ const en: Record<TranslationKey, string> = {
   'account.profile': 'Profile',
   'account.displayName': 'Display name',
   'account.username': 'Username',
+  'account.avatar': 'Profile picture',
+  'account.avatarOwn': 'Your own picture is in use; signing in with Google will not replace it.',
+  'account.avatarProvider':
+    'Currently using the picture from your Google account. Enter a link here to use your own instead.',
+  'account.avatarReset': 'Go back to the Google picture',
   'account.displayNameHint': 'The name other players see. Can be changed once every 7 days.',
   'account.notVerified': 'Not verified',
   'account.usernameHint':

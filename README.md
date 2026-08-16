@@ -226,6 +226,15 @@ saklar ve yalnızca `WEB_URL` kaynağından olay kabul eder. Oyuncu uygulaması 
 Yönetim panelindeki Analitik ekranı oyun verisini gösterir ve yapılandırılmışsa trafik panosuna
 bağlantı verir. Ayrıntı: `docs/DEPLOYMENT.md`.
 
+### Profil fotoğrafı
+
+Kullanıcı modelinde iki alan var ve bu bilinçli: `providerAvatarUrl` sağlayıcının (Google) verdiği
+fotoğraf, `avatarUrl` ise oyuncunun kendi seçtiği. Google ile her girişte **yalnızca sağlayıcı alanı**
+tazelenir; oyuncunun kendi seçimi asla üzerine yazılmaz — aksi hâlde her giriş, kişinin bilinçli
+tercihini sessizce geri alırdı. Görüntülenen fotoğraf `avatarUrl ?? providerAvatarUrl` sırasıyla
+çözülür; hesap ekranında hangisinin geçerli olduğu yazar ve "Google fotoğrafına dön" düğmesi kendi
+seçimi temizler.
+
 ### Profil düzenleme ve ses
 
 Hesap ekranı alan alan etiketli bir formdur: görünen ad, kullanıcı adı, e-posta ve parola. **Görünen
@@ -657,6 +666,13 @@ rather than a third-party service. Variable names follow the dashboard's own `AN
 both sides. The `analytics` compose service builds it from a pinned ref, stores events as
 JSON on its own volume and accepts events only from `WEB_URL`. The player app injects the tracker
 **only** when `NEXT_PUBLIC_ANALYZE_URL` is set — otherwise no page carries any tracker at all.
+
+### Profile picture
+
+Two columns, deliberately: `providerAvatarUrl` is what Google supplied and `avatarUrl` is what the
+player chose. Signing in refreshes **only the provider column**, so a player's own picture is never
+undone by their next Google sign-in. The displayed picture resolves as `avatarUrl ?? providerAvatarUrl`;
+the account screen says which one is in use, and clearing the field returns to the provider picture.
 
 ### Profile editing and audio
 

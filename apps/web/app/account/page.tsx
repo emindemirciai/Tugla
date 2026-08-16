@@ -26,6 +26,7 @@ export default function AccountPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -56,6 +57,7 @@ export default function AccountPage() {
     if (!user) return;
     setDisplayName(user.displayName);
     setUsername(user.username);
+    setAvatarUrl(user.avatarUrl ?? '');
   }, [user]);
 
   const saveProfile = async () => {
@@ -66,6 +68,7 @@ export default function AccountPage() {
       const updated = await authApi.updateProfile({
         displayName: displayName.trim(),
         username: username.trim(),
+        avatarUrl: avatarUrl.trim(),
       });
       setUser(updated);
       setMessage(t('account.profileSaved'));
@@ -164,6 +167,38 @@ export default function AccountPage() {
             void saveProfile();
           }}
         >
+          <div className="avatar-row">
+            {avatarUrl ? (
+              /* A plain img on purpose: avatars come from arbitrary hosts, and
+                 next/image would need every one of them allow-listed. */
+              <img className="avatar" src={avatarUrl} alt="" width={64} height={64} />
+            ) : (
+              <span className="avatar avatar-empty" aria-hidden>
+                {user.displayName.slice(0, 1).toUpperCase()}
+              </span>
+            )}
+            <div className="avatar-controls">
+              <span className="profile-label">
+                <span aria-hidden>🖼️</span> {t('account.avatar')}
+              </span>
+              <input
+                type="url"
+                value={avatarUrl}
+                placeholder="https://…"
+                onChange={(event) => setAvatarUrl(event.target.value)}
+                maxLength={500}
+              />
+              <small className="profile-hint">
+                {user.ownAvatar ? t('account.avatarOwn') : t('account.avatarProvider')}
+              </small>
+              {user.ownAvatar && (
+                <button type="button" className="button-quiet" onClick={() => setAvatarUrl('')}>
+                  {t('account.avatarReset')}
+                </button>
+              )}
+            </div>
+          </div>
+
           <label className="profile-field">
             <span className="profile-label">
               <span aria-hidden>👤</span> {t('account.displayName')}
@@ -239,7 +274,9 @@ export default function AccountPage() {
             className="button button-primary profile-save"
             disabled={
               savingProfile ||
-              (displayName.trim() === user.displayName && username.trim() === user.username)
+              (displayName.trim() === user.displayName &&
+                username.trim() === user.username &&
+                avatarUrl.trim() === (user.avatarUrl ?? ''))
             }
           >
             {savingProfile ? t('common.processing') : t('account.saveProfile')}

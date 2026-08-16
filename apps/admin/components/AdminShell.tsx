@@ -65,13 +65,15 @@ export function AdminShell({ title, children }: { title: string; children: React
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <div className="admin-brand">
+        {/* The brand is a link home: it is where people click to get out of a
+            screen, and a dead logo makes them hunt for the overview instead. */}
+        <Link href="/" className="admin-brand">
           <span className="brand-mark">◇</span>
           <div>
             <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla.fun'}</strong>
             <span>{t('chrome.panel')}</span>
           </div>
-        </div>
+        </Link>
         <nav>
           {NAV.filter(
             (item) => !item.roles || (item.roles as readonly string[]).includes(user.role),

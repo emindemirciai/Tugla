@@ -30,8 +30,15 @@ export default function UsersPage() {
   const { user: staff } = useAdminSession();
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
+  // Paging, not a silent cut-off. The list used to request the first 50 rows
+  // and print the real total underneath, so on a site with more than fifty
+  // players the screen quietly lied about who exists.
+  const [skip, setSkip] = useState(0);
+  const pageSize = 50;
   const { data, loading, error, reload } = useAdminData<{ items: UserRow[]; total: number }>(
-    `/admin/operations/users?limit=50${query ? `&search=${encodeURIComponent(query)}` : ''}`,
+    `/admin/operations/users?limit=${pageSize}&skip=${skip}${
+      query ? `&search=${encodeURIComponent(query)}` : ''
+    }`,
   );
   const { run, busy, message } = useAdminAction(reload);
   const canModerate = ['GAME_ADMIN', 'SUPER_ADMIN'].includes(staff?.role ?? '');
@@ -199,7 +206,31 @@ export default function UsersPage() {
           </div>,
         ])}
       />
-      {data && <p className="admin-note">{t('users.total', { count: data.total })}</p>}
+      {data && (
+        <div className="admin-toolbar">
+          <span className="admin-note">
+            {t('users.range', {
+              from: data.total === 0 ? 0 : skip + 1,
+              to: skip + data.items.length,
+              count: data.total,
+            })}
+          </span>
+          <button
+            type="button"
+            disabled={skip === 0}
+            onClick={() => setSkip(Math.max(0, skip - pageSize))}
+          >
+            {t('users.previous')}
+          </button>
+          <button
+            type="button"
+            disabled={skip + data.items.length >= data.total}
+            onClick={() => setSkip(skip + pageSize)}
+          >
+            {t('users.next')}
+          </button>
+        </div>
+      )}
     </AdminShell>
   );
 }
