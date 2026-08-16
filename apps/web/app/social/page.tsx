@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { HubStatus, PlayerShell } from '../../components/PlayerNav';
 import { socialApi } from '../../lib/api';
@@ -161,13 +162,13 @@ export default function SocialPage() {
             return (
               <li key={friendship.id} className="card">
                 <div className="card-foot">
-                  <div className="identity-row">
+                  <Link className="identity-row" href={`/players/${other.username}`}>
                     <Avatar user={other} />
                     <span>
                       <strong>{other.displayName}</strong>
                       <span className="muted"> @{other.username}</span>
                     </span>
-                  </div>
+                  </Link>
                   <div className="card-actions">
                     <span className="tag tag-ok">{friendship.status}</span>
                     <button

@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Injectable,
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -98,6 +99,92 @@ export class SocialService {
    * new code. The audit trail records who wrote to whom and nothing else —
    * moderators asked for a log, not a mailbox they can read.
    */
+
+  /**
+   * Public profile of one player.
+   *
+   * The social layer let players find each other and become friends but never
+   * showed who they were — a search result was a name and nothing else. This is
+   * the page behind the name: progress, achievements and standing, plus the
+   * viewer's relationship to them so the actions on screen match reality.
+   *
+   * `searchVisible` is honoured here as well as in search. A player who opted
+   * out of discovery should not be reachable by guessing their handle either.
+   */
+  async publicProfile(viewerId: string, username: string) {
+    const user = await this.database.client.user.findUnique({
+      where: { username: username.toLowerCase() },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        providerAvatarUrl: true,
+        searchVisible: true,
+        status: true,
+        createdAt: true,
+        progress: { select: { playerLevel: true, experience: true, currentLevel: true } },
+      },
+    });
+
+    if (!user || user.status === 'DELETED') throw new NotFoundException('Player not found');
+    if (!user.searchVisible && user.id !== viewerId) {
+      throw new NotFoundException('Player not found');
+    }
+
+    const [achievements, clearedLevels, friendship, bestWeekly] = await Promise.all([
+      // A row exists as soon as progress starts, so only count the ones that
+      // actually unlocked.
+      this.database.client.achievementUnlock.count({
+        where: { userId: user.id, unlockedAt: { not: null } },
+      }),
+      this.database.client.gameSession.findMany({
+        where: { userId: user.id, status: 'COMPLETED', mode: 'CAMPAIGN' },
+        select: { levelId: true },
+        distinct: ['levelId'],
+      }),
+      viewerId === user.id
+        ? null
+        : this.database.client.friendship.findFirst({
+            where: {
+              OR: [
+                { requesterId: viewerId, addresseeId: user.id },
+                { requesterId: user.id, addresseeId: viewerId },
+              ],
+            },
+            select: { id: true, status: true, requesterId: true },
+          }),
+      this.database.client.leaderboardEntry.findFirst({
+        where: { userId: user.id, boardKey: { startsWith: 'global:' } },
+        orderBy: { score: 'desc' },
+        select: { score: true, boardKey: true },
+      }),
+    ]);
+
+    return {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      providerAvatarUrl: user.providerAvatarUrl,
+      joinedAt: user.createdAt,
+      playerLevel: user.progress?.playerLevel ?? 1,
+      experience: user.progress?.experience ?? 0,
+      campaignLevel: user.progress?.currentLevel ?? 1,
+      levelsCleared: clearedLevels.length,
+      achievementsUnlocked: achievements,
+      bestWeeklyScore: bestWeekly?.score ?? null,
+      isSelf: user.id === viewerId,
+      friendship: friendship
+        ? {
+            id: friendship.id,
+            status: friendship.status,
+            incoming: friendship.requesterId !== viewerId,
+          }
+        : null,
+    };
+  }
+
   async sendMessage(senderId: string, input: unknown) {
     const data = z
       .object({
@@ -199,6 +286,11 @@ export class SocialController {
   @Post('friends/:id/accept')
   accept(@Req() request: AuthenticatedRequest, @Param('id') friendshipId: string) {
     return this.social.acceptFriend(request.user.sub, friendshipId);
+  }
+
+  @Get('players/:username')
+  profile(@Req() request: AuthenticatedRequest, @Param('username') username: string) {
+    return this.social.publicProfile(request.user.sub, username);
   }
 
   @Post('messages')

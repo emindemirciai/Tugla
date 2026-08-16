@@ -448,6 +448,8 @@ export const socialApi = {
   follow: (userId: string) => api('/social/follow', { method: 'POST', body: { userId } }),
   unfollow: (userId: string) => api(`/social/follow/${userId}`, { method: 'DELETE' }),
   requestFriend: (userId: string) => api('/social/friends', { method: 'POST', body: { userId } }),
+  profile: (username: string) =>
+    api<Record<string, unknown>>(`/social/players/${encodeURIComponent(username)}`),
   sendMessage: (userId: string, body: string) =>
     api<{ id: string; sentAt: string }>('/social/messages', {
       method: 'POST',

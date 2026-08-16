@@ -287,6 +287,16 @@ Kenar çubuğundaki her bağlantı, genel bakıştaki kartıyla **aynı simgeyi*
 görsel sözlük öğretir, iki ayrı değil. Sağ üstteki ortam rozeti kaldırıldı — personelin zaten bildiği
 bir şeyi her ekranın köşesinden tekrar etmenin değeri yoktu.
 
+### Oyuncu profili
+
+Arama kimseyi bulmayı, arkadaşlık kimseyi eklemeyi sağlıyordu ama kimin kim olduğunu gösteren bir yer
+yoktu. `/players/<kullanıcı-adı>` bunu gösterir: fotoğraf, oyuncu seviyesi, tamamlanan bölüm sayısı,
+başarım sayısı, en iyi haftalık skor ve katılım tarihi — üstelik ekrandaki eylem duruma göre değişir
+(ekle, isteğin beklemede, mesaj gönder ya da kendi profilinse düzenle).
+
+Gizlilik burada da geçerli: aramada görünmemeyi seçen bir oyuncuya kullanıcı adı tahmin edilerek de
+ulaşılamaz — uç nokta 404 döner.
+
 ### Mesajlaşma
 
 Oyuncular **arkadaş oldukları** kişilere mesaj gönderebilir (`/social` ekranında her arkadaşın
@@ -753,6 +763,14 @@ form only makes the input humane.
 Every sidebar link carries the same icon as its card on the overview, so the two screens teach one
 visual vocabulary rather than two. The environment badge in the corner is gone: it repeated something
 staff already knew, on every screen.
+
+### Player profile
+
+Search could find people and friendship could connect them, but nothing showed who they were.
+`/players/<username>` does: picture, player level, levels cleared, achievements, best weekly score and
+join date, with exactly the action that applies — add, pending, message, or edit when it is your own.
+Privacy holds here too: a player who opted out of search cannot be reached by guessing their handle,
+and the endpoint answers 404.
 
 ### Messaging
 

@@ -2556,3 +2556,20 @@ textarea:focus {
   object-fit: cover;
   border: 1px solid var(--line);
 }
+
+/* ----- player profile ------------------------------------------------------------ */
+.profile-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.profile-header > div:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.profile-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}

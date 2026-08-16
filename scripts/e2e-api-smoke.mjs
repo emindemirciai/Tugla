@@ -666,6 +666,29 @@ try {
     `status ${staffRename.status}`,
   );
 
+  console.log('\nPublic player profile');
+  const ownProfile = await call(`/social/players/${profile.body?.username}`, { token });
+  check(
+    'a player can open their own profile',
+    ownProfile.status === 200,
+    `status ${ownProfile.status}`,
+  );
+  check('the profile knows it is you', ownProfile.body?.isSelf === true);
+  check('progress is reported', typeof ownProfile.body?.levelsCleared === 'number');
+
+  const missingProfile = await call('/social/players/definitely-not-a-player', { token });
+  check('an unknown handle is a 404', missingProfile.status === 404);
+
+  // Hiding yourself from search must also hide you from a guessed handle.
+  await call('/auth/me', { method: 'PATCH', token, body: { searchVisible: false } });
+  const hidden = await call(`/social/players/${profile.body?.username}`, { token: adminToken });
+  check(
+    'a hidden profile is not reachable by handle',
+    hidden.status === 404,
+    `status ${hidden.status}`,
+  );
+  await call('/auth/me', { method: 'PATCH', token, body: { searchVisible: true } });
+
   console.log('\nAvatars travel with public profiles');
   const searchWithAvatar = await call(`/social/search?query=${encodeURIComponent('smoke')}`, {
     token,
