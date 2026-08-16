@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import type { Field } from '../../components/RecordForm';
 import { t } from '../../lib/i18n';
 
 interface Task {
@@ -14,6 +15,35 @@ interface Task {
   rewards: Record<string, number>;
   active: boolean;
 }
+
+/** Event names the game actually emits; a free-text box invited typos. */
+const EVENTS = ['LEVEL_COMPLETED', 'BLOCK_DESTROYED', 'SCORE_EARNED', 'MAX_BALLS', 'BOSS_DEFEATED'];
+
+const TASK_FIELDS: Field[] = [
+  { name: 'key', label: 'Key', type: 'text', required: true, hint: t('catalog.keyHint') },
+  { name: 'name', label: t('tasks.name'), type: 'text', required: true },
+  { name: 'description', label: t('catalog.description'), type: 'textarea' },
+  {
+    name: 'cadence',
+    label: t('tasks.cadence'),
+    type: 'select',
+    options: ['DAILY', 'WEEKLY', 'SEASONAL', 'PERMANENT'].map((value) => ({ value, label: value })),
+  },
+  { name: 'target', label: t('tasks.target'), type: 'number' },
+  {
+    name: 'eventType',
+    label: t('tasks.event'),
+    type: 'select',
+    options: EVENTS.map((value) => ({ value, label: value })),
+  },
+  {
+    name: 'rewards',
+    label: t('tasks.reward'),
+    type: 'rewards',
+    currencies: ['credits', 'crystals'],
+  },
+  { name: 'active', label: t('common.active'), type: 'checkbox' },
+];
 
 export default function TasksPage() {
   return (
@@ -43,6 +73,17 @@ export default function TasksPage() {
           actions(task),
         ]}
         deletePath={(task) => `/admin/content/tasks/${task.id}`}
+        fields={TASK_FIELDS}
+        toDraft={(task) => ({
+          key: task.key,
+          name: task.name,
+          description: '',
+          cadence: task.cadence,
+          target: task.target,
+          eventType: task.eventType,
+          rewards: task.rewards,
+          active: task.active,
+        })}
         template={{
           key: 'daily-blocks-120',
           name: 'Break 120 blocks',

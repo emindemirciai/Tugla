@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import type { Field } from '../../components/RecordForm';
 import { t } from '../../lib/i18n';
 
 interface CatalogItem {
@@ -14,6 +15,32 @@ interface CatalogItem {
   price: number | null;
   active: boolean;
 }
+
+const ITEM_FIELDS: Field[] = [
+  { name: 'sku', label: 'SKU', type: 'text', required: true, hint: t('catalog.keyHint') },
+  { name: 'name', label: t('tasks.name'), type: 'text', required: true },
+  { name: 'description', label: t('catalog.description'), type: 'textarea' },
+  { name: 'category', label: t('ach.category'), type: 'text' },
+  {
+    name: 'rarity',
+    label: t('eco.rarity'),
+    type: 'select',
+    options: ['COMMON', 'RARE', 'EPIC', 'LEGENDARY'].map((value) => ({ value, label: value })),
+  },
+  {
+    name: 'currency',
+    label: t('catalog.currency'),
+    type: 'select',
+    options: [
+      { value: 'CREDITS', label: 'CREDITS' },
+      { value: 'CRYSTALS', label: 'CRYSTALS' },
+      { value: '', label: '—' },
+    ],
+    hint: t('catalog.currencyHint'),
+  },
+  { name: 'price', label: t('eco.price'), type: 'number' },
+  { name: 'active', label: t('common.active'), type: 'checkbox' },
+];
 
 export default function EconomyPage() {
   return (
@@ -41,6 +68,17 @@ export default function EconomyPage() {
           actions(item),
         ]}
         deletePath={(item) => `/admin/content/catalog/${item.id}`}
+        fields={ITEM_FIELDS}
+        toDraft={(item) => ({
+          sku: item.sku,
+          name: item.name,
+          description: '',
+          category: item.category,
+          rarity: item.rarity,
+          currency: item.currency ?? '',
+          price: item.price ?? 0,
+          active: item.active,
+        })}
         template={{
           sku: 'trail-aurora',
           name: 'Aurora trail',

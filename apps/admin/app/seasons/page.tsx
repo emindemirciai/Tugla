@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import type { Field } from '../../components/RecordForm';
 import { formatDate } from '../../components/primitives';
 import { t } from '../../lib/i18n';
 
@@ -15,6 +16,23 @@ interface Season {
   endsAt: string;
   active: boolean;
 }
+
+const SEASON_FIELDS: Field[] = [
+  { name: 'number', label: t('catalog.number'), type: 'number' },
+  { name: 'key', label: 'Key', type: 'text', required: true, hint: t('catalog.keyHint') },
+  { name: 'name', label: t('seasons.name'), type: 'text', required: true },
+  { name: 'theme', label: t('seasons.theme'), type: 'text' },
+  { name: 'startsAt', label: t('seasons.start'), type: 'datetime' },
+  { name: 'endsAt', label: t('seasons.end'), type: 'datetime' },
+  { name: 'active', label: t('common.active'), type: 'checkbox' },
+  {
+    name: 'rewards',
+    label: t('catalog.rewardsJson'),
+    type: 'json',
+    wide: true,
+    hint: t('catalog.rewardsJsonHint'),
+  },
+];
 
 export default function SeasonsPage() {
   return (
@@ -41,6 +59,17 @@ export default function SeasonsPage() {
           formatDate(item.endsAt),
           item.active ? '✓' : '—',
         ]}
+        fields={SEASON_FIELDS}
+        toDraft={(item) => ({
+          number: item.number,
+          key: item.key,
+          name: item.name,
+          theme: item.theme,
+          startsAt: item.startsAt,
+          endsAt: item.endsAt,
+          active: item.active,
+          rewards: {},
+        })}
         template={{
           number: 2,
           key: 'season-2',

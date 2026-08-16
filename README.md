@@ -265,6 +265,18 @@ hız sınırlayıcı ses saatini kullanıyordu ve askıdaki bağlamda o saat sı
 eliyordu. Ses cihazı artık bölüme girildiği anda ve ilk dokunuş/tuşta açılıyor, hız sınırı ise duvar
 saatiyle çalışıyor. Dört birim test bunu koruyor.
 
+### Yönetim panelinde kayıt formları
+
+Görevler, başarımlar, mağaza, sezonlar, duyurular ve feature flag ekranları artık JSON metin kutusu
+yerine **alan alan form** kullanır: açılır listeler enum değerlerini gösterir (görev olayı, periyot,
+nadirlik, para birimi), tarihler tarih seçicidir, ödüller para birimi başına sayı alanıdır ve
+işaretlenebilir alanlar onay kutusudur. Tablodaki her satırın **Düzenle** düğmesi kaydı forma yükler;
+aynı anahtarla kaydetmek onu günceller, yeni anahtar yeni kayıt açar.
+
+JSON'un kaldığı tek yer **remote config**: içeriğini istemciler serbestçe okur, dolayısıyla sabit bir
+alan listesi orada gerçeği yansıtmazdı. Sunucu doğrulaması değişmedi — aynı Zod şemaları çalışıyor,
+form yalnızca girişi insana uygun hâle getiriyor.
+
 ### Yönetim panelinde gezinme
 
 Kenar çubuğundaki her bağlantı, genel bakıştaki kartıyla **aynı simgeyi** taşır: iki ekran tek bir
@@ -716,6 +728,17 @@ Playing it unlocks **only that level** — the player can return and replay it �
 next one and does not count as completed. The rule is enforced server-side: progression looks at
 completed `CAMPAIGN` sessions only, while a `DAILY` session opens its own level and nothing else. In
 the grid, ✓ means cleared in the campaign and ★ means played as the daily challenge.
+
+### Admin record forms
+
+Tasks, achievements, the shop, seasons, announcements and feature flags are edited through generated
+forms instead of a JSON textarea: selects list the enum values (event type, cadence, rarity,
+currency), dates use a picker, rewards are one number per currency, and booleans are checkboxes. Each
+row has an **Edit** button that loads it into the form; saving with the same key updates it.
+
+The one place JSON remains is remote config, where clients read whatever is stored, so a fixed set of
+inputs would misrepresent it. Server-side validation is unchanged — the same Zod schemas run — the
+form only makes the input humane.
 
 ### Admin navigation
 

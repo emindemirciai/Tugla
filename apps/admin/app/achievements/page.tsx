@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import type { Field } from '../../components/RecordForm';
 import { t } from '../../lib/i18n';
 
 interface Achievement {
@@ -14,6 +15,34 @@ interface Achievement {
   hidden: boolean;
   active: boolean;
 }
+
+const ACHIEVEMENT_FIELDS: Field[] = [
+  { name: 'key', label: 'Key', type: 'text', required: true, hint: t('catalog.keyHint') },
+  { name: 'name', label: t('tasks.name'), type: 'text', required: true },
+  { name: 'description', label: t('catalog.description'), type: 'textarea' },
+  { name: 'category', label: t('ach.category'), type: 'text' },
+  { name: 'target', label: t('tasks.target'), type: 'number' },
+  {
+    name: 'eventType',
+    label: t('tasks.event'),
+    type: 'select',
+    options: [
+      'LEVEL_COMPLETED',
+      'BLOCK_DESTROYED',
+      'SCORE_EARNED',
+      'MAX_BALLS',
+      'BOSS_DEFEATED',
+    ].map((value) => ({ value, label: value })),
+  },
+  {
+    name: 'rewards',
+    label: t('tasks.reward'),
+    type: 'rewards',
+    currencies: ['credits', 'crystals'],
+  },
+  { name: 'hidden', label: t('catalog.hidden'), type: 'checkbox' },
+  { name: 'active', label: t('common.active'), type: 'checkbox' },
+];
 
 export default function AchievementsPage() {
   return (
@@ -42,6 +71,18 @@ export default function AchievementsPage() {
           actions(item),
         ]}
         deletePath={(item) => `/admin/content/achievements/${item.id}`}
+        fields={ACHIEVEMENT_FIELDS}
+        toDraft={(item) => ({
+          key: item.key,
+          name: item.name,
+          description: '',
+          category: item.category,
+          target: item.target,
+          eventType: item.eventType,
+          rewards: {},
+          hidden: item.hidden,
+          active: item.active,
+        })}
         template={{
           key: 'storm-500',
           name: 'Storm',

@@ -2,6 +2,7 @@
 
 import { AdminShell } from '../../components/AdminShell';
 import { CatalogEditor } from '../../components/CatalogEditor';
+import type { Field } from '../../components/RecordForm';
 import { formatDate, useAdminAction } from '../../components/primitives';
 import { t } from '../../lib/i18n';
 
@@ -12,6 +13,29 @@ interface Announcement {
   publishedAt: string | null;
   expiresAt: string | null;
 }
+
+const ANNOUNCEMENT_FIELDS: Field[] = [
+  { name: 'title', label: t('catalog.title'), type: 'text', required: true },
+  { name: 'body', label: t('catalog.body'), type: 'textarea' },
+  {
+    name: 'audience',
+    label: t('catalog.audience'),
+    type: 'select',
+    options: ['ALL', 'PLAYERS', 'STAFF'].map((value) => ({ value, label: value })),
+  },
+  {
+    name: 'publishedAt',
+    label: t('catalog.publishedAt'),
+    type: 'datetime',
+    hint: t('catalog.publishedHint'),
+  },
+  {
+    name: 'expiresAt',
+    label: t('catalog.expiresAt'),
+    type: 'datetime',
+    hint: t('catalog.expiresHint'),
+  },
+];
 
 export default function AnnouncementsPage() {
   const publish = useAdminAction();
@@ -48,6 +72,15 @@ export default function AnnouncementsPage() {
         ]}
         deletePath={(item) => `/admin/content/announcements/${item.id}`}
         deleteLabel={t('catalog.delete')}
+        fields={ANNOUNCEMENT_FIELDS}
+        toDraft={(item) => ({
+          title: item.title,
+          // The list endpoint omits the body; editing starts from an empty one.
+          body: '',
+          audience: item.audience,
+          publishedAt: item.publishedAt,
+          expiresAt: item.expiresAt ?? '',
+        })}
         template={{
           title: 'New season live',
           body: 'The Singularity season is live: new tasks and league rewards await.',
