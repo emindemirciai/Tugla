@@ -160,20 +160,57 @@ function structuredData() {
  * useful is stating who owns the work and under what terms, in the two places
  * a curious visitor actually looks: the top of the HTML and the console.
  */
+/**
+ * Ownership notice.
+ *
+ * This is what someone sees when they choose "view source". Client code is
+ * delivered to the browser by definition and cannot be hidden — a right-click
+ * blocker would only break copy, paste and accessibility while stopping nobody.
+ * What can be done honestly is to state, in the first thing they read, who owns
+ * the work, under which licence the code may be reused, and what is not covered
+ * by that licence at all.
+ */
+const year = new Date().getFullYear();
+
 const sourceNotice = `
-  ${config.appName} — © ${new Date().getFullYear()} ${config.owner}
-  ${config.webUrl}
+  ============================================================
+   ${config.appName}
+   © ${year} ${config.owner}. Tüm hakları saklıdır / All rights reserved.
+   ${config.webUrl}
+  ============================================================
 
-  Kaynak kodu MIT lisansı altındadır: kullanabilir, değiştirebilir ve
-  dağıtabilirsiniz; telif ve lisans bildirimini korumanız gerekir.
-  Marka adı, logo ve görseller lisansın kapsamı dışındadır.
+  TÜRKÇE
 
-  Source code is MIT licensed: use, modify and distribute it, provided the
-  copyright and licence notice are kept. The brand name, logo and artwork are
-  not covered by that licence.
+  Bu site ve üzerindeki oyun ${config.owner} tarafından geliştirilmiştir ve
+  ${config.owner}'ye aittir.
+
+  · Kaynak kodu MIT lisanslıdır. Kodu kullanabilir, değiştirebilir ve
+    dağıtabilirsiniz; tek şart telif ve lisans bildirimini korumanızdır.
+    Lisans metni: ${config.webUrl}/terms
+  · Marka adı, alan adı, logo, görseller, bölüm tasarımları, metinler ve
+    oyuncu verileri lisansın kapsamı DIŞINDADIR ve izinsiz kullanılamaz.
+  · Bu siteyi taklit eden, markayı kullanan veya oyuncu verisini kazıyan
+    kopyalar telif ihlalidir.
+
+  ENGLISH
+
+  This site and the game on it were built by and belong to ${config.owner}.
+
+  · The source code is MIT licensed: use, modify and distribute it, provided
+    the copyright and licence notice are kept.
+  · The brand name, domain, logo, artwork, level designs, copy and player data
+    are NOT covered by that licence and may not be used without permission.
+  · Clones that impersonate this site, reuse the brand or scrape player data
+    are infringements.
+
+  İletişim / Contact: ${config.webUrl}/support
+  ============================================================
 `;
 
-const consoleNotice = `%c${config.appName}%c © ${new Date().getFullYear()} ${config.owner} — MIT licensed source, brand assets reserved. ${config.webUrl}`;
+const consoleNotice = `%c${config.appName}%c
+© ${year} ${config.owner} — ${config.webUrl}
+Kaynak kodu MIT lisanslıdır; marka, görseller ve oyuncu verisi kapsam dışıdır.
+Source is MIT licensed; brand, artwork and player data are not.`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -181,8 +218,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         {/* Rendered verbatim into the served HTML, so it is the first thing in
             "view source"; the surrounding braces keep it out of the visible page. */}
-        <meta name="copyright" content={`© ${new Date().getFullYear()} ${config.owner}`} />
+        <meta name="copyright" content={`© ${year} ${config.owner}. All rights reserved.`} />
+        <meta name="author" content={config.owner} />
         <meta name="license" content="MIT" />
+        {/* Machine-readable pointers next to the human-readable banner. */}
+        <link rel="license" href={`${config.webUrl}/terms`} />
+        <meta name="dcterms.rightsHolder" content={config.owner} />
         {/* Applies the stored appearance before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         {/* Explicit home-page hreflang set: the ?lang parameter is honoured by

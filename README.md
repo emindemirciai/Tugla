@@ -522,10 +522,13 @@ bile bir yük yazılamaz ve çalıştırılamaz.
 
 ### Lisans ve kaynak bildirimi
 
-Depo **MIT lisanslıdır** (`LICENSE`). Servis edilen HTML'in başında, "kaynağı görüntüle" diyen
-herkesin göreceği iki dilli bir bildirim vardır; tarayıcı konsoluna da aynı bilgi yazılır.
-Sayfa ayrıca `<meta name="copyright">` ve `<meta name="license">` taşır. Hak sahibi `SITE_OWNER`
-değişkeninden gelir.
+Depo **MIT lisanslıdır** (`LICENSE`). "Kaynağı görüntüle" diyen herkes, sayfanın başında iki dilli
+bir sahiplik bildirimi görür: sitenin kime ait olduğu, kodun hangi lisansla kullanılabileceği ve
+**lisansın kapsamadığı şeyler** — marka adı, alan adı, logo, görseller, bölüm tasarımları ve oyuncu
+verisi. Aynı bilgi tarayıcı konsoluna da yazılır; sayfa `copyright`, `author`, `license` ve
+`dcterms.rightsHolder` meta etiketleriyle `rel="license"` bağlantısını taşır; alt bilgide hak
+sahibinin adı görünür; kullanım koşullarında ayrı bir "Sahiplik, telif ve lisans" bölümü vardır.
+Hak sahibi `SITE_OWNER` / `NEXT_PUBLIC_SITE_OWNER` değişkenlerinden gelir.
 
 **Dürüst uyarı:** İstemci kodu tarayıcıya gönderilir; teknik olarak gizlenemez. Küçültme ve
 kaynak haritalarının kapalı olması okumayı zorlaştırır, engellemez. Sağ tık engellemek de koruma
@@ -836,9 +839,13 @@ and a small `noexec` `/tmp` tmpfs, so the next bug cannot be turned into a runni
 
 ### Licence and source notice
 
-The repository is **MIT licensed** (`LICENSE`). The served HTML opens with a bilingual notice that
-anyone choosing "view source" will read, the same text is printed to the browser console, and the
-page carries `copyright` and `license` meta tags. The rights holder comes from `SITE_OWNER`.
+The repository is **MIT licensed** (`LICENSE`). Anyone choosing "view source" reads a bilingual
+ownership notice near the top of the page: who the site belongs to, the licence the code may be
+reused under, and **what that licence does not cover** — brand name, domain, logo, artwork, level
+designs and player data. The same text goes to the browser console; the page carries `copyright`,
+`author`, `license` and `dcterms.rightsHolder` meta tags plus a `rel="license"` link; the footer
+names the rights holder; and the terms of service carry an "Ownership, copyright and licence"
+section. The holder comes from `SITE_OWNER` / `NEXT_PUBLIC_SITE_OWNER`.
 
 An honest caveat: client code is shipped to the browser and cannot be hidden. Minification and
 disabled source maps make it harder to read, not impossible, and blocking right-click protects

@@ -243,6 +243,8 @@ const tr = {
     'Bonuslar tek top, top sürüsü, güvenlik ağı, kalkan, mıknatıs ve daha fazlası arasında değişir; 500 top sınırında fazla enerji Overcharge çarpanına döner.',
   'landing.feature3.detail':
     'İstemci girdileri kaydeder, sunucu aynı tohumla yeniden simüle eder. Uyuşmayan sonuç hiçbir tabloya yazılmaz.',
+  'landing.footer.licence':
+    'Kaynak kodu MIT lisanslıdır; marka adı, logo, görseller ve bölüm tasarımları kapsam dışıdır.',
   'landing.footer.rights': 'Tüm hakları saklıdır.',
   'landing.footer.privacy': 'Gizlilik',
   'landing.footer.terms': 'Şartlar',
@@ -682,6 +684,8 @@ const en: Record<TranslationKey, string> = {
     'Bonuses rotate between a single ball, swarms, the safety net, shields, magnets and more; at the 500-ball cap the surplus becomes an Overcharge multiplier.',
   'landing.feature3.detail':
     'The client records inputs and the server re-simulates them with the same seed. A result that does not match never reaches a leaderboard.',
+  'landing.footer.licence':
+    'The source code is MIT licensed; the brand name, logo, artwork and level designs are not.',
   'landing.footer.rights': 'All rights reserved.',
   'landing.footer.privacy': 'Privacy',
   'landing.footer.terms': 'Terms',

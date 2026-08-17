@@ -11,6 +11,7 @@ import { LanguageSwitcher, useI18n } from '../lib/i18n';
 export default function HomePage() {
   const { t } = useI18n();
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Tuğla.fun';
+  const owner = process.env.NEXT_PUBLIC_SITE_OWNER ?? appName;
 
   const stats = [
     { number: '10', label: t('landing.stats.worlds') },
@@ -137,7 +138,9 @@ export default function HomePage() {
           {appName.toUpperCase()}
         </div>
         <p>
-          © {new Date().getFullYear()} {appName}. {t('landing.footer.rights')}
+          © {new Date().getFullYear()} {owner}. {t('landing.footer.rights')}
+          <br />
+          <span className="muted">{t('landing.footer.licence')}</span>
         </p>
         <div>
           <Link href="/privacy">{t('landing.footer.privacy')}</Link>
