@@ -287,6 +287,15 @@ Kenar çubuğundaki her bağlantı, genel bakıştaki kartıyla **aynı simgeyi*
 görsel sözlük öğretir, iki ayrı değil. Sağ üstteki ortam rozeti kaldırıldı — personelin zaten bildiği
 bir şeyi her ekranın köşesinden tekrar etmenin değeri yoktu.
 
+### İlk deneyim
+
+Yeni bir hesap, 500 bölümlük bir ızgaraya düşüyor ve oyunun nasıl oynandığını hiçbir yerde
+görmüyordu; oyun içi ipucu ancak bölüm başladıktan sonra çıkıyor, yani "bu ne?" sorusuna cevap vermek
+için geç kalıyor. `/play` ekranında üç satırlık bir kart var: kontrol, hedef ve ilerlemenin nerede
+biriktiği. Oyuncu ilk bölümünü tamamladığında kart kalıcı olarak kaybolur — daha önce kapatmak da
+mümkündür. Üçten fazla satır bir kılavuz olurdu ve kimse kılavuz okumaz; metin uzunluğu testle
+sınırlanıyor.
+
 ### Oyuncu profili
 
 Arama kimseyi bulmayı, arkadaşlık kimseyi eklemeyi sağlıyordu ama kimin kim olduğunu gösteren bir yer
@@ -766,6 +775,14 @@ form only makes the input humane.
 Every sidebar link carries the same icon as its card on the overview, so the two screens teach one
 visual vocabulary rather than two. The environment badge in the corner is gone: it repeated something
 staff already knew, on every screen.
+
+### First run
+
+A new account used to land on a grid of 500 levels with no explanation; the in-game hint only appears
+after a level starts, which is too late to answer "what is this?". The hub now shows a three-line
+card — control, goal, and where progress accumulates — that disappears for good once the player
+clears their first level and can be dismissed before that. Three lines is the limit: anything longer
+is a manual, and the copy length is enforced by a test.
 
 ### Player profile
 

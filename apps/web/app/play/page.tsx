@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { GameCanvas, type CompletionSummary } from '../../components/GameCanvas';
 import { Avatar } from '../../components/Avatar';
+import { FirstRun } from '../../components/FirstRun';
 import { HubTabs } from '../../components/PlayerNav';
 import { gameApi, type LevelSummary, type SessionStart } from '../../lib/api';
 import { cacheLevel, flushOfflineRuns, pendingOfflineRuns } from '../../lib/offline';
@@ -160,6 +161,10 @@ function PlayInner() {
       {error && <div className="banner banner-error">{error}</div>}
 
       <HubTabs />
+
+      {/* Shown until the first level is cleared: a hub full of locked levels
+          explains nothing on its own. */}
+      <FirstRun hasCleared={levels.some((level) => level.completed)} />
 
       {daily?.level && (
         <section className="card daily-card" aria-label={t('daily.title')}>

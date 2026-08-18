@@ -72,6 +72,17 @@ const tr = {
   'auth.verify.goAccount': 'Hesabıma git',
 
   // play hub
+  'firstRun.title': 'Nasıl oynanır',
+  'firstRun.dismiss': 'Anladım',
+  'firstRun.controlTitle': 'Platformu sürükle',
+  'firstRun.controlBody':
+    'Parmağınla veya fareyle sürükle; ok tuşları da çalışır. İlk hareket topu fırlatır ve çarptığı nokta topun açısını belirler.',
+  'firstRun.goalTitle': 'Blokları temizle',
+  'firstRun.goalBody':
+    'Bölümdeki blokları bitir. Üç hakkın var; top alta düşerse bir hak gider. Bonuslar topu çoğaltır, kalkan verir veya tabana ağ serer.',
+  'firstRun.progressTitle': 'İlerlemeni topla',
+  'firstRun.progressBody':
+    'Her bölüm sonraki bölümü açar. Günlük görevler, haftalık lig ve günün bölümü ek ödül verir; skorların tüm cihazlarında saklanır.',
   'play.checkingSession': 'Oturum doğrulanıyor…',
   'play.account': 'Hesap',
   'play.signOut': 'Çıkış',
@@ -514,6 +525,17 @@ const en: Record<TranslationKey, string> = {
     'The verification link has expired or was already used. You can request a fresh one from your account page.',
   'auth.verify.goAccount': 'Go to my account',
 
+  'firstRun.title': 'How to play',
+  'firstRun.dismiss': 'Got it',
+  'firstRun.controlTitle': 'Drag the paddle',
+  'firstRun.controlBody':
+    'Drag with a finger or the mouse; arrow keys work too. The first move launches the ball, and where it hits the paddle sets its angle.',
+  'firstRun.goalTitle': 'Clear the blocks',
+  'firstRun.goalBody':
+    'Finish the blocks in the level. You have three lives; a ball that falls past the paddle costs one. Bonuses multiply balls, add a shield or lay a net across the floor.',
+  'firstRun.progressTitle': 'Collect your progress',
+  'firstRun.progressBody':
+    'Each level unlocks the next. Daily tasks, the weekly league and the daily challenge add rewards, and your scores follow you across devices.',
   'play.checkingSession': 'Checking your session…',
   'play.account': 'Account',
   'play.signOut': 'Sign out',

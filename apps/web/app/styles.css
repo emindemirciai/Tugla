@@ -2573,3 +2573,34 @@ textarea:focus {
   font-weight: 800;
   letter-spacing: -0.02em;
 }
+
+/* ----- first run ----------------------------------------------------------------- */
+.first-run {
+  border-color: var(--brand);
+  background: linear-gradient(180deg, var(--brand-soft), var(--surface) 62%);
+}
+.first-run-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.first-run-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.first-run-steps li > span {
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+.first-run-steps strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+.first-run-steps p {
+  font-size: 0.85rem;
+}
