@@ -690,9 +690,14 @@ try {
   await call('/auth/me', { method: 'PATCH', token, body: { searchVisible: true } });
 
   console.log('\nAvatars travel with public profiles');
-  const searchWithAvatar = await call(`/social/search?query=${encodeURIComponent('smoke')}`, {
+  const searchWithAvatar = await call(`/social/players?q=${encodeURIComponent('smoke')}`, {
     token,
   });
+  check(
+    'player search responds',
+    searchWithAvatar.status === 200,
+    `status ${searchWithAvatar.status}`,
+  );
   const searchRow = (searchWithAvatar.body?.items ?? [])[0];
   check(
     'player search carries the avatar fields',

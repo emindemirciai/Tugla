@@ -259,7 +259,14 @@ export class SocialController {
         ],
       },
       take: 20,
-      select: { id: true, username: true, displayName: true, createdAt: true },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        providerAvatarUrl: true,
+        createdAt: true,
+      },
     });
     return { items };
   }
