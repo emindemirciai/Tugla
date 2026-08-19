@@ -30,6 +30,18 @@ pnpm test:load              # k6 yük testi (docs/OPERATIONS.md)
 pnpm build:preview          # preview/ui-preview.html
 ```
 
+## CI kırmızıysa ne yapılır
+
+Dokploy'un yeşil olması CI'ın yeşil olduğunu göstermez: Dokploy yalnızca imajları derler, CI ayrıca
+`db:generate`, `db:migrate`, `db:seed`, `pnpm typecheck` ve 130+ kontrollük uçtan uca smoke koşar.
+Ajan ortamında Prisma istemcisi üretilemiyorsa (`binaries.prisma.sh` engelli) bu adımların hiçbiri
+yerel olarak koşamaz; bu durumda **tahmin yürütmek yerine koşunun logunu iste**. Kırmızı adımın adı
+ve son 20 satır neredeyse her zaman yeterlidir.
+
+Log gelene kadar yapılabilecek yararlı iş: yazılan Prisma çağrılarını şemayla denetlemek (model ve
+alan adları), `pnpm --filter @tugla/api build` çıktısındaki hataları "Prisma istemcisi üretilmediği
+için" ve "gerçek" diye ayırmak, ve web/admin tarafını tam olarak doğrulamak.
+
 ## Tuzaklar / Gotchas
 
 - **API yalnızca derlenmiş çıktıdan çalışır** (`apps/api/dist`). `tsx`/esbuild NestJS DI
