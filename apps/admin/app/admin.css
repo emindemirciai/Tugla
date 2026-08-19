@@ -1122,3 +1122,11 @@ a.admin-brand:hover strong {
 .reward-input input {
   width: 110px;
 }
+
+.admin-version {
+  margin: 6px 0 0;
+  padding: 0 4px;
+  font-size: 0.68rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}

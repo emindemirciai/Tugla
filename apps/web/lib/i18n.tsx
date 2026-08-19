@@ -73,7 +73,6 @@ const tr = {
 
   // play hub
   'firstRun.title': 'Nasıl oynanır',
-  'firstRun.dismiss': 'Anladım',
   'firstRun.controlTitle': 'Platformu sürükle',
   'firstRun.controlBody':
     'Parmağınla veya fareyle sürükle; ok tuşları da çalışır. İlk hareket topu fırlatır ve çarptığı nokta topun açısını belirler.',
@@ -256,6 +255,7 @@ const tr = {
     'İstemci girdileri kaydeder, sunucu aynı tohumla yeniden simüle eder. Uyuşmayan sonuç hiçbir tabloya yazılmaz.',
   'landing.footer.licence':
     'Kaynak kodu MIT lisanslıdır; marka adı, logo, görseller ve bölüm tasarımları kapsam dışıdır.',
+  'landing.footer.version': 'Çalışan sürüm',
   'landing.footer.rights': 'Tüm hakları saklıdır.',
   'landing.footer.privacy': 'Gizlilik',
   'landing.footer.terms': 'Şartlar',
@@ -526,7 +526,6 @@ const en: Record<TranslationKey, string> = {
   'auth.verify.goAccount': 'Go to my account',
 
   'firstRun.title': 'How to play',
-  'firstRun.dismiss': 'Got it',
   'firstRun.controlTitle': 'Drag the paddle',
   'firstRun.controlBody':
     'Drag with a finger or the mouse; arrow keys work too. The first move launches the ball, and where it hits the paddle sets its angle.',
@@ -708,6 +707,7 @@ const en: Record<TranslationKey, string> = {
     'The client records inputs and the server re-simulates them with the same seed. A result that does not match never reaches a leaderboard.',
   'landing.footer.licence':
     'The source code is MIT licensed; the brand name, logo, artwork and level designs are not.',
+  'landing.footer.version': 'Running version',
   'landing.footer.rights': 'All rights reserved.',
   'landing.footer.privacy': 'Privacy',
   'landing.footer.terms': 'Terms',

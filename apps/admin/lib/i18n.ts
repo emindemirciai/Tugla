@@ -71,6 +71,7 @@ const tr = {
   'nav.system': 'Sistem sağlığı',
   'chrome.panel': 'YÖNETİM',
   'chrome.checkingSession': 'Oturum doğrulanıyor…',
+  'chrome.version': 'Çalışan sürüm',
   'chrome.signOut': 'Çıkış',
   // login
   'login.panel': 'YÖNETİM PANELİ',
@@ -408,6 +409,7 @@ const en: Record<AdminTranslationKey, string> = {
   'nav.system': 'System health',
   'chrome.panel': 'ADMIN',
   'chrome.checkingSession': 'Checking session…',
+  'chrome.version': 'Running version',
   'chrome.signOut': 'Sign out',
   'login.panel': 'ADMIN PANEL',
   'login.email': 'Email',

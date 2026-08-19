@@ -146,6 +146,9 @@ export default function HomePage() {
           <Link href="/privacy">{t('landing.footer.privacy')}</Link>
           <Link href="/terms">{t('landing.footer.terms')}</Link>
           <Link href="/support">{t('landing.footer.support')}</Link>
+          <span className="version-tag" title={t('landing.footer.version')}>
+            v{process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'}
+          </span>
         </div>
       </footer>
     </main>

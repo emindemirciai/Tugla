@@ -162,9 +162,9 @@ function PlayInner() {
 
       <HubTabs />
 
-      {/* Shown until the first level is cleared: a hub full of locked levels
-          explains nothing on its own. */}
-      <FirstRun hasCleared={levels.some((level) => level.completed)} />
+      {/* Always on: players return after weeks away, and three lines of rules
+          are cheaper to keep than to rediscover. */}
+      <FirstRun />
 
       {daily?.level && (
         <section className="card daily-card" aria-label={t('daily.title')}>

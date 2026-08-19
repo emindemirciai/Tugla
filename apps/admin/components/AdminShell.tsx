@@ -107,6 +107,9 @@ export function AdminShell({ title, children }: { title: string; children: React
             {t('chrome.signOut')}
           </button>
         </footer>
+        <p className="admin-version" title={t('chrome.version')}>
+          v{process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'}
+        </p>
       </aside>
       <main className="admin-main">
         <header className="admin-header">

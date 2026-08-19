@@ -63,6 +63,9 @@ jobs:
       - name: Build workspace packages
         run: pnpm build:packages
 
+      - name: Repository hygiene (versions, scratch files, credentials, migrations)
+        run: pnpm check:repo
+
       - name: Lint
         run: pnpm lint
 

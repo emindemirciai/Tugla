@@ -497,6 +497,23 @@ Açılıştaki içerik tohumlaması ise pnpm'e hiç uğramaz: doğrudan `node` v
 ile çalışır. API konteyneri salt okunur olduğu için çalışma zamanında indirme veya yazma gerektiren
 her adım gereksiz risktir.
 
+### Sürüm görünürlüğü ve depo kontrolü
+
+Çalışan sürüm hem açılış sayfasının alt bilgisinde hem de yönetim panelinin kenar çubuğunda yazar.
+Değer derleme sırasında kök `package.json`'dan okunur; elle güncellenen bir sabit olsaydı ilk unutan
+kişide yanlış bilgi vermeye başlardı.
+
+`pnpm check:repo` her turda koşar ve CI'ın ilk adımıdır: paket sürümlerinin birbiriyle uyumu, izlenen
+ağaçta geçici/çöp dosya bulunmaması, kimlik bilgisi görünümlü dizgiler, `migration.sql` içermeyen
+migration klasörleri ve çalışma ağacının temizliği. Hepsi bu projede en az bir kez sorun çıkardığı
+için buradalar.
+
+Dependabot artık major sürüm atlayan güncellemeleri gruplamıyor. Tek bir çekme isteği 31 üretim
+bağımlılığını, on beşini major sınırının ötesine taşıyordu (Next 15→16, Zod 3→4, ioredis 5→6,
+Capacitor 7→8); böyle bir istek CI'ı asla geçemez ve sürekli kırmızı duran bir kontrol, herkese
+kontrolleri yok saymayı öğretir. Major'lar elle ve tek tek yükseltilir; güvenlik güncellemeleri bu
+kuraldan etkilenmez.
+
 ### Dağıtım iş akışı ve "run failed" e-postaları
 
 Depoda iki iş akışı var: **CI** (lint, typecheck, testler, smoke, derleme) ve **Dokploy deploy**.
@@ -822,6 +839,21 @@ the runtime image, `COREPACK_HOME` is pinned explicitly in both stages, and `/ho
 the API user. Boot-time content seeding avoids pnpm entirely and runs through `node` with `tsx` from
 `node_modules`, because the API container is read-only and anything that downloads or writes at
 runtime is avoidable risk.
+
+### Version visibility and repository checks
+
+The running version appears in the landing footer and the admin sidebar, read from the root
+`package.json` at build time rather than a hand-maintained constant that would go stale the first
+time someone forgot it.
+
+`pnpm check:repo` runs with the rest of the gate and is CI's first step: package versions agree,
+no scratch files are tracked, nothing that looks like a credential is committed, every migration
+folder has SQL, and the tree is clean. Each of these has gone wrong here at least once.
+
+Dependabot no longer groups major upgrades. One pull request bumped 31 production dependencies,
+fifteen across majors (Next 15→16, Zod 3→4, ioredis 5→6, Capacitor 7→8) — it could never pass CI, and
+a permanently red check teaches people to ignore CI. Majors are upgraded deliberately, one at a time;
+security updates are unaffected.
 
 ### Deploy workflow and "run failed" emails
 

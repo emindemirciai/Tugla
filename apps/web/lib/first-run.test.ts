@@ -9,7 +9,6 @@ import { dictionaries } from './i18n';
 describe('first-run guidance', () => {
   const keys = [
     'firstRun.title',
-    'firstRun.dismiss',
     'firstRun.controlTitle',
     'firstRun.controlBody',
     'firstRun.goalTitle',

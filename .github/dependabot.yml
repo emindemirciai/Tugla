@@ -1,4 +1,16 @@
 version: 2
+
+# Dependabot policy.
+#
+# A single grouped pull request that bumped 31 production dependencies, fifteen
+# of them across major versions — Next 15→16, Zod 3→4, ioredis 5→6, Capacitor
+# 7→8 — could never pass CI, and a permanently red pull request teaches everyone
+# to ignore CI. Majors are therefore excluded from the automatic groups: they are
+# real migrations with breaking changes, and each deserves its own deliberate
+# upgrade rather than arriving thirty at a time.
+#
+# Security updates are unaffected by `ignore` and still open immediately, which
+# is the one case where an unattended bump is worth the disruption.
 updates:
   - package-ecosystem: npm
     directory: /
@@ -8,8 +20,20 @@ updates:
     groups:
       production-dependencies:
         dependency-type: production
+        update-types:
+          - minor
+          - patch
       development-dependencies:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Majors are handled by hand; see docs/OPERATIONS.md.
+      - dependency-name: '*'
+        update-types:
+          - version-update:semver-major
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

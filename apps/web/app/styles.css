@@ -2604,3 +2604,11 @@ textarea:focus {
 .first-run-steps p {
   font-size: 0.85rem;
 }
+
+/* Build version: quiet, but present — "which build is live?" should not require
+   opening a terminal. */
+.version-tag {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
