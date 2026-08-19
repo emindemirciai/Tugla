@@ -667,7 +667,13 @@ try {
   );
 
   console.log('\nPublic player profile');
-  const ownProfile = await call(`/social/players/${profile.body?.username}`, { token });
+  // Re-read the account: the rename test above changed this player's username,
+  // and looking them up by the handle captured earlier would 404 — which is
+  // exactly what happened, and it also made the privacy check below pass for
+  // the wrong reason.
+  const current = await call('/auth/me', { token });
+  const handle = current.body?.username;
+  const ownProfile = await call(`/social/players/${handle}`, { token });
   check(
     'a player can open their own profile',
     ownProfile.status === 200,
@@ -679,9 +685,19 @@ try {
   const missingProfile = await call('/social/players/definitely-not-a-player', { token });
   check('an unknown handle is a 404', missingProfile.status === 404);
 
+  // Reachable by someone else first. Without this, the 404 below could mean the
+  // URL is wrong rather than the privacy flag working — which is exactly how
+  // this check once passed while the endpoint was broken.
+  const visibleToOthers = await call(`/social/players/${handle}`, { token: adminToken });
+  check(
+    'a visible profile is reachable by another account',
+    visibleToOthers.status === 200,
+    `status ${visibleToOthers.status}`,
+  );
+
   // Hiding yourself from search must also hide you from a guessed handle.
   await call('/auth/me', { method: 'PATCH', token, body: { searchVisible: false } });
-  const hidden = await call(`/social/players/${profile.body?.username}`, { token: adminToken });
+  const hidden = await call(`/social/players/${handle}`, { token: adminToken });
   check(
     'a hidden profile is not reachable by handle',
     hidden.status === 404,

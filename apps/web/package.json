@@ -1,6 +1,6 @@
 {
   "name": "@tugla/web",
-  "version": "4.9.1",
+  "version": "4.9.2",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
