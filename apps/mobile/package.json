@@ -11,12 +11,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@capacitor/app": "7.0.1",
-    "@capacitor/core": "7.4.1",
-    "@capacitor/haptics": "7.0.1",
-    "@capacitor/keyboard": "7.0.1",
-    "@capacitor/preferences": "7.0.1",
-    "@capacitor/status-bar": "7.0.1"
+    "@capacitor/app": "7.1.2",
+    "@capacitor/core": "7.6.8",
+    "@capacitor/haptics": "7.0.5",
+    "@capacitor/keyboard": "7.0.6",
+    "@capacitor/preferences": "7.0.4",
+    "@capacitor/status-bar": "7.0.6"
   },
   "devDependencies": {
     "@capacitor/android": "7.4.1",
