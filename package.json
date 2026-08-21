@@ -1,6 +1,6 @@
 {
   "name": "tugla",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "private": true,
   "packageManager": "pnpm@11.10.0",
   "engines": {
@@ -26,7 +26,8 @@
     "build:preview": "node scripts/build-preview.mjs",
     "release:version": "node scripts/set-version.mjs",
     "check:docker": "node scripts/check-docker-context.mjs",
-    "check:repo": "node scripts/check-repo.mjs"
+    "check:repo": "node scripts/check-repo.mjs",
+    "check:analytics": "node scripts/check-analytics.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.28.0",

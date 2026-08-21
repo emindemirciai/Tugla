@@ -205,6 +205,18 @@ Arka planda üç yavaş renk alanı gezinir; döngüler 44–60 saniye sürer, i
 Başlık satır yüksekliği 1.12'den 1.24'e çıkarıldı: Türkçe metinde `ğ` ve `ç` inişleri kırpılıyor ve
 satırlar birbirine değiyordu.
 
+### Google ile giriş
+
+Kod hazırdır; eksik olan yalnızca Google'ın vereceği istemci kimliğidir. Adım adım kurulum, izin
+ekranı ayarları, `Authorized JavaScript origins` değerleri ve sorun giderme tablosu:
+[`docs/GOOGLE-SIGN-IN.md`](docs/GOOGLE-SIGN-IN.md). Özet: Dokploy'a tek bir `GOOGLE_CLIENT_ID`
+değişkeni eklenir ve **web imajı yeniden derlenir** (public değişkenler derlemede gömülür). Gizli
+anahtar (client secret) bu akışta kullanılmaz.
+
+Tarayıcının açtığı Google penceresinin sayfayla konuşabilmesi için `Cross-Origin-Opener-Policy`
+bilinçli olarak `same-origin-allow-popups`'tır; daha katı bir değer girişin sessizce başarısız
+olmasına yol açar.
+
 ### Analitik dağıtımı
 
 Pano ayrı bir Dokploy uygulaması olarak çalışır; bu depodaki `analytics` servisi artık `analytics`

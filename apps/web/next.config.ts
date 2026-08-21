@@ -33,7 +33,12 @@ const nextConfig: NextConfig = {
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-        { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+        // Google Identity Services opens a popup and talks back to this
+        // window. Under a strict `same-origin` policy that channel is severed
+        // and the popup either hangs or closes with no result, so sign-in fails
+        // silently. `same-origin-allow-popups` keeps cross-origin isolation for
+        // everything else while permitting exactly that handshake.
+        { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
       ],
     },
   ],

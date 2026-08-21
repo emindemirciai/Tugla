@@ -82,6 +82,23 @@ Use "node .next/standalone/server.js" instead.
 
 Dokploy → General → Start Command alanına `node .next/standalone/server.js` yaz.
 
+## Veri akıyor mu? Tek komutla kontrol
+
+```bash
+SITE_URL=https://tugla.fun ANALYZE_URL=https://analiz.tugla.fun pnpm check:analytics
+```
+
+Üç şeyin de yerinde olması gerekir ve komut hangisinin eksik olduğunu söyler:
+
+1. **Oyun sayfası izleyici betiğini taşıyor mu?** Taşımıyorsa `NEXT_PUBLIC_ANALYZE_URL` web
+   derlemesine girmemiştir — public değişkenler derlemede gömülür, web imajı yeniden derlenmelidir.
+2. **Pano betiği servis ediyor mu?** `/api/tracker` 200 ve `javascript` içerik türü dönmelidir.
+3. **Pano bu kaynaktan olay kabul ediyor mu?** 403 dönüyorsa `ANALYZE_ALLOWED_ORIGIN` yanlıştır;
+   `https://tugla.fun` olmalı (sonda eğik çizgi yok, şema dahil).
+
+Panoda hiç veri görünmüyorsa sebep neredeyse her zaman bu üçünden biridir; komut hangisi olduğunu
+söylemeden önce tahmin yürütme.
+
 ## tugla.fun tarafındaki izleyici
 
 Oyuncu uygulaması izleme betiğini yalnızca `NEXT_PUBLIC_ANALYZE_URL` doluysa ekler. Değer derleme
