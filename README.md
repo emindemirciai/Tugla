@@ -318,6 +318,18 @@ başarım sayısı, en iyi haftalık skor ve katılım tarihi — üstelik ekran
 Gizlilik burada da geçerli: aramada görünmemeyi seçen bir oyuncuya kullanıcı adı tahmin edilerek de
 ulaşılamaz — uç nokta 404 döner.
 
+### Tekrarları izleme
+
+Tekrarlar saklanıyor ve paylaşılabiliyordu ama **izlenemiyordu** — paylaşmak, hiçbir yere giden bir
+bağlantı vermek demekti. `/replays/<oturum>` adresinde tekrar tarayıcıda oynatılır: kayıt bir video
+değil, platform hareketlerinin listesidir ve aynı bölüm, aynı tohum ve **sunucunun doğrulamada
+kullandığı motorun aynısı** ile yeniden çalıştırılır. Bu yüzden ekranda gördüğün skor iddia değil,
+yeniden hesaplanmış değerdir; kayıtlı skorla yan yana gösterilir.
+
+Hız 0,5× ile 4× arasında değiştirilebilir. Oynatma sabit adımlı ilerler, yani ekran tazeleme hızı ne
+olursa olsun hız dürüsttür. Motor tarafında üç test, kare kare oynatmanın doğrulama geçişiyle aynı
+skoru ve aynı tik sayısını verdiğini sabitler — aksi hâlde oyuncu bir kurgu izliyor olurdu.
+
 ### Moderasyon kararı kanıtla verilir
 
 Bildirim kuyruğu eskiden `LEVEL · a1b2c3d4` yazıp moderatörden "işlem yap" ya da "yoksay" seçmesini
@@ -830,6 +842,16 @@ Search could find people and friendship could connect them, but nothing showed w
 join date, with exactly the action that applies — add, pending, message, or edit when it is your own.
 Privacy holds here too: a player who opted out of search cannot be reached by guessing their handle,
 and the endpoint answers 404.
+
+### Watching replays
+
+Replays were stored and shareable but could not be watched, which made sharing a link to nothing.
+`/replays/<session>` plays one in the browser: the recording is a list of paddle movements, not a
+video, so it is re-run against the same level with the same seed by the same engine the server
+verifies with. The score on screen is therefore recomputed rather than asserted, and it is shown
+beside the recorded one. Speed runs from 0.5× to 4×, stepped at a fixed rate so playback is honest on
+any refresh rate. Three engine tests pin frame-by-frame playback to the verification pass — otherwise
+a player could be watching a fiction.
 
 ### Moderation decides with evidence
 

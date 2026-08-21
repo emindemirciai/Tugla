@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { HubStatus, PlayerShell } from '../../components/PlayerNav';
 import { gameApi } from '../../lib/api';
@@ -83,14 +84,19 @@ export default function ReplaysPage() {
                 <td>{row.session ? row.session.score.toLocaleString(locale) : '—'}</td>
                 <td>{new Date(row.createdAt).toLocaleString(locale)}</td>
                 <td>
-                  <button
-                    type="button"
-                    className="button-quiet"
-                    disabled={busy === row.id}
-                    onClick={() => void toggleShare(row)}
-                  >
-                    {row.shared ? t('replays.unshare') : t('replays.share')}
-                  </button>
+                  <div className="card-actions">
+                    <Link className="button-quiet" href={`/replays/${row.sessionId}`}>
+                      {t('replays.watch')}
+                    </Link>
+                    <button
+                      type="button"
+                      className="button-quiet"
+                      disabled={busy === row.id}
+                      onClick={() => void toggleShare(row)}
+                    >
+                      {row.shared ? t('replays.unshare') : t('replays.share')}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

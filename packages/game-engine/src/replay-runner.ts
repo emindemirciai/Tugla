@@ -69,6 +69,50 @@ export const runReplay = (
   };
 };
 
+/**
+ * Prepares a replay for watching rather than verifying.
+ *
+ * Verification runs the whole recording as fast as the CPU allows and reports
+ * the outcome. Watching needs the opposite: an engine that can be advanced one
+ * tick at a time, in step with a screen refresh, with the recorded inputs
+ * applied at exactly the ticks they were made. The stepping is the caller's —
+ * this returns the engine and the function that feeds it.
+ */
+export const prepareReplayPlayback = (level: LevelDefinition, document: ReplayDocument) => {
+  const engine = new TuğlaEngine(level, {
+    width: document.width,
+    height: document.height,
+    fixedStep: document.fixedStep,
+    maxBalls: document.maxBalls,
+    lives: document.lives,
+    seed: document.seed,
+    levelId: document.levelId,
+    recordReplay: false,
+  });
+
+  const byTick = new Map<number, ReplayDocument['inputs']>();
+  for (const input of document.inputs) {
+    const bucket = byTick.get(input.t);
+    if (bucket) bucket.push(input);
+    else byTick.set(input.t, [input]);
+  }
+
+  /** Advances one tick, applying whatever was recorded for it. Returns false at the end. */
+  const advance = () => {
+    if (engine.snapshot.tick > document.finalTick) return false;
+    if (engine.snapshot.status === 'COMPLETED' || engine.snapshot.status === 'FAILED') return false;
+
+    for (const input of byTick.get(engine.snapshot.tick) ?? []) {
+      if (input.k === 'm') engine.setPaddleTarget(input.v, { record: false });
+      else if (input.k === 'l') engine.launch({ record: false });
+    }
+    engine.step();
+    return true;
+  };
+
+  return { engine, advance, finalTick: document.finalTick, fixedStep: document.fixedStep };
+};
+
 export const runEncodedReplay = (
   level: LevelDefinition,
   raw: string,

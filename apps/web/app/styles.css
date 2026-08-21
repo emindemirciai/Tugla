@@ -2612,3 +2612,28 @@ textarea:focus {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
+
+/* ----- replay viewer -------------------------------------------------------------- */
+.replay-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.replay-stage {
+  width: 100%;
+  aspect-ratio: 9 / 14;
+  max-height: 70vh;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.replay-controls .hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
