@@ -217,6 +217,12 @@ Tarayıcının açtığı Google penceresinin sayfayla konuşabilmesi için `Cro
 bilinçli olarak `same-origin-allow-popups`'tır; daha katı bir değer girişin sessizce başarısız
 olmasına yol açar.
 
+Giriş kartındaki tüm denetimler tek sütun: aynı genişlik, aynı yükseklik, aynı köşe yarıçapı. Google
+düğmesini Google kendi çerçevesinde çizer ve içeriğine dışarıdan biçim verilemez; seçilebilen tek
+şeyler tema, biçim ve genişliktir — bu yüzden düğme sayfanın temasını izler (aydınlıkta çerçeveli
+beyaz, karanlıkta siyah). Renk geçişli özel bir Google düğmesi marka kurallarını ihlal eder ve OAuth
+istemcisinin askıya alınmasına yol açabilir, o yüzden yapılmadı.
+
 ### Analitik dağıtımı
 
 Pano ayrı bir Dokploy uygulaması olarak çalışır; bu depodaki `analytics` servisi artık `analytics`

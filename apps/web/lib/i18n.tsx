@@ -435,6 +435,7 @@ const tr = {
   'auth.google.pending': 'Google hesabın doğrulanıyor…',
   'auth.google.continue': 'Google ile devam et',
   'landing.auth.welcomeBack': 'Tekrar hoş geldin, {name}.',
+  'landing.auth.registerCta': 'Hesabın yok mu? Kayıt ol',
   'landing.auth.noAccount': 'Hesabın yok mu?',
   'landing.auth.guestPeek': 'Önce bölümlere göz at',
   'auth.google.unavailable':
@@ -885,6 +886,7 @@ const en: Record<TranslationKey, string> = {
   'auth.google.pending': 'Verifying your Google account…',
   'auth.google.continue': 'Continue with Google',
   'landing.auth.welcomeBack': 'Welcome back, {name}.',
+  'landing.auth.registerCta': "Don't have an account? Sign up",
   'landing.auth.noAccount': 'No account yet?',
   'landing.auth.guestPeek': 'Browse the levels first',
   'auth.google.unavailable':

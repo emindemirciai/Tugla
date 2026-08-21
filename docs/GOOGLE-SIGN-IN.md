@@ -31,9 +31,27 @@ tıklandığında "bu kurulumda henüz yapılandırılmadı" der ve kimseyi boş
 4. **Scopes** adımında hiçbir şey ekleme. Varsayılan `openid`, `email` ve `profile` yeterlidir;
    oyunun başka hiçbir Google verisine ihtiyacı yok ve istemediğin bir izin, ileride Google'ın
    doğrulama istemesine yol açar.
-5. **Publishing status** bölümünde **Publish app** de. Test modunda kalırsa yalnızca elle eklediğin
-   test kullanıcıları giriş yapabilir. Yalnızca `openid/email/profile` istendiği için Google'ın
-   ayrıca doğrulama (verification) süreci gerekmez.
+5. **Uygulamayı yayına al (Publish app).** Bu adım atlanırsa senin dışındaki hiç kimse giriş
+   yapamaz; Google "Access blocked: this app is not verified" der.
+
+   **Nedir:** Yeni bir OAuth uygulaması **Testing** (test) durumunda başlar. Test durumunda yalnızca
+   izin ekranındaki **Test users** listesine elle eklediğin en fazla 100 hesap giriş yapabilir;
+   başka herkes engellenir. **In production** (yayında) durumunda ise herkes girebilir.
+
+   **Nasıl yapılır:**
+
+   1. Google Cloud Console → sol menü **APIs & Services** → **OAuth consent screen**
+   2. Sayfanın üstünde **Publishing status: Testing** yazar; hemen altındaki **PUBLISH APP**
+      düğmesine bas
+   3. Çıkan kutuda **Confirm** de
+   4. Durumun **In production** olduğunu gör
+
+   **Doğrulama (verification) istenir mi?** Hayır. Google yalnızca "hassas" veya "kısıtlı" kapsamlar
+   istendiğinde inceleme yapar. Bu kurulum sadece `openid`, `email` ve `profile` ister; bunlar temel
+   kapsamlardır ve yayına alma anında geçerli olur. Uyarı ekranı görürsen kapsam listesine fazladan
+   bir şey eklenmiş demektir.
+
+   > Bu değişiklik anında etkilidir; yeniden dağıtım gerekmez.
 
 ### 3. İstemci kimliği (client ID)
 
@@ -85,6 +103,20 @@ smoke testinde bu davranış ayrıca kontrol edilir.
 
 Aynı e-posta ile daha önce parolayla açılmış bir hesap varsa, Google kimliği o hesaba **bağlanır**;
 ikinci bir hesap oluşmaz.
+
+## Düğmenin görünümü hakkında
+
+Google'ın giriş düğmesini Google çizer: kendi çerçevesi (iframe) içinde gelir ve içeriğine
+dışarıdan biçim verilemez. API'nin izin verdiği şey temadır (`outline` / `filled_blue` /
+`filled_black`), biçimdir (dikdörtgen / hap), boyuttur ve genişliktir. Bu depoda düğme sayfanın
+temasını izler: aydınlık modda çerçeveli beyaz, karanlık modda siyah; her ikisi de hap biçiminde ve
+formla aynı genişlikte.
+
+Renk geçişli (gradient) özel bir Google düğmesi **yapılmadı ve yapılmamalı**. Google'ın marka
+kuralları kendi markasının onaylanmamış zeminler üzerinde kullanılmasını yasaklar; ihlal, OAuth
+istemcisinin askıya alınmasıyla sonuçlanabilir — yani girişin tamamen çalışmaz hâle gelmesiyle.
+Formun kalanı istenen düzene getirildi: tüm düğmeler aynı genişlik, aynı yükseklik ve aynı köşe
+yarıçapında tek bir sütun hâlinde.
 
 ## Sorun giderme
 

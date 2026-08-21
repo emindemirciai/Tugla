@@ -105,11 +105,19 @@ export function GoogleSignIn({ onDone }: { onDone: () => void }) {
     // control is the shape, the width and where it sits, so the button matches
     // the rest of the form instead of floating at a fixed 320px.
     const width = Math.min(400, Math.max(240, container.current.offsetWidth || 320));
+
+    // Theme follows the page: Google's black button on a dark background, the
+    // outlined white one on light. Those two, plus filled_blue, are the whole
+    // palette Google permits — a custom gradient with their mark is a branding
+    // violation and grounds for suspending the OAuth client, which is why the
+    // button is theirs to draw and ours only to place.
+    const dark = document.documentElement.dataset.theme === 'night';
+
     window.google.accounts.id.renderButton(container.current, {
       type: 'standard',
-      theme: 'filled_blue',
+      theme: dark ? 'filled_black' : 'outline',
       size: 'large',
-      shape: 'rectangular',
+      shape: 'pill',
       text: 'continue_with',
       logo_alignment: 'left',
       locale,
