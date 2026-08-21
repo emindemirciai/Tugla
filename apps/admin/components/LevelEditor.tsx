@@ -20,7 +20,7 @@ import {
 
 type EditorBlock = LevelDefinition['blocks'][number];
 
-const colorByKind: Record<BlockKind, string> = {
+export const colorByKind: Record<BlockKind, string> = {
   NORMAL: '#2dd9ff',
   TOUGH: '#7c6cff',
   ARMORED: '#ffb75e',

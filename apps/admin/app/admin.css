@@ -1130,3 +1130,27 @@ a.admin-brand:hover strong {
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
+
+/* ----- moderation evidence -------------------------------------------------------- */
+.report-target {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+}
+/* Read-only board: same proportions as the editor, small enough to sit in a
+   table cell. */
+.level-preview {
+  position: relative;
+  width: 190px;
+  aspect-ratio: 9 / 14;
+  margin-top: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #2a2154, #171034);
+  overflow: hidden;
+}
+.level-preview span {
+  position: absolute;
+  border-radius: 2px;
+}

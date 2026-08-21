@@ -1049,6 +1049,18 @@ try {
     `${beforeCount} -> ${(afterInbox.body?.items ?? []).length}`,
   );
 
+  console.log('\nModeration sees what was reported');
+  const reportQueue = await call('/admin/operations/reports', { token: adminToken });
+  check('the report queue loads', reportQueue.status === 200, `status ${reportQueue.status}`);
+  const levelReport = (reportQueue.body?.items ?? []).find((item) => item.targetType === 'Level');
+  if (levelReport) {
+    check('a level report carries the level it is about', Boolean(levelReport.level));
+    check(
+      'the level definition travels with it, so the board can be drawn',
+      Boolean(levelReport.level?.definition),
+    );
+  }
+
   console.log('\nAdmin authorisation');
   const forbidden = await call('/admin/system/overview', { token });
   check(

@@ -318,6 +318,16 @@ başarım sayısı, en iyi haftalık skor ve katılım tarihi — üstelik ekran
 Gizlilik burada da geçerli: aramada görünmemeyi seçen bir oyuncuya kullanıcı adı tahmin edilerek de
 ulaşılamaz — uç nokta 404 döner.
 
+### Moderasyon kararı kanıtla verilir
+
+Bildirim kuyruğu eskiden `LEVEL · a1b2c3d4` yazıp moderatörden "işlem yap" ya da "yoksay" seçmesini
+istiyordu — göremediği bir içerik hakkında karar. Kuyruk artık bildirilen şeyi çözer: bölüm
+bildirimlerinde bölümün adı, dünya-sıra numarası, durumu, yazarı ve **tahtanın kendisi** (salt okunur
+önizleme) satırda görünür; kullanıcı bildirimlerinde görünen ad, kullanıcı adı ve hesap durumu.
+
+"İşlem yap" artık sabit bir metin yazmıyor: moderatörden gerekçe istenir ve gerekçe audit log'a
+düşer. Altı ay sonra "bu neden kapatılmış?" sorusunun cevabı kayıtta olmalı.
+
 ### Mesajlaşma
 
 Oyuncular **arkadaş oldukları** kişilere mesaj gönderebilir (`/social` ekranında her arkadaşın
@@ -820,6 +830,15 @@ Search could find people and friendship could connect them, but nothing showed w
 join date, with exactly the action that applies — add, pending, message, or edit when it is your own.
 Privacy holds here too: a player who opted out of search cannot be reached by guessing their handle,
 and the endpoint answers 404.
+
+### Moderation decides with evidence
+
+The report queue used to print `LEVEL · a1b2c3d4` and ask a moderator to action or dismiss it — a
+verdict on content they could not see. Reports now resolve their target: level reports show the name,
+world-index, status, author and a read-only render of **the board itself**; user reports show the
+display name, handle and account status. "Action" no longer writes a canned note either — the
+moderator is asked for a reason and it goes into the audit log, because "why was this closed?" needs
+an answer six months later.
 
 ### Messaging
 

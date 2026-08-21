@@ -326,7 +326,53 @@ export class AdminOperationsController {
       take: 200,
       include: { reporter: { select: { id: true, username: true } } },
     });
-    return { items };
+
+    // Resolve what was reported.
+    //
+    // The panel showed "LEVEL · a1b2c3d4" and then asked a moderator to choose
+    // between actioning and dismissing it — a decision about content they could
+    // not see. Two batched lookups turn the id into something a person can
+    // actually judge, and the level's own definition rides along so the panel
+    // can render the board.
+    const levelIds = items
+      .filter((item) => item.targetType === 'Level')
+      .map((item) => item.targetId);
+    const userIds = items.filter((item) => item.targetType === 'User').map((item) => item.targetId);
+
+    const [levels, users] = await Promise.all([
+      levelIds.length
+        ? this.db.level.findMany({
+            where: { id: { in: levelIds } },
+            select: {
+              id: true,
+              name: true,
+              world: true,
+              index: true,
+              status: true,
+              type: true,
+              definition: true,
+              author: { select: { id: true, username: true } },
+            },
+          })
+        : [],
+      userIds.length
+        ? this.db.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, username: true, displayName: true, status: true },
+          })
+        : [],
+    ]);
+
+    const levelById = new Map(levels.map((level) => [level.id, level]));
+    const userById = new Map(users.map((user) => [user.id, user]));
+
+    return {
+      items: items.map((item) => ({
+        ...item,
+        level: levelById.get(item.targetId) ?? null,
+        user: userById.get(item.targetId) ?? null,
+      })),
+    };
   }
 
   @Patch('reports/:id')

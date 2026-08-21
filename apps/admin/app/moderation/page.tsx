@@ -1,5 +1,6 @@
 'use client';
 
+import { LevelPreview } from '../../components/LevelPreview';
 import { AdminShell } from '../../components/AdminShell';
 import {
   DataTable,
@@ -19,6 +20,19 @@ interface Report {
   status: string;
   createdAt: string;
   reporter: { username: string } | null;
+  level: ReportLevel | null;
+  user: { id: string; username: string; displayName: string; status: string } | null;
+}
+
+interface ReportLevel {
+  id: string;
+  name: string;
+  world: number;
+  index: number;
+  status: string;
+  type: string;
+  definition: unknown;
+  author: { id: string; username: string } | null;
 }
 
 interface FlaggedSession {
@@ -54,7 +68,31 @@ export default function ModerationPage() {
           t('common.actions'),
         ]}
         rows={(reports.data?.items ?? []).map((row) => [
-          `${row.targetType} · ${row.targetId.slice(0, 8)}`,
+          // What was reported, not just its id: a verdict on unseen content is
+          // a guess, and the board is the whole evidence for a level report.
+          <div key="target" className="report-target">
+            {row.level ? (
+              <>
+                <strong>{row.level.name}</strong>
+                <div className="admin-sub">
+                  {row.level.world}-{row.level.index} · {row.level.type} · {row.level.status}
+                  {row.level.author ? ` · @${row.level.author.username}` : ''}
+                </div>
+                <LevelPreview definition={row.level.definition} />
+              </>
+            ) : row.user ? (
+              <>
+                <strong>{row.user.displayName}</strong>
+                <div className="admin-sub">
+                  @{row.user.username} · {row.user.status}
+                </div>
+              </>
+            ) : (
+              <span className="admin-sub">
+                {row.targetType} · {row.targetId.slice(0, 8)}
+              </span>
+            )}
+          </div>,
           <div key="reason">
             <strong>{row.reason}</strong>
             {row.details && <div className="admin-sub">{row.details}</div>}
@@ -73,7 +111,12 @@ export default function ModerationPage() {
                       `/admin/operations/reports/${row.id}`,
                       {
                         method: 'PATCH',
-                        body: { status: 'ACTIONED', resolution: 'Handled via panel' },
+                        body: {
+                          status: 'ACTIONED',
+                          resolution:
+                            window.prompt(t('mod.resolutionPrompt'))?.trim() ||
+                            t('mod.noResolution'),
+                        },
                       },
                       t('mod.actioned'),
                     )
