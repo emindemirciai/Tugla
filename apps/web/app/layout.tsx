@@ -16,8 +16,23 @@ import './styles.css';
 const config = seoConfig();
 const description = localizedDescription[config.defaultLocale];
 
+/**
+ * Site ownership verification.
+ *
+ * Google will not show an app's logo on the consent screen until it can confirm
+ * the home page belongs to the developer, proved through Search Console. This
+ * page is statically rendered, so the token is inlined at build time like every
+ * other public value: changing it means a redeploy, not a restart. DNS
+ * verification avoids the rebuild entirely and is the better route.
+ */
+const siteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+
 export const metadata: Metadata = {
   metadataBase: new URL(config.webUrl),
+  // `verification.google` is the documented field, but it did not survive into
+  // the rendered head here; `other` emits the tag literally, which is what
+  // Search Console actually looks for.
+  ...(siteVerification ? { other: { 'google-site-verification': siteVerification } } : {}),
   title: {
     default: `${config.appName} — ${config.tagline}`,
     template: `%s | ${config.appName}`,

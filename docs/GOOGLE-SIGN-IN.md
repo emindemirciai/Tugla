@@ -104,6 +104,56 @@ smoke testinde bu davranış ayrıca kontrol edilir.
 Aynı e-posta ile daha önce parolayla açılmış bir hesap varsa, Google kimliği o hesaba **bağlanır**;
 ikinci bir hesap oluşmaz.
 
+## "Your branding is not being shown to users" / alan adı doğrulaması
+
+Google, izin ekranında **logonu** gösterebilmek için ana sayfanın gerçekten sana ait olduğunu görmek
+ister. Doğrulama denemesi şu hatayla döner:
+
+> The website of your home page URL "https://tugla.fun" is not registered to you.
+
+Bu, girişi engellemez — oyuncular yine giriş yapabilir. Engellediği tek şey **logonun ve uygulama
+adının** izin ekranında görünmesidir. Önünde iki yol var.
+
+### Yol A — Alan adını doğrula (logoyu korursun, önerilen)
+
+Doğrulama Google Search Console üzerinden yapılır ve **Cloud projesiyle aynı Google hesabıyla**
+yapılmalıdır. Aksi hâlde Google alan adını "sana ait" saymaz.
+
+1. <https://search.google.com/search-console> → **Add property**
+2. **Domain** kutusunu seç (URL prefix değil) → `tugla.fun` yaz → **Continue**
+3. Google bir **TXT kaydı** verir: `google-site-verification=...`
+4. Alan adı sağlayıcının DNS panelinde şu kaydı ekle:
+
+   | Alan      | Değer                                                    |
+   | --------- | -------------------------------------------------------- |
+   | Tür       | `TXT`                                                    |
+   | Ad / Host | `@` (kök alan adı)                                       |
+   | Değer     | Google'ın verdiği `google-site-verification=...` dizgisi |
+   | TTL       | varsayılan                                               |
+
+5. Kaydı ekledikten sonra Search Console'da **Verify**. DNS yayılması birkaç dakika sürebilir.
+6. Google Cloud → **Branding** → **View issues** → **I have fixed the issues** → **Proceed**
+
+**DNS'e erişemiyorsan** aynı doğrulama HTML etiketiyle de yapılabilir: Search Console'da **URL
+prefix** yöntemini seçip **HTML tag** seçeneğine geç, verilen `content="..."` değerini kopyala ve
+Dokploy'a ekle:
+
+```env
+GOOGLE_SITE_VERIFICATION=abc123...
+```
+
+Ardından **yeniden dağıt** (bu değer derlemeye gömülür), sonra Search Console'da **Verify**. Etiketin
+yerinde olduğunu şöyle görebilirsin: sayfanın kaynağında
+`<meta name="google-site-verification" content="...">`.
+
+### Yol B — Logoyu kaldır (doğrulama gerekmez)
+
+Branding doğrulamasını tetikleyen şey logodur. Google Cloud → **Branding** → logonun altındaki
+**Remove** → **Save**. İzin ekranı uygulama adını ve alan adını göstermeye devam eder, yalnızca logo
+görünmez ve hiçbir doğrulama gerekmez.
+
+Aceleyse B, kalıcı çözüm A'dır; ikisi arasında geçiş yapmak serbesttir.
+
 ## Düğmenin görünümü hakkında
 
 Google'ın giriş düğmesini Google çizer: kendi çerçevesi (iframe) içinde gelir ve içeriğine

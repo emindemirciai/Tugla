@@ -217,6 +217,11 @@ Tarayıcının açtığı Google penceresinin sayfayla konuşabilmesi için `Cro
 bilinçli olarak `same-origin-allow-popups`'tır; daha katı bir değer girişin sessizce başarısız
 olmasına yol açar.
 
+Google izin ekranında logonun görünmesi için alan adının sana ait olduğunu Search Console üzerinden
+kanıtlaman gerekir; iki yolun (DNS TXT kaydı veya `GOOGLE_SITE_VERIFICATION` ile HTML etiketi) ve
+logoyu kaldırıp doğrulamadan tamamen kaçınma seçeneği dokümanda. Etiket yolu seçilirse değer
+derlemeye gömülür, yani yeniden dağıtım gerekir.
+
 Giriş kartındaki tüm denetimler tek sütun: aynı genişlik, aynı yükseklik, aynı köşe yarıçapı. Google
 düğmesini Google kendi çerçevesinde çizer ve içeriğine dışarıdan biçim verilemez; seçilebilen tek
 şeyler tema, biçim ve genişliktir — bu yüzden düğme sayfanın temasını izler (aydınlıkta çerçeveli
