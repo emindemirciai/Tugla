@@ -1,9 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { GameCanvas, type CompletionSummary } from '../../components/GameCanvas';
+import type { CompletionSummary } from '../../components/GameCanvas';
+/**
+ * The renderer arrives with the game, not with the page.
+ *
+ * GameCanvas pulls in three.js, which is the bulk of this route's JavaScript.
+ * The hub is a list of levels: nobody needs a 3D renderer to read it, and on a
+ * phone that download is the difference between an instant screen and a wait.
+ * Loading it when a session starts costs a moment nobody notices, because the
+ * level is starting anyway.
+ */
+const GameCanvas = dynamic(
+  () => import('../../components/GameCanvas').then((module) => module.GameCanvas),
+  { ssr: false },
+);
 import { Avatar } from '../../components/Avatar';
 import { FirstRun } from '../../components/FirstRun';
 import { HubTabs } from '../../components/PlayerNav';

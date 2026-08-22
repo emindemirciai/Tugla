@@ -329,6 +329,21 @@ başarım sayısı, en iyi haftalık skor ve katılım tarihi — üstelik ekran
 Gizlilik burada da geçerli: aramada görünmemeyi seçen bir oyuncuya kullanıcı adı tahmin edilerek de
 ulaşılamaz — uç nokta 404 döner.
 
+### Yükleme ağırlığı
+
+Oyuncu hub'ı bir bölüm listesidir, ama 3B motoru da beraberinde indiriyordu: `/play` ve `/create`
+ilk yüklemede **295 kB** JavaScript istiyordu ve bunun çoğu three.js'ti. Telefonda bu, anında açılan
+bir ekranla bekleyen bir ekran arasındaki farktır.
+
+Motor artık oyunla birlikte geliyor, sayfayla değil: her iki rota da **127 kB**'a indi (%57 azalma),
+tekrar sayfası 289 kB'dan 125 kB'a. Oyun başlarken oluşan gecikmeyi kimse fark etmez, çünkü zaten
+bölüm açılıyordur.
+
+Bu düzeltmeyi tek bir statik `import` geri getirir, o yüzden bütçe testle sabitlendi: derleme
+manifestinden gerçek bayt sayısı okunur ve 700 kB'ı aşarsa test kırılır. Test, sıfır bayt ölçtüğünde
+de kırılır — hiçbir şey ölçmeden geçen bir bütçe kontrolü, kontrolsüzlükten kötüdür. Statik import
+geri konularak doğrulandı: ölçüm 1064 kB'a çıktı ve test kırıldı.
+
 ### Okunmamış mesaj rozeti ve topluluk keşfi
 
 Arkadaş mesajı da personel bildirimi de gelen kutusuna düşüyordu ama ekranda bunu söyleyen hiçbir şey
@@ -865,6 +880,21 @@ Search could find people and friendship could connect them, but nothing showed w
 join date, with exactly the action that applies — add, pending, message, or edit when it is your own.
 Privacy holds here too: a player who opted out of search cannot be reached by guessing their handle,
 and the endpoint answers 404.
+
+### Route weight
+
+The hub is a list of levels, but it downloaded the 3D renderer with it: `/play` and `/create` asked
+for **295 kB** of JavaScript on first load, most of it three.js. On a phone that is the difference
+between an instant screen and a wait.
+
+The renderer now arrives with the game rather than the page: both routes dropped to **127 kB** (−57%),
+and the replay page from 289 kB to 125 kB. Nobody notices the moment it loads, because a level is
+starting anyway.
+
+A single static import would undo this, so the budget is asserted from the build manifest and fails
+past 700 kB — and fails on a zero-byte measurement too, because a budget check that measures nothing
+is worse than none. Verified by restoring the eager import: the measurement rose to 1064 kB and the
+test broke.
 
 ### Unread badge and community discovery
 

@@ -1,11 +1,16 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar } from '../../../components/Avatar';
 import { PlayerShell } from '../../../components/PlayerNav';
-import { ReplayViewer } from '../../../components/ReplayViewer';
+/** Same reasoning as the hub: three.js arrives with the replay, not the page. */
+const ReplayViewer = dynamic(
+  () => import('../../../components/ReplayViewer').then((module) => module.ReplayViewer),
+  { ssr: false },
+);
 import { gameApi } from '../../../lib/api';
 import { useI18n } from '../../../lib/i18n';
 import type { LevelDefinition } from '@tugla/shared';
