@@ -7,7 +7,7 @@
  * only on the deployment host with a confusing "Cannot find module" — this check
  * turns that into a red CI step instead.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
@@ -123,6 +123,62 @@ for (const app of ['apps/web', 'apps/admin']) {
     );
   }
 }
+
+/**
+ * Build args must be declared where they are used.
+ *
+ * `--build-arg FOO=x` against a Dockerfile with no `ARG FOO` is not an error:
+ * Docker drops the value. Every public Next.js variable is baked at build time,
+ * so a dropped arg means the feature it configures is simply missing from the
+ * image — which is exactly how the analytics tracker disappeared from the page
+ * after a rename touched compose but not the Dockerfile.
+ */
+const checkComposeBuildArgs = () => {
+  const composePath = join(root, 'infrastructure/dokploy/compose.production.yml');
+  if (!existsSync(composePath)) return;
+
+  const lines = readFileSync(composePath, 'utf8').split('\n');
+  let dockerfile = null;
+  let inArgs = false;
+  let inspected = 0;
+
+  for (const line of lines) {
+    const file = /^\s*dockerfile:\s*(\S+)/.exec(line);
+    if (file) {
+      dockerfile = file[1];
+      inArgs = false;
+      continue;
+    }
+    if (/^\s*args:\s*$/.test(line)) {
+      inArgs = true;
+      continue;
+    }
+    if (inArgs && /^\s{0,6}\w[\w.-]*:/.test(line)) inArgs = false;
+
+    const arg = inArgs ? /^\s+([A-Z][A-Z0-9_]*):/.exec(line) : null;
+    if (!arg || !dockerfile) continue;
+
+    const dockerfilePath = join(root, dockerfile);
+    if (!existsSync(dockerfilePath)) continue;
+
+    inspected += 1;
+    const declared = new Set(
+      [...readFileSync(dockerfilePath, 'utf8').matchAll(/^ARG\s+(\w+)/gm)].map((match) => match[1]),
+    );
+    if (!declared.has(arg[1])) {
+      failures.push(
+        `${dockerfile}: compose passes build arg "${arg[1]}" but the Dockerfile never declares it, so Docker drops the value`,
+      );
+    }
+  }
+
+  // A check that inspected nothing is not a passing check.
+  if (!inspected) {
+    failures.push('compose build args could not be read; this check verified nothing');
+  }
+};
+
+checkComposeBuildArgs();
 
 if (failures.length) {
   console.error(

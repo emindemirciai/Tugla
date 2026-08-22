@@ -82,6 +82,41 @@ Use "node .next/standalone/server.js" instead.
 
 Dokploy → General → Start Command alanına `node .next/standalone/server.js` yaz.
 
+## Panonun gerçekte okuduğu değişkenler
+
+Pano kodunda `process.env` ile okunan değişkenler şunlardır — bunların dışındakiler hiçbir etki
+yapmaz:
+
+| Değişken                                                                                           | Zorunlu                   | Ne yapar                                      |
+| -------------------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------- |
+| `ANALYZE_SITE_ID`                                                                                  | evet                      | Site anahtarı; küçük harf, rakam, nokta, tire |
+| `ANALYZE_SITE_NAME`                                                                                | evet                      | Panoda görünen ad                             |
+| `ANALYZE_ALLOWED_ORIGINS`                                                                          | evet                      | Olay göndermesine izin verilen **kökenler**   |
+| `ANALYZE_EVENT_SITES`                                                                              | evet                      | Olayların yazılabileceği site anahtarları     |
+| `ANALYZE_AUTH_MODE`                                                                                | hayır                     | `none` veya `platform-admin`                  |
+| `ANALYZE_AUTH_API_URL`                                                                             | `platform-admin` ise evet | Yönetici girişinin sorulacağı API             |
+| `ANALYZE_TITLE_TR` / `_EN`, `ANALYZE_METADATA_TITLE`, `ANALYZE_DESCRIPTION`, `ANALYZE_HEALTH_NAME` | hayır                     | Metinler                                      |
+| `ANALYZE_DATA_DIR`, `ANALYZE_MAX_EVENTS`, `ANALYZE_GEO_LOOKUP`                                     | hayır                     | Depolama ve zenginleştirme                    |
+
+### Köken (origin) nedir, ne değildir
+
+`ANALYZE_ALLOWED_ORIGINS` **köken** listesidir: şema + host (+ port). Yol içeremez.
+
+- ✅ `https://tugla.fun`
+- ✅ `https://www.tugla.fun`
+- ❌ `https://tugla.fun/play` — bu bir köken değil, hiçbir isteğe uymaz
+
+Tarayıcı `/play` sayfasından gönderdiği isteğe de `Origin: https://tugla.fun` yazar; yol asla
+gönderilmez. Yani tek satır yeterlidir:
+
+```env
+ANALYZE_ALLOWED_ORIGINS=https://tugla.fun,https://www.tugla.fun
+ANALYZE_EVENT_SITES=tugla.fun,www.tugla.fun
+```
+
+> `ANALYZE_EVENT_SITES` değerine markdown bağlantısı yapıştırılmışsa (`[www.tugla.fun](https://...)`)
+> o girdi geçersizdir ve sessizce yok sayılır; düz metin yaz.
+
 ## Veri akıyor mu? Tek komutla kontrol
 
 ```bash
