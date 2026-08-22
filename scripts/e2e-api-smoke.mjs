@@ -1023,6 +1023,23 @@ try {
     );
   }
 
+  console.log('\nCommunity levels can be found, not just published');
+  const newest = await call('/game/community/levels?sort=new&limit=20', { token });
+  check('newest-first listing responds', newest.status === 200, `status ${newest.status}`);
+  const dates = (newest.body?.items ?? []).map((item) => new Date(item.publishedAt ?? 0).getTime());
+  check(
+    'newest-first is actually newest first',
+    dates.every((value, index) => index === 0 || dates[index - 1] >= value),
+    dates.slice(0, 3).join(', '),
+  );
+  const top = await call('/game/community/levels?sort=top&limit=20', { token });
+  const likes = (top.body?.items ?? []).map((item) => item.likes ?? 0);
+  check(
+    'most-liked is ordered by likes',
+    likes.every((value, index) => index === 0 || likes[index - 1] >= value),
+    likes.slice(0, 3).join(', '),
+  );
+
   console.log('\nInbox is fed by real events');
   const beforeInbox = await call('/notifications', { token });
   const beforeCount = (beforeInbox.body?.items ?? []).length;

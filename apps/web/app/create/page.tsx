@@ -89,6 +89,7 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sort, setSort] = useState<'top' | 'new'>('top');
 
   const [editing, setEditing] = useState<{ id: string | null } | null>(null);
   const [grid, setGrid] = useState<Cell[]>(emptyGrid);
@@ -103,7 +104,7 @@ export default function CreatePage() {
     try {
       const [mine, published] = await Promise.all([
         gameApi.myCommunityLevels(),
-        gameApi.communityLevels(),
+        gameApi.communityLevels(sort),
       ]);
       setLevels(mine.items);
       setLimit(mine.limit);
@@ -114,7 +115,8 @@ export default function CreatePage() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+    // `sort` is a dependency: changing it has to refetch, not just re-render.
+  }, [t, sort]);
 
   useEffect(() => {
     if (ready) void load();
@@ -418,7 +420,23 @@ export default function CreatePage() {
             </ul>
           )}
 
-          <h2 className="hub-section">{t('create.community')}</h2>
+          <div className="section-head">
+            <h2 className="hub-section">{t('create.community')}</h2>
+            {/* Sorting only by likes buries every new level under the same few
+                forever, and a creation loop dies when nobody can be found. */}
+            <div className="segmented">
+              {(['top', 'new'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={sort === option ? 'active' : ''}
+                  onClick={() => setSort(option)}
+                >
+                  {t(option === 'top' ? 'create.sortTop' : 'create.sortNew')}
+                </button>
+              ))}
+            </div>
+          </div>
           {community.length === 0 ? (
             <p className="loading-note">{t('create.communityEmpty')}</p>
           ) : (

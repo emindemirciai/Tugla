@@ -490,7 +490,15 @@ export class CommunityService {
   }
 
   /** Published community levels with their like/dislike tallies. */
-  async published(limit: number, viewerId?: string) {
+  /**
+   * Published community levels.
+   *
+   * `sort` decides what people find: `top` surfaces what the community liked,
+   * `new` surfaces what was just published. Ordering only by likes buries every
+   * new level under the same handful forever, which is how a creation loop dies
+   * — nobody plays what nobody can see.
+   */
+  async published(limit: number, viewerId?: string, sort: 'top' | 'new' = 'top') {
     const levels = await this.db.level.findMany({
       where: { type: 'COMMUNITY', status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
@@ -525,7 +533,12 @@ export class CommunityService {
           : null,
         isMine: viewerId ? level.author?.id === viewerId : false,
       }))
-      .sort((a, b) => b.likes - a.likes);
+      .sort((a, b) =>
+        sort === 'new'
+          ? new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime()
+          : b.likes - a.likes ||
+            new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime(),
+      );
 
     return { items };
   }
@@ -923,8 +936,9 @@ export class GameController {
   @Public()
   communityLevels(@Req() request: AuthenticatedRequest, @Query() query: unknown) {
     const page = pageSchema.parse(query);
+    const { sort } = z.object({ sort: z.enum(['top', 'new']).default('top') }).parse(query);
     // Signed-in visitors also get their own rating back; anonymous ones do not.
-    return this.community.published(page.limit, request.user?.sub);
+    return this.community.published(page.limit, request.user?.sub, sort);
   }
 
   @Post('community/levels/:id/rate')

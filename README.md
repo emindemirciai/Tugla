@@ -329,6 +329,18 @@ başarım sayısı, en iyi haftalık skor ve katılım tarihi — üstelik ekran
 Gizlilik burada da geçerli: aramada görünmemeyi seçen bir oyuncuya kullanıcı adı tahmin edilerek de
 ulaşılamaz — uç nokta 404 döner.
 
+### Okunmamış mesaj rozeti ve topluluk keşfi
+
+Arkadaş mesajı da personel bildirimi de gelen kutusuna düşüyordu ama ekranda bunu söyleyen hiçbir şey
+yoktu; sekmeyi açıp bakman gerekiyordu. Gelen kutusu sekmesi artık okunmamış sayısını taşıyor. Sayı
+sayfa açıldığında ve oyuncu sekmeye geri döndüğünde okunuyor — yani değişmiş olabileceği anlarda —
+sürekli sıfır dönen bir sayı için sunucuyu zamanlayıcıyla yormak yerine.
+
+Topluluk bölümleri yalnızca beğeniye göre sıralanıyordu. Bu, yeni yayımlanan her bölümü aynı birkaç
+bölümün altına gömer ve bir üretim döngüsü, kimsenin bulamadığı içerikle ölür. Listede artık **En
+beğenilen** ve **En yeni** seçenekleri var; sıralama sunucuda yapılıyor ve smoke her ikisinin de
+gerçekten iddia ettiği sırada geldiğini doğruluyor.
+
 ### Tekrarları izleme
 
 Tekrarlar saklanıyor ve paylaşılabiliyordu ama **izlenemiyordu** — paylaşmak, hiçbir yere giden bir
@@ -853,6 +865,18 @@ Search could find people and friendship could connect them, but nothing showed w
 join date, with exactly the action that applies — add, pending, message, or edit when it is your own.
 Privacy holds here too: a player who opted out of search cannot be reached by guessing their handle,
 and the endpoint answers 404.
+
+### Unread badge and community discovery
+
+Friend messages and staff notices both land in the inbox, but nothing on screen said so — you had to
+open the tab and look. The tab now carries the unread count, read on mount and when the player
+returns to the tab, which is when it can have changed, rather than polling for a number that is
+usually zero.
+
+Community levels were ordered by likes alone, which buries every new level under the same few forever
+and kills a creation loop: nobody plays what nobody can find. The list now offers **most liked** and
+**newest**, ordered server-side, and the smoke suite checks that both orderings are actually in the
+order they claim.
 
 ### Watching replays
 

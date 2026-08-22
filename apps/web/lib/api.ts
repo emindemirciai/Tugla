@@ -315,7 +315,7 @@ export const gameApi = {
       board: { score: number; user: { id: string; username: string; displayName: string } }[];
       mine: { score: number; updatedAt: string } | null;
     }>('/game/daily'),
-  communityLevels: () =>
+  communityLevels: (sort: 'top' | 'new' = 'top') =>
     api<{
       items: {
         id: string;
@@ -330,7 +330,7 @@ export const gameApi = {
         myRating: boolean | null;
         isMine: boolean;
       }[];
-    }>('/game/community/levels'),
+    }>(`/game/community/levels?sort=${sort}`),
   rateCommunityLevel: (id: string, liked: boolean) =>
     api<{ levelId: string; likes: number; dislikes: number; myRating: boolean | null }>(
       `/game/community/levels/${id}/rate`,

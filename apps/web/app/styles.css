@@ -2665,3 +2665,32 @@ textarea:focus {
   flex-direction: column;
   gap: 12px;
 }
+
+/* Unread badge: attached to the tab it belongs to, small enough not to shift
+   the label, and readable at a glance rather than a bare dot. */
+.hub-tabs a {
+  position: relative;
+}
+.tab-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--coral);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}

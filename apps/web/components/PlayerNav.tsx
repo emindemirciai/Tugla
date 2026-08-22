@@ -3,8 +3,9 @@
 import { Avatar } from './Avatar';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { LanguageSwitcher, useI18n, type TranslationKey } from '../lib/i18n';
+import { platformApi } from '../lib/api';
 import { useSession } from '../lib/session';
 
 const LINKS: { href: string; key: TranslationKey; icon: string }[] = [
@@ -25,19 +26,61 @@ const LINKS: { href: string; key: TranslationKey; icon: string }[] = [
 export function HubTabs() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const [unread, setUnread] = useState(0);
+
+  /**
+   * Unread mail badge.
+   *
+   * A friend's message and a staff notice both land in the inbox, and until now
+   * nothing on screen said so — you had to open the tab and check. The count is
+   * fetched once per mount and refreshed when the player returns to the tab,
+   * which is when it can have changed, rather than polling a server on a timer
+   * for a number that is usually zero.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    const read = () => {
+      platformApi
+        .notifications()
+        .then((result) => {
+          if (!cancelled) setUnread(result.unread ?? 0);
+        })
+        .catch(() => undefined);
+    };
+
+    read();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') read();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [pathname]);
+
   return (
     <div className="hub-tabs" role="navigation">
-      {LINKS.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          aria-current={pathname === link.href ? 'page' : undefined}
-          className={pathname === link.href ? 'active' : ''}
-        >
-          <span aria-hidden>{link.icon}</span>
-          {t(link.key)}
-        </Link>
-      ))}
+      {LINKS.map((link) => {
+        const badge = link.href === '/inbox' && unread > 0 ? unread : 0;
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            aria-current={pathname === link.href ? 'page' : undefined}
+            className={pathname === link.href ? 'active' : ''}
+          >
+            <span aria-hidden>{link.icon}</span>
+            {t(link.key)}
+            {badge > 0 && (
+              <span className="tab-badge" aria-label={t('hub.unread', { count: badge })}>
+                {badge > 9 ? '9+' : badge}
+              </span>
+            )}
+          </Link>
+        );
+      })}
     </div>
   );
 }
