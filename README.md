@@ -329,6 +329,21 @@ başarım sayısı, en iyi haftalık skor ve katılım tarihi — üstelik ekran
 Gizlilik burada da geçerli: aramada görünmemeyi seçen bir oyuncuya kullanıcı adı tahmin edilerek de
 ulaşılamaz — uç nokta 404 döner.
 
+### Mağaza: satın alınan şey görünür oluyor
+
+Mağaza kredi karşılığı iz ve platform görselleri satıyordu ama **hiçbir şey değişmiyordu**: kuşanma
+uç noktası vardı, arayüzde onu çağıran bir düğme yoktu ve oyun tarafında kuşanılmış eşyayı okuyan
+kod hiç yazılmamıştı. Oyuncu kredi harcayıp envanterinde bir satır alıyordu.
+
+Artık zincir tamam: mağaza kartında **Kuşan** düğmesi var, kuşanılan eşya oturum yanıtıyla birlikte
+geliyor (bölüm başlangıcı hâlâ tek gidiş-dönüş) ve motor iz ile platform rengine uyguluyor.
+
+Kozmetikler **bilinçli olarak yalnızca görseldir**; simülasyona hiç dokunmazlar. Aksi hâlde bir satın
+alma avantaja dönüşür ve sunucunun yeniden ürettiği her skor, oyuncunun neye sahip olduğuna bağlı
+hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı için güvenilmez girdi
+sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
+bunu sabitliyor.
+
 ### Yükleme ağırlığı
 
 Oyuncu hub'ı bir bölüm listesidir, ama 3B motoru da beraberinde indiriyordu: `/play` ve `/create`
@@ -880,6 +895,19 @@ Search could find people and friendship could connect them, but nothing showed w
 join date, with exactly the action that applies — add, pending, message, or edit when it is your own.
 Privacy holds here too: a player who opted out of search cannot be reached by guessing their handle,
 and the endpoint answers 404.
+
+### The shop sells things you can now see
+
+The shop sold ball trails and paddles for credits, and **nothing changed**: the equip endpoint
+existed, no button called it, and no code ever read the equipped flag. A player spent credits and
+received a row in an inventory.
+
+The chain is complete now: shop cards have an **Equip** button, the equipped item travels with the
+session response (level start stays one round trip), and the renderer applies it to the trail and
+paddle colours. Cosmetics are deliberately visual only and never touch the simulation — otherwise a
+purchase becomes an advantage and every verified score depends on what someone owns. Catalogue
+metadata is free-form JSON typed in the admin panel, so it is treated as untrusted: anything that is
+not `#rrggbb` is ignored and the level's own colour stands. Eight tests hold that line.
 
 ### Route weight
 

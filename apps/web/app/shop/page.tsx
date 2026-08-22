@@ -12,7 +12,9 @@ export default function ShopPage() {
   const { t, locale } = useI18n();
   const { ready } = useRequirePlayer();
   const [shop, setShop] = useState<Shop | null>(null);
-  const [owned, setOwned] = useState<Set<string>>(new Set());
+  const [inventory, setInventory] = useState<
+    { id: string; equipped: boolean; item: { sku: string; name: string } }[]
+  >([]);
   const [balances, setBalances] = useState<{ currency: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,9 @@ export default function ShopPage() {
         progressionApi.wallet(),
       ]);
       setShop(shopResult);
-      setOwned(new Set(inventoryResult.items.map((entry) => entry.item.sku)));
+      // Keep the whole entry, not just the sku: equipping needs the inventory
+      // id, and the card has to show which one is currently in use.
+      setInventory(inventoryResult.items);
       setBalances(walletResult.balances);
       setError(null);
     } catch (loadError) {
@@ -43,6 +47,20 @@ export default function ShopPage() {
   }, [ready, load]);
 
   if (!ready) return null;
+
+  const equip = async (id: string) => {
+    setBusy(id);
+    setNotice(null);
+    try {
+      await platformApi.equipItem(id);
+      setNotice(t('shop.equipped'));
+      await load();
+    } catch (equipError) {
+      setNotice(equipError instanceof Error ? equipError.message : t('common.unexpectedError'));
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const buy = async (sku: string) => {
     setBusy(sku);
@@ -79,7 +97,7 @@ export default function ShopPage() {
       ) : (
         <ul className="card-list">
           {(shop?.items ?? []).map((item) => {
-            const isOwned = owned.has(item.sku);
+            const entry = inventory.find((owned) => owned.item.sku === item.sku);
             const affordable =
               item.currency === null ||
               (balances.find((balance) => balance.currency === item.currency)?.amount ?? 0) >=
@@ -95,8 +113,21 @@ export default function ShopPage() {
                   <span className="accent">
                     {item.currency ? `${item.price} ${item.currency}` : '—'}
                   </span>
-                  {isOwned ? (
-                    <span className="tag tag-ok">{t('shop.owned')}</span>
+                  {entry ? (
+                    entry.equipped ? (
+                      <span className="tag tag-ok">{t('shop.equippedTag')}</span>
+                    ) : (
+                      // Owning an item did nothing until now; equipping is what
+                      // makes a purchase visible in the game.
+                      <button
+                        type="button"
+                        className="button"
+                        disabled={busy === entry.id}
+                        onClick={() => void equip(entry.id)}
+                      >
+                        {t('shop.equip')}
+                      </button>
+                    )
                   ) : (
                     <button
                       type="button"

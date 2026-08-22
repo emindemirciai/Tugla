@@ -1023,6 +1023,41 @@ try {
     );
   }
 
+  console.log('\nEquipped cosmetics reach the game');
+  const inventory = await call('/inventory', { token });
+  const ownedEntry = (inventory.body?.items ?? [])[0];
+  if (ownedEntry) {
+    const equipResult = await call(`/inventory/${ownedEntry.id}/equip`, { method: 'POST', token });
+    check(
+      'an owned item can be equipped',
+      equipResult.status < 300,
+      `status ${equipResult.status}`,
+    );
+
+    const afterEquip = await call('/inventory', { token });
+    check(
+      'the inventory reports it as equipped',
+      (afterEquip.body?.items ?? []).some((entry) => entry.id === ownedEntry.id && entry.equipped),
+    );
+
+    const cosmeticSession = await call('/game/sessions', {
+      method: 'POST',
+      token,
+      body: { levelId: firstLevel.id },
+    });
+    check(
+      'a new session carries the equipped cosmetics',
+      Array.isArray(cosmeticSession.body?.cosmetics),
+      JSON.stringify(cosmeticSession.body?.cosmetics ?? null).slice(0, 80),
+    );
+  }
+
+  const foreignEquip = await call('/inventory/00000000-0000-0000-0000-000000000000/equip', {
+    method: 'POST',
+    token,
+  });
+  check('equipping something you do not own is refused', foreignEquip.status === 404);
+
   console.log('\nCommunity levels can be found, not just published');
   const newest = await call('/game/community/levels?sort=new&limit=20', { token });
   check('newest-first listing responds', newest.status === 200, `status ${newest.status}`);

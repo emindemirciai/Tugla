@@ -78,6 +78,28 @@ const PADDLE_COLORS = [
  */
 const BRICK_TONES = [0x52bdf5, 0x8b7bff, 0xff9a6b, 0x4fd6a8, 0xffd166, 0x7fd8ef, 0xff8ad0];
 
+/** One equipped catalogue item, as the session hands it over. */
+export interface Cosmetic {
+  sku: string;
+  category: string;
+  metadata: unknown;
+}
+
+/**
+ * Reads a colour from a cosmetic's metadata.
+ *
+ * Catalogue metadata is free-form JSON written by staff in the admin panel, so
+ * it is treated as untrusted: anything that is not a `#rrggbb` string is
+ * ignored and the level's own colour stands. A malformed shop item should look
+ * like nothing happened, not break the renderer.
+ */
+export const cosmeticColour = (cosmetics: Cosmetic[], category: string): number | null => {
+  const match = cosmetics.find((item) => item.category === category);
+  const value = (match?.metadata as { color?: unknown } | undefined)?.color;
+  if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value)) return null;
+  return Number.parseInt(value.slice(1), 16);
+};
+
 export interface LevelStyle {
   theme: string;
   index: number;
@@ -118,6 +140,12 @@ export class GameRenderer {
     private readonly engine: TuğlaEngine,
     private quality: ResolvedQuality,
     private readonly levelStyle: LevelStyle = { theme: 'neon-grid', index: 1 },
+    /**
+     * Equipped cosmetics. Visual only, by design: they are applied to materials
+     * and never to the simulation, so what a player owns can never change a
+     * score the server has to reproduce.
+     */
+    private readonly cosmetics: Cosmetic[] = [],
   ) {
     const palette = THEME_PALETTES[levelStyle.theme] ?? DEFAULT_PALETTE;
     this.palette = palette;
@@ -239,7 +267,7 @@ export class GameRenderer {
     if (quality.trailLength > 0) {
       const trailGeometry = new THREE.SphereGeometry(1, 6, 4);
       const trailMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffd9c2,
+        color: cosmeticColour(cosmetics, 'trail') ?? 0xffd9c2,
         transparent: true,
         opacity: 0.34,
         depthWrite: false,
@@ -258,7 +286,7 @@ export class GameRenderer {
     paddleGeometry.rotateZ(Math.PI / 2);
     paddleGeometry.scale(1, 1, 0.55);
     const paddleMaterial = new THREE.MeshPhysicalMaterial({
-      color: paddleTone.color,
+      color: cosmeticColour(cosmetics, 'paddle') ?? paddleTone.color,
       emissive: paddleTone.emissive,
       emissiveIntensity: 0.8,
       metalness: 0.65,

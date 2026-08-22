@@ -152,6 +152,9 @@ export function GameCanvas({
           : quality.maxParticles,
       },
       { theme: session.level.theme, index: session.level.index },
+      // What the player equipped in the shop, delivered with the session so the
+      // level start stays a single round trip.
+      session.cosmetics ?? [],
     );
 
     let frame = 0;

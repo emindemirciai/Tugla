@@ -251,6 +251,8 @@ export interface LevelSummary {
 
 export interface SessionStart {
   sessionId: string;
+  /** Equipped cosmetics; visual only and never part of the simulation. */
+  cosmetics?: { sku: string; category: string; metadata: unknown }[];
   seed: number;
   nonce: string;
   level: {
@@ -519,6 +521,10 @@ export const platformApi = {
     }>('/shop'),
   purchase: (sku: string) =>
     api<{ purchased: boolean; sku: string }>('/shop/purchase', { method: 'POST', body: { sku } }),
+  equipItem: (id: string) =>
+    api<{ equipped: boolean }>(`/inventory/${id}/equip`, { method: 'POST' }),
   inventory: () =>
-    api<{ items: { id: string; item: { sku: string; name: string } }[] }>('/inventory'),
+    api<{
+      items: { id: string; equipped: boolean; item: { sku: string; name: string } }[];
+    }>('/inventory'),
 };

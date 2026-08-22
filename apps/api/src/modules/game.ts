@@ -131,8 +131,28 @@ export class GameService {
       client.set(`active-game:${userId}`, session.id, 'EX', 60 * 60),
     );
 
+    /**
+     * Equipped cosmetics travel with the session.
+     *
+     * The shop sold trails and paddles that changed nothing, because nothing
+     * ever read the equipped flag — a player spent credits and got a line in an
+     * inventory. Sending them here rather than as a separate request keeps the
+     * level start to one round trip, and cosmetics are deliberately visual only:
+     * they must never touch the simulation, or a purchase would become an
+     * advantage and every verified score would depend on what someone owns.
+     */
+    const equipped = await this.db.inventoryItem.findMany({
+      where: { userId, equipped: true },
+      select: { item: { select: { sku: true, category: true, metadata: true } } },
+    });
+
     return {
       sessionId: session.id,
+      cosmetics: equipped.map((entry) => ({
+        sku: entry.item.sku,
+        category: entry.item.category,
+        metadata: entry.item.metadata,
+      })),
       seed,
       nonce,
       level: {
