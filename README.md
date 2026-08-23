@@ -344,6 +344,13 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Aranabilirlik
+
+Site haritasındaki her adresin yanıt verdiği, hiçbirinin kendi `robots.txt`'imiz tarafından
+yasaklanmadığı ve her sayfanın kendini canonical gösterdiği `pnpm check:seo` ile denetlenir. Google
+Search Console uyarılarının hangisinin gerçek kusur, hangisinin beklenen davranış olduğu
+[`docs/SEARCH-CONSOLE.md`](docs/SEARCH-CONSOLE.md) dosyasında.
+
 ### Yükleme ağırlığı
 
 Oyuncu hub'ı bir bölüm listesidir, ama 3B motoru da beraberinde indiriyordu: `/play` ve `/create`
@@ -908,6 +915,12 @@ paddle colours. Cosmetics are deliberately visual only and never touch the simul
 purchase becomes an advantage and every verified score depends on what someone owns. Catalogue
 metadata is free-form JSON typed in the admin panel, so it is treated as untrusted: anything that is
 not `#rrggbb` is ignored and the level's own colour stands. Eight tests hold that line.
+
+### Crawlability
+
+`pnpm check:seo` verifies that every sitemap URL responds, that none of them is disallowed by our own
+`robots.txt`, and that each page is self-canonical. Which Search Console notices are real defects and
+which are the rules working is explained in [`docs/SEARCH-CONSOLE.md`](docs/SEARCH-CONSOLE.md).
 
 ### Route weight
 

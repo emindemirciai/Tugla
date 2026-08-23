@@ -14,11 +14,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified,
     changeFrequency: route === '/' ? ('weekly' as const) : ('monthly' as const),
     priority: route === '/' ? 1 : 0.6,
-    alternates: {
-      languages: {
-        tr: `${absolute(config, route)}?lang=tr`,
-        en: `${absolute(config, route)}?lang=en`,
-      },
-    },
+    // No hreflang alternates.
+    //
+    // Language here is a client preference, not a URL: `?lang=tr` and `?lang=en`
+    // serve byte-identical HTML. Declaring them as alternates asked Google to
+    // crawl two extra copies of every page, each of which then correctly
+    // reported "alternate page with proper canonical tag" — noise this sitemap
+    // was manufacturing about itself. Honest hreflang needs per-language URLs
+    // that actually differ.
   }));
 }
