@@ -1023,6 +1023,32 @@ try {
     );
   }
 
+  console.log('\nAccounts created without a password are visible to staff');
+  // A Google sign-up produces a user with no password. Staff must be able to see
+  // and act on those accounts exactly like any other, or a whole class of player
+  // becomes invisible to support.
+  const staffList = await call(
+    `/admin/operations/users?limit=100&search=${encodeURIComponent(email)}`,
+    {
+      token: adminToken,
+    },
+  );
+  check('the admin user list responds', staffList.status === 200, `status ${staffList.status}`);
+  const listed = (staffList.body?.items ?? []).find((row) => row.email === email);
+  check('a newly registered account appears in the admin list', Boolean(listed));
+  check(
+    'the listed account carries the fields staff act on',
+    Boolean(listed && 'status' in listed && 'role' in listed && 'username' in listed),
+    JSON.stringify(listed ?? {}).slice(0, 100),
+  );
+
+  const providerList = await call('/auth/providers', { token });
+  check(
+    'linked sign-in providers are reported',
+    providerList.status === 200,
+    `status ${providerList.status}`,
+  );
+
   console.log('\nEquipped cosmetics reach the game');
   const inventory = await call('/inventory', { token });
   const ownedEntry = (inventory.body?.items ?? [])[0];

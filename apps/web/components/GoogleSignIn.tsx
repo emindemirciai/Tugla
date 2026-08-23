@@ -155,6 +155,11 @@ export function GoogleSignIn({ onDone }: { onDone: () => void }) {
         </button>
       )}
       {pending && <p className="muted">{t('auth.google.pending')}</p>}
+      {/* The same button signs in and signs up: the server links a verified
+          Google address to an existing account or creates one. Saying it is
+          cheaper than a player wondering whether they need to register first. */}
+      <small className="oauth-note">{t('auth.google.signUpToo')}</small>
+
       {error && (
         <p className="form-error" role="alert">
           {error}

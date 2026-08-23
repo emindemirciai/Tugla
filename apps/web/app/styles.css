@@ -2694,3 +2694,10 @@ textarea:focus {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+.oauth-note {
+  display: block;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}

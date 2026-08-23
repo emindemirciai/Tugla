@@ -98,13 +98,19 @@ describe('campaign level progression', () => {
       updateMany: vi.fn().mockResolvedValue({ count: 0 }),
       create: vi.fn().mockResolvedValue({ id: 'session-51' }),
     };
-    const database = { client: { level: { findFirst: levelFindFirst }, gameSession } };
+    const inventoryItem = { findMany: vi.fn().mockResolvedValue([]) };
+    const database = {
+      client: { level: { findFirst: levelFindFirst }, gameSession, inventoryItem },
+    };
     const redis = { safe: vi.fn().mockResolvedValue(undefined) };
     const service = new GameService(database as never, redis as never, {} as never, {} as never);
 
     await expect(
       service.start('player-1', { levelId: level51.id, mode: 'CAMPAIGN' }),
-    ).resolves.toMatchObject({ sessionId: 'session-51' });
+    ).resolves.toMatchObject({ sessionId: 'session-51', cosmetics: [] });
+    expect(inventoryItem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'player-1', equipped: true } }),
+    );
     expect(levelFindFirst).toHaveBeenNthCalledWith(2, {
       where: {
         world: 1,

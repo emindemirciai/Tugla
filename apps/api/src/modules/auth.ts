@@ -333,8 +333,12 @@ export class AuthService {
         subject: String(verified.payload.sub ?? ''),
         email: String(verified.payload.email ?? '').toLowerCase(),
         emailVerified: verified.payload.email_verified === true,
-        // Google supplies a profile picture; Apple does not.
+        // Google supplies a profile picture and the account holder's name;
+        // Apple supplies neither. Without the name a new player was called
+        // "emindemirci.ai" — the local part of their address, which is both
+        // wrong and a small privacy leak on every leaderboard.
         picture: typeof verified.payload.picture === 'string' ? verified.payload.picture : null,
+        name: typeof verified.payload.name === 'string' ? verified.payload.name.trim() : null,
       };
     }
     if (!config.APPLE_CLIENT_ID) throw new BadRequestException('Apple sign-in is not configured');
@@ -348,6 +352,7 @@ export class AuthService {
       emailVerified:
         verified.payload.email_verified === true || verified.payload.email_verified === 'true',
       picture: null,
+      name: null,
     };
   }
 
@@ -389,10 +394,15 @@ export class AuthService {
         user = await this.db.user.create({
           data: {
             email: identity.email,
+            // Preference order: what the client asked for, then the name the
+            // provider vouches for, then the address local part as a last
+            // resort. The username is derived from the same source so the two
+            // agree from the first minute.
             username: this.uniqueUsername(
-              data.displayName ?? identity.email.split('@')[0] ?? 'player',
+              data.displayName ?? identity.name ?? identity.email.split('@')[0] ?? 'player',
             ),
-            displayName: data.displayName ?? identity.email.split('@')[0] ?? 'Player',
+            displayName:
+              data.displayName ?? identity.name ?? identity.email.split('@')[0] ?? 'Player',
             emailVerifiedAt: identity.emailVerified ? new Date() : null,
             providerAvatarUrl: identity.picture,
             acceptedTermsAt: new Date(),

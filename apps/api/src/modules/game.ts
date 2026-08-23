@@ -141,18 +141,27 @@ export class GameService {
      * they must never touch the simulation, or a purchase would become an
      * advantage and every verified score would depend on what someone owns.
      */
-    const equipped = await this.db.inventoryItem.findMany({
-      where: { userId, equipped: true },
-      select: { item: { select: { sku: true, category: true, metadata: true } } },
-    });
-
-    return {
-      sessionId: session.id,
-      cosmetics: equipped.map((entry) => ({
+    // Starting a level must not depend on the shop. A cosmetic lookup that
+    // fails should cost the player their trail colour, never their game — so
+    // the failure is logged and playing continues without decoration.
+    let cosmetics: { sku: string; category: string; metadata: unknown }[] = [];
+    try {
+      const equipped = await this.db.inventoryItem.findMany({
+        where: { userId, equipped: true },
+        select: { item: { select: { sku: true, category: true, metadata: true } } },
+      });
+      cosmetics = equipped.map((entry) => ({
         sku: entry.item.sku,
         category: entry.item.category,
         metadata: entry.item.metadata,
-      })),
+      }));
+    } catch (error) {
+      console.warn('Equipped cosmetics could not be read; starting without them', error);
+    }
+
+    return {
+      sessionId: session.id,
+      cosmetics,
       seed,
       nonce,
       level: {

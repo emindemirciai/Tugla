@@ -338,6 +338,9 @@ kod hiç yazılmamıştı. Oyuncu kredi harcayıp envanterinde bir satır alıyo
 Artık zincir tamam: mağaza kartında **Kuşan** düğmesi var, kuşanılan eşya oturum yanıtıyla birlikte
 geliyor (bölüm başlangıcı hâlâ tek gidiş-dönüş) ve motor iz ile platform rengine uyguluyor.
 
+Kozmetik okuması bölüm başlatmayı **engelleyemez**: sorgu hata verirse loga yazılır ve oyun süssüz
+başlar. Bir mağaza sorunu oyuncunun oyununa mal olmamalı.
+
 Kozmetikler **bilinçli olarak yalnızca görseldir**; simülasyona hiç dokunmazlar. Aksi hâlde bir satın
 alma avantaja dönüşür ve sunucunun yeniden ürettiği her skor, oyuncunun neye sahip olduğuna bağlı
 hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı için güvenilmez girdi
@@ -911,7 +914,8 @@ received a row in an inventory.
 
 The chain is complete now: shop cards have an **Equip** button, the equipped item travels with the
 session response (level start stays one round trip), and the renderer applies it to the trail and
-paddle colours. Cosmetics are deliberately visual only and never touch the simulation — otherwise a
+paddle colours. A failing cosmetics lookup cannot block a level start: it is logged and the game starts undecorated,
+because a shop problem should never cost someone their game. Cosmetics are deliberately visual only and never touch the simulation — otherwise a
 purchase becomes an advantage and every verified score depends on what someone owns. Catalogue
 metadata is free-form JSON typed in the admin panel, so it is treated as untrusted: anything that is
 not `#rrggbb` is ignored and the level's own colour stands. Eight tests hold that line.
