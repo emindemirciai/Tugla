@@ -347,6 +347,20 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Arama sonuçlarındaki metin
+
+Google 22 Ağustos 2026'da tugla.fun için gösterim ve tıklama toplamaya başladı; yani sayfalar artık
+arama sonuçlarında görünüyor. Bu, iki eskimiş metni önemli hâle getirdi ve ikisi de düzeltildi:
+
+- **Marka adı:** Tuğla.fun'a geçiş her ekrana ulaşmıştı ama meta açıklamalarına ulaşmamıştı; arama
+  sonuçları sitenin artık kullanmadığı bir adı tanıtıyordu.
+- **Başlık sloganı:** Varsayılan `Break the grid` idi. Sitenin varsayılan dili Türkçe ve trafiği
+  Türkçe arama sorgularından geliyor; sonuçta okunan tek satırın yabancı dilde olması ziyaretçiye
+  başka bir siteye baktığını düşündürür. Varsayılan artık `Modern tuğla kırma oyunu`.
+
+İki test bunları sabitliyor: açıklamalarda güncel marka adı geçmeli ve varsayılan slogan Türkçe
+karakter içermeli.
+
 ### Aranabilirlik
 
 Site haritasındaki her adresin yanıt verdiği, hiçbirinin kendi `robots.txt`'imiz tarafından
@@ -919,6 +933,15 @@ because a shop problem should never cost someone their game. Cosmetics are delib
 purchase becomes an advantage and every verified score depends on what someone owns. Catalogue
 metadata is free-form JSON typed in the admin panel, so it is treated as untrusted: anything that is
 not `#rrggbb` is ignored and the level's own colour stands. Eight tests hold that line.
+
+### Search result copy
+
+Google began collecting impressions for tugla.fun on 22 August 2026, which made two pieces of stale
+text matter. The rename to Tuğla.fun had reached every screen but not the metadata, so results
+advertised a name the site no longer used; and the default tagline was `Break the grid` on a
+Turkish-first site, which makes the one line people read in a result look like a different site. Both
+are fixed and pinned by tests: descriptions must carry the current brand, and the default tagline
+must be in the site's language.
 
 ### Crawlability
 

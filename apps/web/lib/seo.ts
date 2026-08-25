@@ -33,7 +33,10 @@ export const seoConfig = (env: NodeJS.ProcessEnv = process.env): SeoConfig => {
   const defaultLocale: Locale = clean(env.DEFAULT_LOCALE) === 'en' ? 'en' : 'tr';
   return {
     appName: clean(env.APP_NAME) ?? clean(env.NEXT_PUBLIC_APP_NAME) ?? 'Tuğla.fun',
-    tagline: clean(env.APP_TAGLINE) ?? 'Break the grid',
+    // Turkish by default: the title is the line most people read in search
+    // results, and the site's default locale is Turkish. An English tagline on a
+    // Turkish result reads as a foreign site.
+    tagline: clean(env.APP_TAGLINE) ?? 'Modern tuğla kırma oyunu',
     webUrl,
     defaultLocale,
     // Staging and preview environments must never outrank production.
@@ -90,8 +93,8 @@ export const AI_CRAWLERS = [
 ] as const;
 
 export const localizedDescription: Record<Locale, string> = {
-  tr: 'Tuğla; 10 dünya ve 500 el yapımı bölümden oluşan, boss savaşları, günlük görevler, haftalık ligler ve topluluk bölümleri içeren modern bir tuğla kırma oyunudur. Tarayıcıda, PWA olarak, Android ve iOS üzerinde oynanır; her skor sunucuda yeniden simüle edilerek doğrulanır.',
-  en: 'Tuğla is a modern brick breaker with 10 worlds and 500 handcrafted levels, boss fights, daily tasks, weekly leagues and community levels. It runs in the browser, as a PWA and on Android and iOS, and every score is verified by re-simulating the run on the server.',
+  tr: 'Tuğla.fun; 10 dünya ve 500 el yapımı bölümden oluşan, boss savaşları, günlük görevler, haftalık ligler ve topluluk bölümleri içeren modern bir tuğla kırma oyunudur. Tarayıcıda, PWA olarak, Android ve iOS üzerinde oynanır; her skor sunucuda yeniden simüle edilerek doğrulanır.',
+  en: 'Tuğla.fun is a modern brick breaker with 10 worlds and 500 handcrafted levels, boss fights, daily tasks, weekly leagues and community levels. It runs in the browser, as a PWA and on Android and iOS, and every score is verified by re-simulating the run on the server.',
 };
 
 export const localizedShortDescription: Record<Locale, string> = {
@@ -107,12 +110,12 @@ export const localizedShortDescription: Record<Locale, string> = {
 export const faq: Record<Locale, { question: string; answer: string }[]> = {
   tr: [
     {
-      question: 'Tuğla nedir?',
+      question: 'Tuğla.fun nedir?',
       answer:
-        'Tuğla, mobil öncelikli dikey ekran için tasarlanmış modern bir tuğla kırma oyunudur. Görüntü Three.js ile üç boyutludur, fizik ise sabit 120 Hz deterministik 2B düzlemde çalışır.',
+        'Tuğla.fun, mobil öncelikli dikey ekran için tasarlanmış modern bir tuğla kırma oyunudur. Görüntü Three.js ile üç boyutludur, fizik ise sabit 120 Hz deterministik 2B düzlemde çalışır.',
     },
     {
-      question: 'Tuğla ücretsiz mi?',
+      question: 'Tuğla.fun ücretsiz mi?',
       answer:
         'Evet, oyunun tamamı ücretsiz oynanır. Mağazada yalnızca görsel öğeler bulunur ve rekabet modlarında satın alınabilir güç avantajı yoktur.',
     },
@@ -149,12 +152,12 @@ export const faq: Record<Locale, { question: string; answer: string }[]> = {
   ],
   en: [
     {
-      question: 'What is Tuğla?',
+      question: 'What is Tuğla.fun?',
       answer:
-        'Tuğla is a modern brick breaker built for portrait, one-handed play. The presentation is 3D via Three.js while the physics runs on a fixed 120 Hz deterministic 2D plane.',
+        'Tuğla.fun is a modern brick breaker built for portrait, one-handed play. The presentation is 3D via Three.js while the physics runs on a fixed 120 Hz deterministic 2D plane.',
     },
     {
-      question: 'Is Tuğla free to play?',
+      question: 'Is Tuğla.fun free to play?',
       answer:
         'Yes, the whole game is free. The shop sells cosmetics only and competitive modes never sell power advantages.',
     },

@@ -39,7 +39,7 @@ export const readBrand = (env: Record<string, string | undefined> = {}): BrandCo
   return {
     name,
     slug,
-    tagline: env.APP_TAGLINE ?? env.NEXT_PUBLIC_APP_TAGLINE ?? 'Break the grid',
+    tagline: env.APP_TAGLINE ?? env.NEXT_PUBLIC_APP_TAGLINE ?? 'Modern tuğla kırma oyunu',
     rootDomain,
     webUrl,
     adminUrl,

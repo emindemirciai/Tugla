@@ -5,6 +5,7 @@ import {
   faq,
   llmsTxt,
   localizedDescription,
+  localizedShortDescription,
   PRIVATE_ROUTES,
   PUBLIC_ROUTES,
   robotsRules,
@@ -92,5 +93,24 @@ describe('llms.txt', () => {
 describe('faq parity', () => {
   it('asks the same questions in both languages', () => {
     expect(faq.tr).toHaveLength(faq.en.length);
+  });
+});
+
+describe('search result copy', () => {
+  it('describes the product with its current name', () => {
+    // The rename to Tuğla.fun reached every screen but not the metadata, so
+    // search results advertised a name the site no longer used.
+    // Both the long and the short copy: the short one is what social cards show.
+    for (const locale of ['tr', 'en'] as const) {
+      expect(localizedDescription[locale]).not.toMatch(/Tuğla(?!\.fun)[\s;,.]/);
+      expect(localizedShortDescription[locale]).not.toMatch(/Tuğla(?!\.fun)[\s;,.]/);
+    }
+  });
+
+  it('defaults to a tagline in the site language', () => {
+    // The title is the line most people read in a result. The default locale is
+    // Turkish, so an English default made every Turkish result look foreign.
+    const config = seoConfig({ ...base, APP_TAGLINE: undefined } as NodeJS.ProcessEnv);
+    expect(config.tagline).toMatch(/[çğıöşü]/i);
   });
 });
