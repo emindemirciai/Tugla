@@ -347,6 +347,29 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Tuğla yüzeyi ve açılış rallisi
+
+Tuğla renkleri yedi tonluk bir havuzdan iki renk ailesine indi; her aile üç derinlik kademesi taşıyor
+ve kademe satır bandından geliyor, böylece duvar ışık alan bir kabartma gibi okunuyor. Eski havuz
+**anlam renkleriyle çakışıyordu**: `TOUGH` bir tonla birebir aynı hex'ti, `EXPLOSIVE` bir başkasından
+ayırt edilemiyordu — yani oyuncu özel bir bloğu sıradan bir bloktan ayıramıyordu. Üçü de değişti ve
+bir test bu çakışmayı kalıcı olarak yasaklıyor.
+
+Köşe yarıçapı birim şekilde sabitti; tuğla 0,845 × 0,511'e ölçeklendiği için yarıçap elipse dönüşüyor
+ve her tuğla pastil gibi duruyordu. Malzeme de matlaştı: `clearcoat` her tuğlaya kendi parlak
+lekesini koyuyordu, 35 tuğlada 35 ayrı parlama ve ortak ışık yönü yoktu.
+
+`EXPLOSIVE` bloklar artık ayrı bir mesh grubu — gövde, kapaklar, bantlar ve nefes alan bir fitil — ve
+blok hareket ederse dinamit takip ediyor.
+
+Açılış animasyonu iki bağımsız döngü yerine tek bir 13 saniyelik ralli: hız sabit, sekmeler anlık,
+platform topun ineceği yere önceden varıp bekliyor ve tuğla yalnızca topun değdiği yerde kırılıyor.
+Animasyon tamamen CSS olduğu için `hero-preview.ts` modülü kaldırıldı.
+
+**Bağlı iki sayı:** `.preview-hud` yüksekliği 18 px'e sabit ve `.preview-field` inset'i (46 px) buna
+göre yazıldı; HUD'a satır eklenirse inset de aynı miktarda kaymalıdır, yoksa top tuğlalara denk
+gelmez. Bu, düzenleyecek kişinin göreceği yere yorum olarak yazıldı.
+
 ### Arama sonuçlarındaki metin
 
 Google 22 Ağustos 2026'da tugla.fun için gösterim ve tıklama toplamaya başladı; yani sayfalar artık
@@ -933,6 +956,23 @@ because a shop problem should never cost someone their game. Cosmetics are delib
 purchase becomes an advantage and every verified score depends on what someone owns. Catalogue
 metadata is free-form JSON typed in the admin panel, so it is treated as untrusted: anything that is
 not `#rrggbb` is ignored and the level's own colour stands. Eight tests hold that line.
+
+### Brick surface and the landing rally
+
+Brick colours went from a seven-tone pool to two colour families, each carrying three depth steps
+chosen by row band, so the wall reads as a lit relief rather than a grid of flat swatches. The old
+pool **collided with the meaning colours**: `TOUGH` was byte-identical to one tone and `EXPLOSIVE`
+indistinguishable from another, so a player could not tell a special block from an ordinary one. All
+three changed and a test now forbids the collision permanently. Corner radius was fixed in unit space
+while bricks scale to 0.845 × 0.511, which turned every radius into an ellipse; the material also
+lost its clearcoat, which had been giving 35 bricks 35 separate highlights and no shared light
+direction. `EXPLOSIVE` blocks are their own mesh group — body, caps, bands and a breathing fuse — and
+follow the block if it moves.
+
+The landing animation is one 13-second rally instead of two independent loops, and it is pure CSS, so
+`hero-preview.ts` is gone. Two numbers are coupled: `.preview-hud` is a fixed 18px and
+`.preview-field`'s 46px inset is measured from it, so adding a HUD row means moving the inset by the
+same amount — noted in the stylesheet where someone editing it will see it.
 
 ### Search result copy
 

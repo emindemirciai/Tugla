@@ -2,33 +2,45 @@ import { bonusKinds } from '@tugla/shared';
 import { describe, expect, it } from 'vitest';
 import { createBlockGeometry } from './block-visuals';
 import { bonusColor } from './bonus-visuals';
-import { HERO_PREVIEW_BALLS, heroPreviewBallStyle } from './hero-preview';
+import { BLOCK_COLORS, BRICK_FAMILIES, depthStep } from '../components/GameRenderer';
 
 describe('web visual language', () => {
-  it('keeps every hero ball moving through a padded, non-central trajectory', () => {
-    expect(HERO_PREVIEW_BALLS).toHaveLength(8);
-    expect(new Set(HERO_PREVIEW_BALLS.map((ball) => ball.tone))).toEqual(
-      new Set(['peach', 'aqua', 'violet']),
-    );
+  /**
+   * Guards the defect the brick redesign fixed.
+   *
+   * The old seven-tone pool overlapped the meaning colours: TOUGH was
+   * byte-identical to tone 1 and EXPLOSIVE was indistinguishable from tone 6, so
+   * a player could not tell a plain brick from one that takes two hits or blows
+   * up its neighbours. Any future tone added to a family has to stay clear of
+   * every special kind, and this test is what says so.
+   */
+  it('keeps ordinary brick tones clear of every special block colour', () => {
+    const tones = BRICK_FAMILIES.flatMap((family) => [...family]);
+    const meanings = Object.entries(BLOCK_COLORS).filter(([kind]) => kind !== 'NORMAL');
 
-    for (const ball of HERO_PREVIEW_BALLS) {
-      expect(new Set(ball.points.map((point) => point.x)).size).toBeGreaterThan(1);
-      expect(new Set(ball.points.map((point) => point.y)).size).toBeGreaterThan(1);
-      for (const point of ball.points) {
-        expect(point.x).toBeGreaterThanOrEqual(5);
-        expect(point.x).toBeLessThanOrEqual(95);
-        expect(point.y).toBeGreaterThanOrEqual(5);
-        expect(point.y).toBeLessThanOrEqual(95);
-        expect(point).not.toEqual({ x: 50, y: 50 });
-      }
+    expect(tones).toHaveLength(6);
+    expect(new Set(tones).size).toBe(tones.length);
+
+    for (const [kind, colour] of meanings) {
+      expect(tones, `${kind} collides with an ordinary brick tone`).not.toContain(colour);
     }
+  });
 
-    expect(heroPreviewBallStyle(HERO_PREVIEW_BALLS[0]!)).toMatchObject({
-      '--x-0': '12%',
-      '--y-0': '84%',
-      '--ball-duration': '4.1s',
-      '--ball-delay': '-1.2s',
-    });
+  /**
+   * The wall reads as a lit relief because deeper rows sit darker. Each family
+   * must therefore cover all three steps across a nine-row band, and a moving
+   * block must keep its step rather than flickering through the palette.
+   */
+  it('steps ordinary brick depth by row band', () => {
+    expect([0, 1, 2, 3, 4, 5, 6, 7, 8].map(depthStep)).toEqual([0, 0, 0, 1, 1, 1, 2, 2, 2]);
+    // Stable across bands and for negative rows, so authored positions outside
+    // the first band still resolve to a step.
+    expect(depthStep(9)).toBe(depthStep(0));
+    expect(depthStep(-1)).toBe(2);
+
+    for (const family of BRICK_FAMILIES) {
+      expect(new Set(family).size).toBe(3);
+    }
   });
 
   it('uses actual rounded block normals without changing the unit footprint', () => {

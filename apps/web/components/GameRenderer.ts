@@ -3,13 +3,23 @@ import * as THREE from 'three';
 import { fitGameCamera, projectPointerToBoardX } from '../lib/game-camera';
 import type { ResolvedQuality } from '../lib/settings';
 
-const BLOCK_COLORS: Record<string, number> = {
+/**
+ * Fixed meaning colours.
+ *
+ * Three of these used to collide with the ordinary-brick pool: TOUGH was
+ * byte-identical to tone 1 (#8b7bff), EXPLOSIVE (#ff7a8f) was indistinguishable
+ * from tone 6 (#ff8ad0), and FIRE sat on tone 2. A player could not tell a
+ * plain brick from one that takes two hits. The kinds below now differ from
+ * ordinary bricks by MATERIAL as well as hue — plated slate for TOUGH,
+ * dynamite red for EXPLOSIVE — so their colours never have to compete.
+ */
+export const BLOCK_COLORS: Record<string, number> = {
   NORMAL: 0x52bdf5,
-  TOUGH: 0x8b7bff,
+  TOUGH: 0x7b78a8,
   ARMORED: 0x9aa3bd,
-  EXPLOSIVE: 0xff7a8f,
+  EXPLOSIVE: 0xe5252f,
   ICE: 0x7fd8ef,
-  FIRE: 0xff9a6b,
+  FIRE: 0xff7a45,
   ELECTRIC: 0xffd166,
   MOVING: 0x4fd6a8,
   REGENERATING: 0x7ce8b0,
@@ -68,15 +78,27 @@ const PADDLE_COLORS = [
 ];
 
 /**
- * Vivid tones for ordinary bricks.
+ * Ordinary bricks: two colour families, three depth steps each.
  *
- * Giving every NORMAL block the world's single hue made whole boards read as
- * one flat blue — the "kasvetli" look players reported. Tones are picked from
- * the block's own position, so the wall is colourful but never random: the same
- * board always paints the same way, and special kinds keep their meaning
- * colours (armored grey, explosive red…).
+ * The seven-tone pool painted the wall as a random rainbow AND collided with
+ * the meaning colours above. Two families keep the board colourful without
+ * noise, and stepping the tone by row band makes the wall read as a lit relief
+ * rather than a flat sheet — deeper rows sit darker, exactly as they would
+ * under the key light. The same board always paints the same way, because the
+ * family and the step are derived from the brick's authored position.
  */
-const BRICK_TONES = [0x52bdf5, 0x8b7bff, 0xff9a6b, 0x4fd6a8, 0xffd166, 0x7fd8ef, 0xff8ad0];
+export const BRICK_FAMILIES = [
+  // Warm family, three depths.
+  [0xffb389, 0xf0855a, 0xdc7450],
+  // Cool counter tone, three depths.
+  [0xa5e4ff, 0x52bdf5, 0x3d9fd4],
+] as const;
+
+/** Row band → depth step. Top rows lighter, deeper rows darker. */
+export const depthStep = (row: number) => {
+  const band = ((row % 9) + 9) % 9;
+  return band < 3 ? 0 : band < 6 ? 1 : 2;
+};
 
 /** One equipped catalogue item, as the session hands it over. */
 export interface Cosmetic {
@@ -123,6 +145,8 @@ export class GameRenderer {
   private readonly bonusMesh: THREE.InstancedMesh;
   private readonly paddle: THREE.Mesh;
   private readonly trailMesh: THREE.InstancedMesh | null = null;
+  /** Dynamite bodies for EXPLOSIVE blocks, keyed by block index. */
+  private readonly dynamite = new Map<number, { group: THREE.Group; fuse: THREE.Mesh }>();
   private readonly particleGeometry = new THREE.BufferGeometry();
   private readonly particlePoints: THREE.Points;
   private particles: Particle[] = [];
@@ -183,7 +207,13 @@ export class GameRenderer {
     // the same silhouette as the animated board on the landing page. Built once
     // and instanced across the board, so the extra vertices cost one geometry.
     const brickShape = new THREE.Shape();
-    const radius = 0.22;
+    // The radius applies to the UNIT shape, which is then scaled to the brick's
+    // real size (0.845 × 0.511 board units). At 0.22 the corner became an
+    // ellipse — 7.4 px across but only 4.5 px tall — and every brick read as a
+    // lozenge floating in the dark rather than a tile set into a wall. 0.05
+    // lands at roughly 2 px on both axes after scaling: a crisp corner that
+    // still catches the key light.
+    const radius = 0.05;
     const half = 0.5 - radius;
     brickShape.moveTo(-half, -0.5);
     brickShape.lineTo(half, -0.5);
@@ -195,25 +225,35 @@ export class GameRenderer {
     brickShape.lineTo(-0.5, -half);
     brickShape.quadraticCurveTo(-0.5, -0.5, -half, -0.5);
 
+    // Deeper extrusion, tighter bevel: the brick should look like a slab set
+    // into the wall, and a fat bevel on a small corner radius just rounds the
+    // whole edge back off again.
     const blockGeometry = new THREE.ExtrudeGeometry(brickShape, {
-      depth: 0.3,
+      depth: 0.42,
       bevelEnabled: quality.level !== 'LOW',
-      bevelThickness: 0.06,
-      bevelSize: 0.05,
-      bevelSegments: 2,
-      curveSegments: 4,
+      bevelThickness: 0.03,
+      bevelSize: 0.025,
+      bevelSegments: 1,
+      curveSegments: 3,
     });
-    blockGeometry.translate(0, 0, -0.2);
+    blockGeometry.translate(0, 0, -0.26);
+    // One light direction for the whole wall.
+    //
+    // clearcoat: 1 plus sheen: 0.6 gave every brick its own specular blob, so
+    // 35 bricks meant 35 competing highlights and no readable light direction —
+    // the surface looked like wet plastic. Rougher, barely reflective, with a
+    // trace of clearcoat: now the key light at (-5, 16, 10) reads as a single
+    // gradient down each brick, and the wall has one top-left light source.
     const blockMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      roughness: 0.32,
-      metalness: 0.05,
-      reflectivity: 0.7,
+      roughness: 0.46,
+      metalness: 0.04,
+      reflectivity: 0.35,
       emissiveIntensity: 0,
-      sheen: quality.level === 'LOW' ? 0 : 0.6,
+      sheen: 0,
       sheenRoughness: 0.4,
-      clearcoat: quality.level === 'LOW' ? 0 : 1,
-      clearcoatRoughness: 0.18,
+      clearcoat: quality.level === 'LOW' ? 0 : 0.25,
+      clearcoatRoughness: 0.5,
     });
     this.blockMesh = new THREE.InstancedMesh(
       blockGeometry,
@@ -229,6 +269,8 @@ export class GameRenderer {
     );
     this.scene.add(this.blockMesh);
     this.disposables.push(blockGeometry, blockMaterial);
+
+    this.buildDynamite();
 
     const ballGeometry = new THREE.SphereGeometry(
       1,
@@ -324,6 +366,89 @@ export class GameRenderer {
     this.disposables.push(this.particleGeometry, particleMaterial);
 
     this.applyBlockColors();
+  }
+
+  /**
+   * Dynamite bodies for EXPLOSIVE blocks.
+   *
+   * The kind used to be marked by colour alone, which is invisible next to a
+   * pink ordinary brick — players had no way to know which brick would take its
+   * neighbours with it until it did. A red stick with cream end caps, two dark
+   * bands and a lit fuse says it without a legend, and it survives the board
+   * being scaled down to a phone because the silhouette carries the meaning,
+   * not the hue.
+   *
+   * These are real meshes rather than instances: EXPLOSIVE blocks are a handful
+   * per board, so a group each costs nothing and buys per-brick fuse animation.
+   */
+  private buildDynamite() {
+    const explosive = this.engine.snapshot.blocks
+      .map((block, index) => ({ block, index }))
+      .filter((entry) => entry.block.kind === 'EXPLOSIVE');
+    if (explosive.length === 0) return;
+
+    // Built at unit size and scaled per block, exactly like the brick shape.
+    const bodyGeometry = new THREE.CylinderGeometry(0.46, 0.46, 0.92, 14);
+    bodyGeometry.rotateZ(Math.PI / 2);
+    const bodyMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xe5252f,
+      emissive: 0x8e0d16,
+      emissiveIntensity: 0.35,
+      roughness: 0.55,
+      metalness: 0,
+    });
+    const capGeometry = new THREE.CylinderGeometry(0.47, 0.47, 0.08, 14);
+    capGeometry.rotateZ(Math.PI / 2);
+    const capMaterial = new THREE.MeshStandardMaterial({ color: 0xfff3e2, roughness: 0.7 });
+    const bandGeometry = new THREE.CylinderGeometry(0.475, 0.475, 0.06, 14);
+    bandGeometry.rotateZ(Math.PI / 2);
+    const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x780a12, roughness: 0.8 });
+    const fuseGeometry = new THREE.SphereGeometry(0.14, 8, 6);
+    const fuseMaterial = new THREE.MeshBasicMaterial({ color: 0xfff6d8 });
+
+    this.disposables.push(
+      bodyGeometry,
+      bodyMaterial,
+      capGeometry,
+      capMaterial,
+      bandGeometry,
+      bandMaterial,
+      fuseGeometry,
+      fuseMaterial,
+    );
+
+    for (const { block, index } of explosive) {
+      const group = new THREE.Group();
+
+      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+      body.castShadow = this.quality.shadows;
+      group.add(body);
+
+      for (const side of [-1, 1]) {
+        const cap = new THREE.Mesh(capGeometry, capMaterial);
+        cap.position.x = side * 0.48;
+        group.add(cap);
+        const band = new THREE.Mesh(bandGeometry, bandMaterial);
+        band.position.x = side * 0.2;
+        group.add(band);
+      }
+
+      const fuse = new THREE.Mesh(fuseGeometry, fuseMaterial);
+      fuse.position.set(0.2, 0.62, 0.1);
+      group.add(fuse);
+
+      // Board-space placement, then scaled to the brick's real footprint so the
+      // stick sits exactly where the collision box is.
+      //
+      // Every campaign brick is the same shape (0.102 × 0.038 board units, a
+      // 2.7:1 ratio), so the caps keep their proportions. A future level type
+      // with a much narrower brick would squash them on one axis; the fix would
+      // be to scale the group uniformly by the smaller dimension and centre it.
+      group.position.set(block.position.x, block.position.y, 0.14);
+      group.scale.set(block.size.x, block.size.y, Math.min(block.size.x, block.size.y));
+      this.scene.add(group);
+      this.dynamite.set(index, { group, fuse });
+    }
   }
 
   private buildLighting() {
@@ -430,13 +555,16 @@ export class GameRenderer {
   private applyBlockColors() {
     this.engine.snapshot.blocks.forEach((block, index) => {
       if (block.kind === 'NORMAL') {
-        // Tone from the brick's own position: the wall is colourful but stable,
-        // and neighbouring bricks always differ.
+        // Family and depth from the brick's own position: the wall is colourful
+        // but stable, and the row band gives it a lit relief.
         // origin is the block's authored position and never moves, so a moving
         // block keeps its colour instead of flickering through the palette.
         const column = Math.round(block.origin.x);
         const row = Math.round(block.origin.y);
-        this.tempColor.setHex(BRICK_TONES[(column + row) % BRICK_TONES.length]!);
+        // Deterministic 70/30 split — the counter tone is an accent, not half
+        // the wall, so the board still reads as one material.
+        const family = (column * 3 + row) % 10 < 7 ? 0 : 1;
+        this.tempColor.setHex(BRICK_FAMILIES[family]![depthStep(row)]!);
       } else {
         this.tempColor.setHex(BLOCK_COLORS[block.kind] ?? this.palette.block);
       }
@@ -460,9 +588,12 @@ export class GameRenderer {
         count = Math.min(budget, this.quality.level === 'HIGH' ? 14 : 8);
         colour = 0x8fd9ff;
       } else if (event.type === 'BLOCK_EXPLODED') {
-        count = Math.min(budget, this.quality.level === 'HIGH' ? 28 : 14);
-        colour = 0xff7a8f;
-        speed = 4.2;
+        // A dynamite stick has to go off like one: more fragments, faster, and
+        // in fuse-spark yellow rather than the old pink, which read as just
+        // another brick breaking.
+        count = Math.min(budget, this.quality.level === 'HIGH' ? 40 : 20);
+        colour = 0xffc454;
+        speed = 5.4;
       } else if (event.type === 'BOSS_DEFEATED') {
         count = Math.min(budget, this.quality.maxParticles / 2);
         colour = 0xff6b9a;
@@ -550,15 +681,33 @@ export class GameRenderer {
     snapshot.blocks.forEach((block, index) => {
       const visible = block.active;
       this.tempPosition.set(block.position.x, block.position.y, 0.1);
-      this.tempScale.set(
-        visible ? block.size.x * 0.92 : 0,
-        visible ? block.size.y * 0.84 : 0,
-        visible ? 1 : 0,
-      );
+      // Draw the real collision box.
+      //
+      // This used to be 0.92 × 0.84, so a 36.7 × 24.3 px brick was drawn at
+      // 33.8 × 20.4 — the ball visibly bounced off empty space, and because the
+      // two factors differ the vertical mortar line ended up 1.6× the
+      // horizontal one, which is why the wall looked like floating sweets
+      // instead of brickwork. The mortar line should come from the level's
+      // pitch, not from shrinking every brick.
+      this.tempScale.set(visible ? block.size.x : 0, visible ? block.size.y : 0, visible ? 1 : 0);
       this.tempMatrix.compose(this.tempPosition, this.tempQuaternion, this.tempScale);
       this.blockMesh.setMatrixAt(index, this.tempMatrix);
     });
     this.blockMesh.instanceMatrix.needsUpdate = true;
+
+    // Dynamite follows its block — including MOVING ones — and its fuse
+    // breathes so the threat is legible even on a still board.
+    if (this.dynamite.size) {
+      const spark = 0.8 + Math.sin(snapshot.tick * 0.09) * 0.25;
+      for (const [index, entry] of this.dynamite) {
+        const block = snapshot.blocks[index];
+        if (!block) continue;
+        entry.group.visible = block.active;
+        if (!block.active) continue;
+        entry.group.position.set(block.position.x, block.position.y, 0.14);
+        entry.fuse.scale.setScalar(spark);
+      }
+    }
 
     // Retired balls stay in the snapshot until the next tick prunes them, and
     // the game does not tick while it waits for a launch — so an inactive ball
@@ -648,6 +797,8 @@ export class GameRenderer {
   }
 
   dispose() {
+    for (const entry of this.dynamite.values()) this.scene.remove(entry.group);
+    this.dynamite.clear();
     for (const item of this.disposables) item.dispose();
     this.renderer.dispose();
     if (this.renderer.domElement.parentElement === this.mount) {
