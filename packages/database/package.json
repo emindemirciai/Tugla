@@ -14,16 +14,16 @@
     "db:push": "prisma db push --skip-generate"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "6.9.0",
-    "@prisma/client": "6.9.0",
+    "@prisma/adapter-pg": "6.19.3",
+    "@prisma/client": "6.19.3",
     "@tugla/shared": "workspace:*",
     "bcrypt": "6.0.0",
-    "dotenv": "16.5.0",
-    "pg": "8.16.0"
+    "dotenv": "16.6.1",
+    "pg": "8.23.0"
   },
   "devDependencies": {
     "@types/bcrypt": "5.0.2",
-    "@types/pg": "8.15.4",
+    "@types/pg": "8.23.1",
     "prisma": "6.9.0",
     "tsx": "4.19.4",
     "typescript": "5.8.3"
