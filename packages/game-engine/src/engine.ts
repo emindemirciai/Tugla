@@ -1,7 +1,10 @@
 import {
   APP_DEFAULTS,
   encodeReplay,
+  isBallBonus,
+  isIndestructibleBlock,
   sessionChecksum,
+  weightedBonusPool,
   type BonusKind,
   type LevelDefinition,
   type ReplayDocument,
@@ -63,6 +66,16 @@ const SHIELD_TICKS = 240;
 const BONUS_FALL_SPEED = 2.15;
 const MAX_LAUNCH_ANGLE = 1.05;
 
+/**
+ * Ceiling for banked lives. LIFE_GUARD used to cap at the level's starting
+ * allowance, which meant it did nothing at all unless you had already died;
+ * `levelResultSchema` accepts up to five, so five it is.
+ */
+const MAX_LIVES = 5;
+
+/** Laser cadence: five shots a second while the effect runs. */
+const LASER_INTERVAL = 24;
+
 const circleAabb = (ball: Ball, block: RuntimeBlock) => {
   const halfWidth = block.size.x / 2;
   const halfHeight = block.size.y / 2;
@@ -112,6 +125,16 @@ export class TuğlaEngine {
   private readonly recordReplay: boolean;
   private readonly inputs: ReplayInput[] = [];
   private pendingLaunch = false;
+
+  /**
+   * Weighted pool of everything that is not "more balls", used when the
+   * authored bonus would be wasted on the current board.
+   */
+  private readonly utilityPool: BonusKind[] = weightedBonusPool().filter(
+    (kind) => !isBallBonus(kind),
+  );
+  /** Whether the previous drop was a ball bonus; blocks back-to-back swarms. */
+  private lastBonusWasBall = false;
 
   snapshot: EngineSnapshot;
 
@@ -350,8 +373,12 @@ export class TuğlaEngine {
         this.addBalls(this.snapshot.balls.filter((ball) => ball.active).length);
         break;
       case 'PADDLE_GROW':
+        // A visible extension rather than a nudge. +0.45 on a 1.8-wide paddle
+        // was a 25% change that most players never noticed, which is part of why
+        // every bonus felt like "more balls": the alternatives were invisible.
+        // 40% of the base width per pickup, stacking to double.
         paddle.growTicks = EFFECT_TICKS.PADDLE_GROW;
-        paddle.width = Math.min(paddle.baseWidth * 1.9, paddle.width + 0.45);
+        paddle.width = Math.min(paddle.baseWidth * 2, paddle.width + paddle.baseWidth * 0.4);
         break;
       case 'MAGNET':
         paddle.magnetTicks = EFFECT_TICKS.MAGNET;
@@ -371,7 +398,11 @@ export class TuğlaEngine {
         this.snapshot.safetyNetTicks = EFFECT_TICKS.SAFETY_NET;
         break;
       case 'LIFE_GUARD':
-        this.snapshot.lives = Math.min(APP_DEFAULTS.livesPerLevel, this.snapshot.lives + 1);
+        // Capped at livesPerLevel, which is also the value you start with — so
+        // at full lives this was a completely silent no-op. One life may now be
+        // banked above the level's allowance, and the drop filter withholds the
+        // bonus entirely when even that is full.
+        this.snapshot.lives = Math.min(MAX_LIVES, this.snapshot.lives + 1);
         break;
       case 'GIANT_BALL':
         for (const ball of this.snapshot.balls) {
@@ -436,6 +467,7 @@ export class TuğlaEngine {
         continue;
       }
       const scale = ball.effects.has('SLOW_TIME') ? 0.55 : 1;
+      this.applyMagnet(ball, dt);
       ball.previous.x = ball.position.x;
       ball.previous.y = ball.position.y;
       ball.position.x += ball.velocity.x * dt * scale;
@@ -446,6 +478,7 @@ export class TuğlaEngine {
       if (ball.position.y < -0.5) this.retireBall(ball);
     }
 
+    this.fireLaser();
     this.updateBonuses(dt);
     this.snapshot.balls = this.snapshot.balls.filter((ball) => ball.active);
 
@@ -512,7 +545,10 @@ export class TuğlaEngine {
   private moveBlocks() {
     if (this.snapshot.tick % 2 !== 0) return;
     for (const block of this.snapshot.blocks) {
-      if (block.kind !== 'MOVING' || block.motionRange <= 0) continue;
+      // Any block with a patrol range moves, not only kind === 'MOVING'. That
+      // keeps MOVING behaving exactly as before (motionRange defaults to 0 for
+      // every other kind) while leaving room for a level to slide a barrier.
+      if (block.motionRange <= 0) continue;
       const t = this.snapshot.tick * this.fixedStep * block.motionSpeed + block.motionPhase;
       block.position.x = clamp(
         block.origin.x + Math.sin(t) * block.motionRange,
@@ -520,6 +556,62 @@ export class TuğlaEngine {
         this.width - block.size.x / 2,
       );
     }
+  }
+
+  /**
+   * MAGNET: steers a descending ball towards the paddle.
+   *
+   * The bonus existed in name only — `magnetTicks` was set, counted down and
+   * never read — so collecting it did nothing whatsoever. It now bends the
+   * ball's horizontal velocity towards the paddle on the way down, while
+   * preserving speed exactly: a magnet is an aim assist, not a slow field, and
+   * changing speed here would also change every downstream bounce.
+   *
+   * Only applies below mid-board, so it helps with the catch without dragging
+   * the ball off a line the player aimed at the bricks.
+   */
+  private applyMagnet(ball: Ball, dt: number) {
+    const paddle = this.snapshot.paddle;
+    if (paddle.magnetTicks <= 0) return;
+    if (ball.velocity.y >= 0) return;
+    if (ball.position.y > this.height * 0.55) return;
+
+    const speed = Math.hypot(ball.velocity.x, ball.velocity.y) || this.ballSpeed;
+    const desired = clamp((paddle.x - ball.position.x) * 2.6, -speed * 0.6, speed * 0.6);
+    ball.velocity.x += (desired - ball.velocity.x) * Math.min(1, dt * 3.2);
+
+    const magnitude = Math.hypot(ball.velocity.x, ball.velocity.y) || 1;
+    const correction = speed / magnitude;
+    ball.velocity.x *= correction;
+    ball.velocity.y *= correction;
+  }
+
+  /**
+   * LASER: the paddle shoots.
+   *
+   * Like MAGNET, this was dead: `laserTicks` was set and decremented, and no
+   * shot was ever fired. It now hits the lowest breakable block in the paddle's
+   * column, five times a second. Indestructible blocks are skipped rather than
+   * absorbing the shot, so a gated level cannot be stalled by a barrier sitting
+   * over the paddle.
+   */
+  private fireLaser() {
+    const paddle = this.snapshot.paddle;
+    if (paddle.laserTicks <= 0) return;
+    if (this.snapshot.tick % LASER_INTERVAL !== 0) return;
+
+    // destroyBlock needs a source ball for chain and explosion effects.
+    const source = this.snapshot.balls.find((ball) => ball.active);
+    if (!source) return;
+
+    let target: RuntimeBlock | null = null;
+    for (const block of this.snapshot.blocks) {
+      if (!block.active || isIndestructibleBlock(block.kind)) continue;
+      if (Math.abs(block.position.x - paddle.x) > block.size.x / 2) continue;
+      if (!target || block.position.y < target.position.y) target = block;
+    }
+    if (!target) return;
+    this.damageBlock(target, this.snapshot.overcharge, source);
   }
 
   private updateBonuses(dt: number) {
@@ -768,6 +860,10 @@ export class TuğlaEngine {
     });
     for (const block of this.snapshot.blocks) {
       if (!block.active || block.id === source.id) continue;
+      // A blast must not delete the level's permanent structure. Without this,
+      // one EXPLOSIVE brick could open a hole in an indestructible barrier and
+      // the gate the level is built around would simply disappear.
+      if (isIndestructibleBlock(block.kind)) continue;
       const distance = Math.hypot(
         block.position.x - source.position.x,
         block.position.y - source.position.y,
@@ -780,7 +876,9 @@ export class TuğlaEngine {
 
   private chain(source: RuntimeBlock, ball: Ball) {
     const candidates = this.snapshot.blocks
-      .filter((block) => block.active && block.id !== source.id)
+      .filter(
+        (block) => block.active && block.id !== source.id && !isIndestructibleBlock(block.kind),
+      )
       .map((block) => ({
         block,
         distance: Math.hypot(
@@ -804,11 +902,89 @@ export class TuğlaEngine {
     }
   }
 
-  private dropBonus(block: RuntimeBlock) {
+  /**
+   * Decides what a brick actually drops.
+   *
+   * The authored bonus is a suggestion. Filtering it against the live board at
+   * drop time is what stops the run of identical pickups players complained
+   * about: two ball bonuses can never land back to back, a swarm is withheld
+   * once the board is already busy, and any bonus whose effect is already
+   * running — or that would do literally nothing, like an extra life at full
+   * lives — is swapped for one that will be felt.
+   *
+   * Uses the seeded PRNG, so a replay resolves to the identical substitution.
+   */
+  private resolveBonus(kind: BonusKind): BonusKind {
+    if (this.bonusFitsBoard(kind)) {
+      this.lastBonusWasBall = isBallBonus(kind);
+      return kind;
+    }
+    const usable = this.utilityPool.filter((candidate) => this.bonusFitsBoard(candidate));
+    // If literally everything is already running, the original still drops:
+    // a visible no-op beats a silent one.
+    if (!usable.length) {
+      this.lastBonusWasBall = isBallBonus(kind);
+      return kind;
+    }
+    const picked = usable[Math.floor(this.random() * usable.length)] ?? kind;
+    this.lastBonusWasBall = false;
+    return picked;
+  }
+
+  /** Whether a bonus would visibly change the current board. */
+  private bonusFitsBoard(kind: BonusKind): boolean {
+    const snapshot = this.snapshot;
+    const paddle = snapshot.paddle;
+    const active = snapshot.balls.filter((ball) => ball.active).length;
+
+    if (isBallBonus(kind)) {
+      if (this.lastBonusWasBall) return false;
+      // Past eight balls the board is already chaotic and another swarm reads as
+      // noise rather than a reward.
+      if (active >= 8) return false;
+      if (kind === 'BALL_DOUBLE' && active >= 4) return false;
+      if (kind === 'BALL_5' && active >= 3) return false;
+      return true;
+    }
+
+    switch (kind) {
+      case 'LIFE_GUARD':
+        return snapshot.lives < MAX_LIVES;
+      case 'SAFETY_NET':
+        // Refreshing a floor that has just gone up is invisible; refreshing one
+        // about to expire is not.
+        return snapshot.safetyNetTicks < EFFECT_TICKS.SAFETY_NET * 0.4;
+      case 'PADDLE_GROW':
+        return paddle.width < paddle.baseWidth * 1.95;
+      case 'SHIELD':
+        return paddle.shield === 0;
+      case 'MAGNET':
+        return paddle.magnetTicks <= 0;
+      case 'STICKY':
+        return paddle.stickyTicks <= 0;
+      case 'LASER':
+        return paddle.laserTicks <= 0;
+      case 'SLOW_TIME':
+        return !snapshot.balls.some((ball) => ball.active && ball.effects.has('SLOW_TIME'));
+      default:
+        return true;
+    }
+  }
+
+  /**
+   * Drops the bonus a block is carrying, resolved against the live board.
+   *
+   * Public because the resolution is a game rule, not an implementation detail:
+   * the level editor preview and the drop-filter tests both need to ask "what
+   * would this brick actually give the player right now?" without driving a
+   * full rally into it.
+   */
+  dropBonus(block: RuntimeBlock) {
     if (!block.bonus) return;
+    const kind = this.resolveBonus(block.bonus);
     const bonus: FallingBonus = {
       id: this.nextBonusId++,
-      kind: block.bonus,
+      kind,
       position: { x: block.position.x, y: block.position.y },
       velocityY: -BONUS_FALL_SPEED,
       active: true,
@@ -842,6 +1018,8 @@ export class TuğlaEngine {
     paddle.growTicks = 0;
     paddle.stickyTicks = 0;
     paddle.magnetTicks = 0;
+    paddle.laserTicks = 0;
+    this.lastBonusWasBall = false;
     this.snapshot.bonuses = [];
     this.snapshot.balls = [this.makeBall(paddle.x, paddle.y + 0.35, 0, 0)];
     this.snapshot.status = 'READY';

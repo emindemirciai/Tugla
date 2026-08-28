@@ -77,6 +77,58 @@ export const bonusKinds = [
 
 export type BonusKind = (typeof bonusKinds)[number];
 
+/**
+ * Blocks that damage cannot remove.
+ *
+ * `DEFLECTOR` is the barrier the gauntlet levels are built around: the ball
+ * bounces and the wall stays. Splash damage used to reach past that rule and
+ * open a hole in it, which quietly deleted the level's whole shape — so the
+ * check lives here, where the engine, the generator and the renderer all read
+ * the same answer.
+ */
+export const indestructibleBlockKinds = ['DEFLECTOR'] as const;
+
+export const isIndestructibleBlock = (kind: BlockKind): boolean =>
+  (indestructibleBlockKinds as readonly string[]).includes(kind);
+
+/** Bonuses that put more balls on the board. */
+export const ballBonusKinds = ['BALL_1', 'BALL_3', 'BALL_5', 'BALL_DOUBLE'] as const;
+
+export const isBallBonus = (kind: BonusKind): boolean =>
+  (ballBonusKinds as readonly string[]).includes(kind);
+
+/**
+ * How often each bonus may be authored into a level.
+ *
+ * One table, read by the generator, the admin editor and the seed script, so
+ * they cannot disagree about what a level may contain. Ball bonuses are
+ * deliberately outnumbered: unweighted they were a quarter of every drop, which
+ * is what made pickups feel identical.
+ */
+export const bonusWeights: Record<BonusKind, number> = {
+  BALL_1: 3,
+  BALL_3: 1,
+  BALL_5: 1,
+  BALL_DOUBLE: 1,
+  FIREBALL: 3,
+  PIERCING: 3,
+  EXPLOSIVE: 3,
+  CHAIN_LIGHTNING: 2,
+  GIANT_BALL: 2,
+  LASER: 3,
+  PADDLE_GROW: 3,
+  MAGNET: 3,
+  SLOW_TIME: 2,
+  STICKY: 2,
+  SHIELD: 2,
+  LIFE_GUARD: 2,
+  SAFETY_NET: 3,
+};
+
+/** The authoring pool: every kind at least once, repeated by its weight. */
+export const weightedBonusPool = (): BonusKind[] =>
+  bonusKinds.flatMap((kind) => Array.from({ length: bonusWeights[kind] }, () => kind));
+
 export const qualityLevels = ['LOW', 'MEDIUM', 'HIGH', 'AUTO'] as const;
 export type QualityLevel = (typeof qualityLevels)[number];
 

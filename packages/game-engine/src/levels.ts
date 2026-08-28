@@ -1,10 +1,13 @@
 import {
   APP_DEFAULTS,
+  isIndestructibleBlock,
   levelTypeForIndex,
+  weightedBonusPool,
   worldThemes,
   type BlockKind,
   type BonusKind,
   type LevelDefinition,
+  type LevelType,
 } from '@tugla/shared';
 
 /** Small deterministic PRNG so generated levels are stable across runs. */
@@ -38,7 +41,7 @@ const kindPoolForWorld = (world: number): BlockKind[] => {
     ['NORMAL', 'ARMORED', 'MOVING', 'ELECTRIC'],
     ['NORMAL', 'TOUGH', 'REGENERATING', 'SPLITTER'],
     ['NORMAL', 'ARMORED', 'SHIELDED', 'PORTAL'],
-    ['NORMAL', 'TOUGH', 'DEFLECTOR', 'ELECTRIC'],
+    ['NORMAL', 'TOUGH', 'SHIELDED', 'ELECTRIC'],
     ['NORMAL', 'ARMORED', 'ABSORBER', 'REGENERATING'],
     ['NORMAL', 'TOUGH', 'ARMORED', 'SHIELDED', 'EXPLOSIVE', 'PORTAL'],
   ];
@@ -46,37 +49,108 @@ const kindPoolForWorld = (world: number): BlockKind[] => {
 };
 
 /**
- * Bonus pool.
+ * Bonus authoring pool, expanded from the shared weights.
  *
- * Extra balls used to dominate because three of the eight entries added balls;
- * every drop felt like the same "+3 balls". The pool is now weighted: a single
- * extra ball is the common case, larger swarms are rare, and the utility
- * bonuses (net, shield, magnet, slow time…) make up the bulk so two drops in a
- * row rarely feel alike.
+ * The weights live in `@tugla/shared` so the generator, the admin editor and
+ * the seed script cannot drift apart on what a level is allowed to contain.
  */
-const bonusPool: BonusKind[] = [
-  'BALL_1',
-  'BALL_1',
-  'BALL_1',
-  'BALL_3',
-  'BALL_5',
-  'BALL_DOUBLE',
-  'SAFETY_NET',
-  'SAFETY_NET',
-  'SHIELD',
-  'PADDLE_GROW',
-  'PADDLE_GROW',
-  'MAGNET',
-  'STICKY',
-  'SLOW_TIME',
-  'LASER',
-  'FIREBALL',
-  'PIERCING',
-  'EXPLOSIVE',
-  'CHAIN_LIGHTNING',
-  'GIANT_BALL',
-  'LIFE_GUARD',
-];
+const bonusPool: BonusKind[] = weightedBonusPool();
+
+/**
+ * A wall the ball cannot break, with one opening.
+ *
+ * Boss rooms and the late-campaign gauntlet levels put an indestructible
+ * barrier between the paddle and the bricks: the only way up is to thread the
+ * ball through the gate. It changes what the player is doing — aiming for a gap
+ * instead of sweeping a wall — without adding a single new mechanic to the
+ * engine, because DEFLECTOR blocks already reflect without taking damage.
+ */
+export interface BarrierPlan {
+  /** Normalized y of the barrier row. */
+  y: number;
+  /** First open column of the gate. */
+  gapColumn: number;
+  /** Gate width, in columns. */
+  gapWidth: number;
+  /** World bosses get a second row with the gate on the far side. */
+  double: boolean;
+}
+
+/** Columns across the board. Bricks and barriers share the pitch. */
+const COLUMNS = 8;
+
+/**
+ * Decides whether a level is gated, and how.
+ *
+ * Deterministic in the level index, so the client, the admin preview and the
+ * server's verification run all build the identical board. Exported so a test
+ * can assert the campaign's difficulty curve rather than trusting a comment:
+ * no gates while the game is still teaching, every boss room gated, and a
+ * recurring gauntlet once the player has seen everything.
+ */
+export const barrierPlanFor = (
+  index: number,
+  type: LevelType,
+  random: () => number,
+): BarrierPlan | null => {
+  const boss = type === 'MINI_BOSS' || type === 'WORLD_BOSS';
+  // Gauntlet levels start deep into world 3 — by then the player has met every
+  // block kind, and a gate reads as a new challenge rather than a wall they do
+  // not understand.
+  const gauntlet = index >= 120 && index % 12 === 5;
+  if (!boss && !gauntlet) return null;
+
+  // A world boss gets the narrow gate; everything else gets two columns, which
+  // is about ten ball diameters and can be hit deliberately rather than by luck.
+  const gapWidth = type === 'WORLD_BOSS' ? 1 : 2;
+  const gapColumn = Math.floor(random() * (COLUMNS - gapWidth));
+
+  return {
+    y: boss ? 0.3 : 0.36,
+    gapColumn,
+    gapWidth,
+    double: type === 'WORLD_BOSS',
+  };
+};
+
+/** Builds the barrier rows for a plan. */
+const barrierBlocks = (index: number, plan: BarrierPlan): LevelDefinition['blocks'] => {
+  const blocks: LevelDefinition['blocks'] = [];
+  const rows: { y: number; gapColumn: number; tag: string }[] = [
+    { y: plan.y, gapColumn: plan.gapColumn, tag: 'a' },
+  ];
+  if (plan.double) {
+    // Gate on the far side, so the two openings are never stacked: the ball has
+    // to cross the corridor between the rows to get up.
+    const mirrored = COLUMNS - plan.gapWidth - plan.gapColumn;
+    rows.push({ y: plan.y - 0.075, gapColumn: Math.max(0, mirrored), tag: 'b' });
+  }
+
+  for (const row of rows) {
+    for (let column = 0; column < COLUMNS; column += 1) {
+      if (column >= row.gapColumn && column < row.gapColumn + plan.gapWidth) continue;
+      blocks.push({
+        id: `l${index}-bar${row.tag}c${column}`,
+        kind: 'DEFLECTOR',
+        x: 0.08 + column * 0.12,
+        y: row.y,
+        // Slightly wider than a brick so the row is a seamless wall: at the
+        // brick width of 0.102 the 0.018 seams are narrower than the ball, but
+        // a discrete collision test should never have to rely on that.
+        width: 0.118,
+        height: 0.038,
+        // Never read — a DEFLECTOR reflects before any damage is applied — but
+        // the schema requires a positive value.
+        hitPoints: 1,
+        rotation: 0,
+        bonus: null,
+        // The wall is scenery, not a target: it must not hold the level open.
+        required: false,
+      });
+    }
+  }
+  return blocks;
+};
 
 const hitPointsFor = (kind: BlockKind, index: number) => {
   switch (kind) {
@@ -208,6 +282,21 @@ const LAYOUTS: Layout[] = [
  * the tougher members of the world pool, so difficulty reads visually instead of
  * being scattered at random.
  */
+/**
+ * Brick kinds must be destructible.
+ *
+ * A required brick that cannot be destroyed makes its level impossible to
+ * finish, and because progression is sequential that would stop every player
+ * there forever. Barriers are placed deliberately by `barrierPlanFor` with
+ * `required: false`; the brick generator must never reach for one.
+ */
+const assertDestructible = (kind: BlockKind): BlockKind => {
+  if (isIndestructibleBlock(kind)) {
+    throw new Error(`${kind} is indestructible and cannot be used as a brick kind`);
+  }
+  return kind;
+};
+
 const kindForCell = ({
   pool,
   row,
@@ -222,13 +311,16 @@ const kindForCell = ({
   accent: boolean;
   random: () => number;
 }): BlockKind => {
-  const specials = pool.filter((kind) => kind !== 'NORMAL');
+  // Filtered, not just excluded: a pool that lists an indestructible kind is a
+  // configuration mistake, and it must not be able to reach a brick.
+  const specials = pool.filter((kind) => kind !== 'NORMAL' && !isIndestructibleBlock(kind));
   if (!specials.length) return 'NORMAL';
-  if (accent) return specials[Math.floor(random() * specials.length)] ?? 'NORMAL';
+  if (accent)
+    return assertDestructible(specials[Math.floor(random() * specials.length)] ?? 'NORMAL');
   // Deeper rows stay softer so there is always a way into the board.
   const chance = row === 0 ? 0.55 : row === 1 ? 0.3 : 0.12;
   return random() < chance
-    ? (specials[Math.floor(random() * specials.length)] ?? 'NORMAL')
+    ? assertDestructible(specials[Math.floor(random() * specials.length)] ?? 'NORMAL')
     : 'NORMAL';
 };
 
@@ -245,12 +337,16 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
   const pool = kindPoolForWorld(world);
   const theme = worldThemes[(world - 1) % worldThemes.length] ?? 'neon-grid';
 
-  const columns = 8;
+  const columns = COLUMNS;
   const rows = Math.min(9, 4 + Math.floor(index / 60));
   const blocks: LevelDefinition['blocks'] = [];
   // index alone would put every 10th level (the mini bosses) on the same
   // silhouette, so the world is mixed into the choice.
   const layout = LAYOUTS[(index + world * 3) % LAYOUTS.length]!;
+  const barrier = barrierPlanFor(index, type, random);
+  // Bricks must stop clear of the barrier, or the wall and the lowest brick row
+  // would occupy the same space.
+  const floorY = barrier ? barrier.y + 0.045 : 0.24;
 
   if (type !== 'NORMAL') {
     blocks.push({
@@ -277,7 +373,7 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
       if (random() > 0.94 && !layout.solid) continue;
 
       const y = (type === 'NORMAL' ? 0.84 : 0.74) - row * 0.055;
-      if (y <= 0.24) continue;
+      if (y <= floorY) continue;
 
       const kind = kindForCell({
         pool,
@@ -333,7 +429,7 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
     for (let column = 0; column < columns && blocks.length < minimumBlocks; column += 1) {
       const x = 0.08 + column * 0.12;
       const y = (type === 'NORMAL' ? 0.84 : 0.74) - row * 0.055;
-      if (y <= 0.24) continue;
+      if (y <= floorY) continue;
       const key = `${x.toFixed(3)}:${y.toFixed(3)}`;
       if (occupied.has(key)) continue;
       occupied.add(key);
@@ -352,6 +448,10 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
     }
   }
 
+  // The barrier goes on last, after the minimum-brick fill: it is not a target,
+  // so it must not count towards the level being "worth playing".
+  if (barrier) blocks.push(...barrierBlocks(index, barrier));
+
   return {
     version: 1,
     name: `${APP_DEFAULTS.name} ${index}`,
@@ -366,6 +466,7 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
       boss: type !== 'NORMAL',
       generated: true,
       layout: layout.name,
+      barrier: barrier ?? null,
     },
   };
 };

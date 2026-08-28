@@ -347,6 +347,30 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Tuğla gölgelemesi, geçit bariyerleri ve bonus dinamiği
+
+**Gölgeleme.** Tasarım gradyanı oyunda yoktu, çünkü yaşayacağı bir yer yoktu: tüm tuğlalar tek bir
+`InstancedMesh` ile çiziliyor ve bir instanced mesh her tuğlaya yalnızca tek bir düz renk verebilir.
+Gradyan artık geometriye **vertex color** olarak gömülü; three.js `material.color × vertexColor ×
+instanceColor` çarptığı için tek geometri her tuğlada o tuğlanın kendi rengiyle tonlanıyor. Tek draw
+call, shader yok. Rampanın yönü testle sabit: üst alttan parlak, üst pah en parlak yüzey, oturma
+gölgesi yan duvardan koyu.
+
+**Bariyerler.** `DEFLECTOR` artık kırılmaz ve boss ile geçit bölümlerinde tuğla alanının altında bir
+duvar kuruyor; top yukarı çıkmak için geçitten geçmek zorunda. Sıçrama hasarı bu duvarı deliyordu —
+`explode()` ve `chain()` tür kontrolü yapmadan can düşürüyordu — artık ikisi de atlıyor.
+
+**Kırılamayan zorunlu blok tehlikesi.** Bu değişiklik sessiz bir tuzak açtı: 8. dünyanın tuğla havuzu
+`DEFLECTOR` içeriyordu. Kırılmazlık gelmeden önce zararsızdı; sonrasında **50 bölümde zorunlu ama asla
+kırılamayan tuğlalar** oluştu. İlerleme sıralı olduğu için bu, her oyuncuyu 351. bölümde kalıcı olarak
+durdururdu. Havuz düzeltildi, üretici artık kırılmaz bir türü tuğla olarak seçemiyor (seçerse hata
+fırlatıyor) ve iki test 500 bölümün tamamının bitirilebilir kaldığını doğruluyor.
+
+**Bonuslar.** `MAGNET` ve `LASER` tamamen ölü koddu: sayaçları kuruluyor, azaltılıyor, sıfırlanıyordu
+ama simülasyonda hiç okunmuyordu. İkisi de gerçek etkiye kavuştu. Ne düşeceği artık düşme anında
+canlı tahtaya göre süzülüyor — iki top bonusu arka arkaya düşmüyor, çalışan bir etki tekrar
+düşmüyor — ve süzgeç tohumlanmış PRNG kullandığı için replay birebir aynı sonucu üretiyor.
+
 ### Tuğla yüzeyi ve açılış rallisi
 
 Tuğla renkleri yedi tonluk bir havuzdan iki renk ailesine indi; her aile üç derinlik kademesi taşıyor
@@ -956,6 +980,29 @@ because a shop problem should never cost someone their game. Cosmetics are delib
 purchase becomes an advantage and every verified score depends on what someone owns. Catalogue
 metadata is free-form JSON typed in the admin panel, so it is treated as untrusted: anything that is
 not `#rrggbb` is ignored and the level's own colour stands. Eight tests hold that line.
+
+### Brick shading, gate barriers and bonus dynamics
+
+The design's gradient had nowhere to live: every brick is drawn from one `InstancedMesh`, and an
+instanced mesh can only give each brick a single flat colour. The ramp is now baked into the geometry
+as **vertex colours** — three.js multiplies `material.color × vertexColor × instanceColor`, so one
+geometry carries the shading while each brick keeps its own hue, in a single draw call with no
+shader. A test pins the ramp's direction.
+
+`DEFLECTOR` blocks are indestructible and form a wall below the bricks on boss and gauntlet levels,
+so the ball must pass through a gate. Splash damage used to punch holes in that wall because
+`explode()` and `chain()` subtracted hit points without checking the kind; both now skip it.
+
+That change opened a quiet trap: world 8's brick pool listed `DEFLECTOR`. Harmless while the kind
+merely reflected — but once indestructible, fifty levels contained **required bricks that could never
+be destroyed**, and with sequential progression that would have stopped every player at level 351
+permanently. The pool is fixed, the generator now throws if an indestructible kind reaches a brick,
+and two tests assert all 500 levels remain finishable.
+
+`MAGNET` and `LASER` were dead code — counters set, decremented and cleared, never read by the
+simulation. Both do something now, and what drops is filtered against the live board at drop time
+(no two ball bonuses in a row, no duplicate of a running effect) using the seeded PRNG, so replays
+still reproduce exactly.
 
 ### Brick surface and the landing rally
 

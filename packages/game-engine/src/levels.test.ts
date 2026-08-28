@@ -24,7 +24,17 @@ describe('campaign level variety', () => {
     for (let index = 1; index <= 500; index += 1) {
       const level = generateCampaignLevel(index);
       expect(level.blocks.length).toBeGreaterThan(5);
-      expect(level.blocks.every((block) => block.y > 0.24)).toBe(true);
+
+      // Two rules now, because there are two kinds of thing on the board.
+      // Bricks stay in the upper field as before. Barriers sit deliberately
+      // lower — the ball has to pass through their gate to reach the bricks —
+      // but they must still leave the paddle room to work, so they are held to
+      // their own floor rather than exempted from having one.
+      const bricks = level.blocks.filter((block) => block.kind !== 'DEFLECTOR');
+      const barriers = level.blocks.filter((block) => block.kind === 'DEFLECTOR');
+
+      expect(bricks.every((block) => block.y > 0.24)).toBe(true);
+      expect(barriers.every((block) => block.y > 0.15)).toBe(true);
     }
   });
 

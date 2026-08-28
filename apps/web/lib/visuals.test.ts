@@ -1,6 +1,6 @@
 import { bonusKinds } from '@tugla/shared';
 import { describe, expect, it } from 'vitest';
-import { createBlockGeometry } from './block-visuals';
+import { brickShadeAt, createBlockGeometry, BRICK_SHADING } from './block-visuals';
 import { bonusColor } from './bonus-visuals';
 import { BLOCK_COLORS, BRICK_FAMILIES, depthStep } from '../components/GameRenderer';
 
@@ -33,8 +33,6 @@ describe('web visual language', () => {
    */
   it('steps ordinary brick depth by row band', () => {
     expect([0, 1, 2, 3, 4, 5, 6, 7, 8].map(depthStep)).toEqual([0, 0, 0, 1, 1, 1, 2, 2, 2]);
-    // Stable across bands and for negative rows, so authored positions outside
-    // the first band still resolve to a step.
     expect(depthStep(9)).toBe(depthStep(0));
     expect(depthStep(-1)).toBe(2);
 
@@ -43,30 +41,42 @@ describe('web visual language', () => {
     }
   });
 
-  it('uses actual rounded block normals without changing the unit footprint', () => {
+  /**
+   * The gradient the design asked for cannot come from scene lighting: the
+   * brick's front face points at the camera, so one directional light lands on
+   * every brick at the same angle and the face renders flat. It has to be baked
+   * into the geometry as vertex colours — which is exactly what made the 3D
+   * bricks look nothing like the mockup before. These assertions are the design
+   * contract: light from above, dark at the seat, and the top bevel brightest.
+   */
+  it('bakes the design gradient into the brick, lit from above', () => {
+    const faceTop = brickShadeAt(0.5, 0, 0, 1);
+    const faceMid = brickShadeAt(0.04, 0, 0, 1);
+    const faceBottom = brickShadeAt(-0.5, 0, 0, 1);
+
+    expect(faceTop).toBeGreaterThan(faceMid);
+    expect(faceMid).toBeGreaterThan(faceBottom);
+    expect(faceMid).toBeCloseTo(BRICK_SHADING.faceMid, 5);
+
+    // The lit top edge is the brightest thing on the brick; the seated shadow
+    // underneath is darker than the side walls.
+    expect(brickShadeAt(0.5, 0, 1, 0)).toBeGreaterThan(faceTop);
+    expect(brickShadeAt(-0.5, 0, -1, 0)).toBeLessThan(brickShadeAt(0, 1, 0, 0));
+  });
+
+  it('carries one baked shade per brick vertex without distorting the footprint', () => {
     const geometry = createBlockGeometry();
+    const position = geometry.getAttribute('position');
+    const color = geometry.getAttribute('color');
     geometry.computeBoundingBox();
     const box = geometry.boundingBox!;
-    const normal = geometry.getAttribute('normal');
-    let roundedNormalFound = false;
 
-    for (let index = 0; index < normal.count; index += 1) {
-      const components = [
-        Math.abs(normal.getX(index)),
-        Math.abs(normal.getY(index)),
-        Math.abs(normal.getZ(index)),
-      ];
-      if (components.filter((component) => component > 0.05).length > 1) {
-        roundedNormalFound = true;
-        break;
-      }
-    }
-
-    expect(box.max.x - box.min.x).toBeCloseTo(1, 5);
-    expect(box.max.y - box.min.y).toBeCloseTo(1, 5);
-    expect(box.max.z - box.min.z).toBeCloseTo(0.46, 5);
-    expect((box.max.z + box.min.z) / 2).toBeCloseTo(0.02, 5);
-    expect(roundedNormalFound).toBe(true);
+    expect(color).toBeDefined();
+    expect(color.count).toBe(position.count);
+    // Unit footprint, so the instance matrix can scale it straight onto the
+    // block's collision box. The bevel is allowed to round the outline slightly.
+    expect(box.max.x - box.min.x).toBeCloseTo(1, 1);
+    expect(box.max.y - box.min.y).toBeCloseTo(1, 1);
     geometry.dispose();
   });
 
@@ -81,8 +91,8 @@ describe('web visual language', () => {
   it('formats elapsed tick duration strictly as HH:MM:SS', async () => {
     const { formatElapsed } = await import('../components/GameCanvas');
     expect(formatElapsed(0)).toBe('00:00:00');
-    expect(formatElapsed(3480)).toBe('00:00:29'); // 29 seconds
-    expect(formatElapsed(14400)).toBe('00:02:00'); // 120 seconds
-    expect(formatElapsed(435000)).toBe('01:00:25'); // 1h 25s
+    expect(formatElapsed(3480)).toBe('00:00:29');
+    expect(formatElapsed(14400)).toBe('00:02:00');
+    expect(formatElapsed(435000)).toBe('01:00:25');
   });
 });

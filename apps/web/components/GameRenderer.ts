@@ -1,5 +1,6 @@
 import type { EngineSnapshot, GameEvent, TuğlaEngine } from '@tugla/game-engine';
 import * as THREE from 'three';
+import { createBlockGeometry } from '../lib/block-visuals';
 import { fitGameCamera, projectPointerToBoardX } from '../lib/game-camera';
 import type { ResolvedQuality } from '../lib/settings';
 
@@ -27,7 +28,11 @@ export const BLOCK_COLORS: Record<string, number> = {
   PORTAL: 0xc07bff,
   SPLITTER: 0xff8ad0,
   BONUS: 0xffd166,
-  DEFLECTOR: 0xcbd5e6,
+  // Barrier structure: cold brushed steel, deliberately the least saturated
+  // thing on the board. A gate the ball can never break must not look like a
+  // brick that is merely hard — it reads as architecture, and the eye skips it
+  // when looking for targets.
+  DEFLECTOR: 0xb6bed4,
   ABSORBER: 0x6b7390,
   BOSS_CORE: 0xff6b9a,
 };
@@ -140,6 +145,8 @@ export class GameRenderer {
   private readonly camera: THREE.PerspectiveCamera;
   private readonly palette: (typeof THEME_PALETTES)[string];
   private safetyNet: THREE.Mesh | null = null;
+  /** Paddle laser beam, shown while the LASER bonus runs. */
+  private laserBeam: THREE.Mesh | null = null;
   private readonly blockMesh: THREE.InstancedMesh;
   private readonly ballMesh: THREE.InstancedMesh;
   private readonly bonusMesh: THREE.InstancedMesh;
@@ -202,41 +209,10 @@ export class GameRenderer {
     this.buildLighting();
     this.buildBoard();
 
-    // Brick shape: a plain box reads as a coloured rectangle, so this is a
-    // rounded rectangle extruded with a bevel — soft corners and a lit edge,
-    // the same silhouette as the animated board on the landing page. Built once
-    // and instanced across the board, so the extra vertices cost one geometry.
-    const brickShape = new THREE.Shape();
-    // The radius applies to the UNIT shape, which is then scaled to the brick's
-    // real size (0.845 × 0.511 board units). At 0.22 the corner became an
-    // ellipse — 7.4 px across but only 4.5 px tall — and every brick read as a
-    // lozenge floating in the dark rather than a tile set into a wall. 0.05
-    // lands at roughly 2 px on both axes after scaling: a crisp corner that
-    // still catches the key light.
-    const radius = 0.05;
-    const half = 0.5 - radius;
-    brickShape.moveTo(-half, -0.5);
-    brickShape.lineTo(half, -0.5);
-    brickShape.quadraticCurveTo(0.5, -0.5, 0.5, -half);
-    brickShape.lineTo(0.5, half);
-    brickShape.quadraticCurveTo(0.5, 0.5, half, 0.5);
-    brickShape.lineTo(-half, 0.5);
-    brickShape.quadraticCurveTo(-0.5, 0.5, -0.5, half);
-    brickShape.lineTo(-0.5, -half);
-    brickShape.quadraticCurveTo(-0.5, -0.5, -half, -0.5);
-
-    // Deeper extrusion, tighter bevel: the brick should look like a slab set
-    // into the wall, and a fat bevel on a small corner radius just rounds the
-    // whole edge back off again.
-    const blockGeometry = new THREE.ExtrudeGeometry(brickShape, {
-      depth: 0.42,
-      bevelEnabled: quality.level !== 'LOW',
-      bevelThickness: 0.03,
-      bevelSize: 0.025,
-      bevelSegments: 1,
-      curveSegments: 3,
-    });
-    blockGeometry.translate(0, 0, -0.26);
+    // The brick geometry carries the design's luminance ramp in its vertex
+    // colours — see block-visuals.ts for why that is the only place a per-brick
+    // gradient can live in an instanced mesh.
+    const blockGeometry = createBlockGeometry({ bevel: quality.level !== 'LOW' });
     // One light direction for the whole wall.
     //
     // clearcoat: 1 plus sheen: 0.6 gave every brick its own specular blob, so
@@ -244,8 +220,14 @@ export class GameRenderer {
     // the surface looked like wet plastic. Rougher, barely reflective, with a
     // trace of clearcoat: now the key light at (-5, 16, 10) reads as a single
     // gradient down each brick, and the wall has one top-left light source.
+    //
+    // vertexColors is what finally made the 3D bricks match the design. Scene
+    // lighting alone cannot produce a gradient across a face that points at the
+    // camera, so the ramp is baked into the geometry and multiplies with each
+    // brick's instance colour.
     const blockMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
+      vertexColors: true,
       roughness: 0.46,
       metalness: 0.04,
       reflectivity: 0.35,
@@ -518,6 +500,21 @@ export class GameRenderer {
     this.scene.add(this.safetyNet);
     this.disposables.push(netGeometry, netMaterial);
 
+    // Laser beam. The bonus fires five shots a second at the block above the
+    // paddle; without a beam the only feedback was bricks breaking for no
+    // visible reason.
+    const beamGeometry = new THREE.PlaneGeometry(0.1, this.engine.height);
+    const beamMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffe6a3,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+    });
+    this.laserBeam = new THREE.Mesh(beamGeometry, beamMaterial);
+    this.laserBeam.visible = false;
+    this.scene.add(this.laserBeam);
+    this.disposables.push(beamGeometry, beamMaterial);
+
     // Playfield rails.
     //
     // Making the backdrop one flat colour removed the two-tone seam but also
@@ -753,6 +750,18 @@ export class GameRenderer {
     const paddle = snapshot.paddle;
     this.paddle.position.set(paddle.x, paddle.y, 0.34);
     this.paddle.scale.set(paddle.width, paddle.height, 1);
+
+    if (this.laserBeam) {
+      const firing = paddle.laserTicks > 0;
+      this.laserBeam.visible = firing;
+      if (firing) {
+        this.laserBeam.position.set(paddle.x, this.engine.height / 2 + paddle.y, 0.2);
+        const material = this.laserBeam.material as THREE.MeshBasicMaterial;
+        // Pulses on the firing cadence, so the beam looks like repeated shots
+        // rather than a static line.
+        material.opacity = 0.24 + Math.abs(Math.sin(snapshot.tick * 0.13)) * 0.4;
+      }
+    }
 
     this.updateTrail(snapshot);
     this.updateParticles(delta);
