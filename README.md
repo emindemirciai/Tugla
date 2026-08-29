@@ -347,6 +347,26 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Gölgelemenin ekrana ulaşması
+
+Vertex-color rampası önceki turda gömülmüştü ama ekrana varmadan dört yerde siliniyordu ve tek tek
+düzeltildi:
+
+- **Sis.** `FogExp2(0.026)` tahtanın kamera mesafesinde (~25 birim) **%34,5** karıştırma yapıyordu;
+  yani her tuğla, ekrana gelmeden önce üçte bir oranında koyu mora karışıyordu. `0.008` ile bu oran
+  **%3,9**'a indi — kenarlarda derinlik kalıyor, renk grileşmiyor.
+- **Tone mapping.** ACES filmik bir S-eğrisidir: parlak uçları yuvarlar ve yuvarlarken doygunluğu
+  düşürür. Üst pahtaki 1,55 ile yüz üstündeki 1,28 neredeyse aynı çıkışa sıkışıyordu. `Linear`,
+  pozlama 1,05 — tasarım düz ve canlı bir sRGB kompozisyonu, onu üreten eğri doğrusal olan.
+- **Bloom.** `quality.bloom` ayarlarda vardı ama yalnızca topun parlaklık çarpanı olarak okunuyordu;
+  post-processing zinciri hiç kurulmamıştı. Artık kuruluyor ve yalnızca HIGH kalitede açık.
+- **Dinamit.** Yan yatırılmış bir silindir, düz tuğla ızgarasında kapsül gibi duruyordu. Gövde artık
+  tuğlanın kendi geometrisi; kapaklar ve bantlar düz çubuk, fitil bir yay.
+
+Parlaklık payı ölçülü: emissive 0,5 × rampanın en parlak durağı 1,55 × pozlama 1,05 = **0,814**,
+yani üst pahta 1,0 tavanına **0,186** pay kalıyor ve diffuse ışık bunun üstüne biniyor. Fazla parlarsa
+sırayla `emissiveIntensity` 0,5 → 0,35, sonra bloom `strength` 0,55 → 0,4.
+
 ### Tuğla gölgelemesi, geçit bariyerleri ve bonus dinamiği
 
 **Gölgeleme.** Tasarım gradyanı oyunda yoktu, çünkü yaşayacağı bir yer yoktu: tüm tuğlalar tek bir

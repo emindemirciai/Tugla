@@ -1,5 +1,9 @@
 import type { EngineSnapshot, GameEvent, TuğlaEngine } from '@tugla/game-engine';
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { createBlockGeometry } from '../lib/block-visuals';
 import { fitGameCamera, projectPointerToBoardX } from '../lib/game-camera';
 import type { ResolvedQuality } from '../lib/settings';
@@ -142,6 +146,8 @@ export interface LevelStyle {
 export class GameRenderer {
   private readonly scene = new THREE.Scene();
   private readonly renderer: THREE.WebGLRenderer;
+  /** Bloom pipeline. Null below HIGH quality, where the scene renders direct. */
+  private composer: EffectComposer | null = null;
   private readonly camera: THREE.PerspectiveCamera;
   private readonly palette: (typeof THEME_PALETTES)[string];
   private safetyNet: THREE.Mesh | null = null;
@@ -191,13 +197,30 @@ export class GameRenderer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality.pixelRatio));
     this.renderer.setSize(viewportWidth, viewportHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
+    // Linear, not ACES.
+    //
+    // ACES applies a filmic S-curve that rolls highlights off hard and
+    // desaturates as it does so. That is right for photographic realism and
+    // wrong here: it was compressing the top of the brick's baked gradient
+    // (1.55 at the lit edge, 1.28 at the top of the face) into nearly the same
+    // output value, so the ramp this renderer goes to the trouble of baking
+    // arrived on screen almost flat. The design is a flat, vivid, sRGB
+    // composition — a linear transfer is what reproduces it.
+    this.renderer.toneMapping = THREE.LinearToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(this.renderer.domElement);
 
-    this.scene.fog = new THREE.FogExp2(0x171034, 0.026);
+    // Fog was eating a third of every brick.
+    //
+    // The board sits roughly 25 units from the camera, and FogExp2 at density
+    // 0.026 blends by 1 - exp(-(0.026 × 25)²) ≈ 34% at that distance — so every
+    // brick was mixed a third of the way into dark purple before it reached the
+    // screen. That, more than any material setting, is why the wall looked
+    // dull and desaturated next to the design. Kept, but as a whisper: enough
+    // to give the board depth at its edges, not enough to grey out the bricks.
+    this.scene.fog = new THREE.FogExp2(0x171034, 0.008);
     this.camera = new THREE.PerspectiveCamera();
     fitGameCamera(this.camera, {
       boardWidth: engine.width,
@@ -231,12 +254,34 @@ export class GameRenderer {
       roughness: 0.46,
       metalness: 0.04,
       reflectivity: 0.35,
-      emissiveIntensity: 0,
+      // Bricks are luminous in the design, not merely lit.
+      //
+      // With emissiveIntensity at 0 a brick could only ever be as bright as the
+      // light falling on it, so the wall read as painted cardboard while the
+      // mockup reads as backlit glass. White emissive plus the shader patch
+      // below makes each brick glow in ITS OWN colour, and it is what gives the
+      // bloom pass something to bloom.
+      emissive: 0xffffff,
+      emissiveIntensity: 0.5,
       sheen: 0,
       sheenRoughness: 0.4,
       clearcoat: quality.level === 'LOW' ? 0 : 0.25,
       clearcoatRoughness: 0.5,
     });
+    // Tint the emissive per brick.
+    //
+    // three.js multiplies the vertex-colour attribute and the instance colour
+    // together into `vColor`, but applies it to the DIFFUSE term only — emissive
+    // stays whatever the material says, so without this every brick would glow
+    // the same white and the wall would wash out to one colour. Multiplying the
+    // emissive by vColor carries both the brick's hue and the baked ramp into
+    // the glow, so the lit top edge is the brightest part of the brick.
+    blockMaterial.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <emissivemap_fragment>',
+        '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= vColor.rgb;',
+      );
+    };
     this.blockMesh = new THREE.InstancedMesh(
       blockGeometry,
       blockMaterial,
@@ -348,6 +393,32 @@ export class GameRenderer {
     this.disposables.push(this.particleGeometry, particleMaterial);
 
     this.applyBlockColors();
+    this.buildComposer(viewportWidth, viewportHeight);
+  }
+
+  /**
+   * The halo.
+   *
+   * Every brick in the design carries `box-shadow: 0 0 9px -3px <hue>` — a
+   * coloured glow bleeding onto the board. Nothing in a plain forward render
+   * can produce that: `quality.bloom` existed in the settings but was read in
+   * exactly one place, to scale the ball's emissive intensity, so no glow was
+   * ever drawn. This is the pass that was missing.
+   *
+   * Thresholded at 0.75 so it lifts the emissive edges, the ball and the
+   * dynamite rather than fogging the whole board, and gated on quality: bloom
+   * is a full-screen pass and phones on the LOW preset should not pay for it.
+   */
+  private buildComposer(width: number, height: number) {
+    if (!this.quality.bloom || width === 0 || height === 0) return;
+    const composer = new EffectComposer(this.renderer);
+    composer.addPass(new RenderPass(this.scene, this.camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(width, height), 0.55, 0.5, 0.75));
+    // OutputPass applies tone mapping and the sRGB conversion at the end of the
+    // chain; without it the composer would write linear values straight out and
+    // the whole board would come back washed out.
+    composer.addPass(new OutputPass());
+    this.composer = composer;
   }
 
   /**
@@ -369,24 +440,41 @@ export class GameRenderer {
       .filter((entry) => entry.block.kind === 'EXPLOSIVE');
     if (explosive.length === 0) return;
 
-    // Built at unit size and scaled per block, exactly like the brick shape.
-    const bodyGeometry = new THREE.CylinderGeometry(0.46, 0.46, 0.92, 14);
-    bodyGeometry.rotateZ(Math.PI / 2);
+    // A slab, not a tube.
+    //
+    // This was a sideways CylinderGeometry — a round pill sitting in a grid of
+    // flat bricks, with disc caps and ring bands. It read as a capsule, which
+    // is why it was the one piece that looked closest to the design and still
+    // looked wrong. The design's dynamite is brick-SHAPED: the same slab as
+    // every other block, in red, with flat cream caps at each end, two dark
+    // vertical bands and a fuse. Reusing the brick geometry is also what makes
+    // it sit in the wall instead of on top of it.
+    const bodyGeometry = createBlockGeometry({ bevel: this.quality.level !== 'LOW' });
     const bodyMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xe5252f,
-      emissive: 0x8e0d16,
-      emissiveIntensity: 0.35,
-      roughness: 0.55,
+      emissive: 0xb01620,
+      emissiveIntensity: 0.7,
+      roughness: 0.5,
       metalness: 0,
     });
-    const capGeometry = new THREE.CylinderGeometry(0.47, 0.47, 0.08, 14);
-    capGeometry.rotateZ(Math.PI / 2);
-    const capMaterial = new THREE.MeshStandardMaterial({ color: 0xfff3e2, roughness: 0.7 });
-    const bandGeometry = new THREE.CylinderGeometry(0.475, 0.475, 0.06, 14);
-    bandGeometry.rotateZ(Math.PI / 2);
-    const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x780a12, roughness: 0.8 });
-    const fuseGeometry = new THREE.SphereGeometry(0.14, 8, 6);
-    const fuseMaterial = new THREE.MeshBasicMaterial({ color: 0xfff6d8 });
+    // Flat bars, sized in unit-brick space and scaled with the group.
+    const capGeometry = new THREE.BoxGeometry(0.12, 0.9, 0.5);
+    const capMaterial = new THREE.MeshStandardMaterial({
+      color: 0xfff3e2,
+      emissive: 0x6b5a3e,
+      emissiveIntensity: 0.35,
+      roughness: 0.65,
+    });
+    const bandGeometry = new THREE.BoxGeometry(0.07, 0.94, 0.54);
+    const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x6d0a12, roughness: 0.85 });
+    // The fuse: a short arc rising off the top edge, then the spark.
+    const fuseGeometry = new THREE.TorusGeometry(0.13, 0.022, 6, 10, Math.PI * 0.9);
+    const fuseMaterial = new THREE.MeshStandardMaterial({ color: 0xf0d8a8, roughness: 0.7 });
+    const sparkGeometry = new THREE.SphereGeometry(0.075, 10, 8);
+    // Basic, not standard: the spark is a light source in the fiction, so it
+    // must not be shaded by the scene — and being the brightest thing on the
+    // board is what makes the bloom pass halo it.
+    const sparkMaterial = new THREE.MeshBasicMaterial({ color: 0xfff6d8 });
 
     this.disposables.push(
       bodyGeometry,
@@ -397,6 +485,8 @@ export class GameRenderer {
       bandMaterial,
       fuseGeometry,
       fuseMaterial,
+      sparkGeometry,
+      sparkMaterial,
     );
 
     for (const { block, index } of explosive) {
@@ -408,15 +498,21 @@ export class GameRenderer {
 
       for (const side of [-1, 1]) {
         const cap = new THREE.Mesh(capGeometry, capMaterial);
-        cap.position.x = side * 0.48;
+        cap.position.set(side * 0.41, 0, 0.06);
         group.add(cap);
         const band = new THREE.Mesh(bandGeometry, bandMaterial);
-        band.position.x = side * 0.2;
+        band.position.set(side * 0.2, 0, 0.05);
         group.add(band);
       }
 
-      const fuse = new THREE.Mesh(fuseGeometry, fuseMaterial);
-      fuse.position.set(0.2, 0.62, 0.1);
+      const fuseArc = new THREE.Mesh(fuseGeometry, fuseMaterial);
+      // Rotated so the arc leans out of the top-right corner, as in the design.
+      fuseArc.position.set(0.16, 0.5, 0.1);
+      fuseArc.rotation.z = -Math.PI * 0.35;
+      group.add(fuseArc);
+
+      const fuse = new THREE.Mesh(sparkGeometry, sparkMaterial);
+      fuse.position.set(0.3, 0.68, 0.1);
       group.add(fuse);
 
       // Board-space placement, then scaled to the brick's real footprint so the
@@ -676,7 +772,10 @@ export class GameRenderer {
     const snapshot = this.engine.snapshot;
 
     snapshot.blocks.forEach((block, index) => {
-      const visible = block.active;
+      // An EXPLOSIVE block is drawn by its dynamite group instead. Both are the
+      // same slab at the same place, so leaving the instance visible would put
+      // two coincident surfaces in the depth buffer and z-fight.
+      const visible = block.active && !this.dynamite.has(index);
       this.tempPosition.set(block.position.x, block.position.y, 0.1);
       // Draw the real collision box.
       //
@@ -765,7 +864,8 @@ export class GameRenderer {
 
     this.updateTrail(snapshot);
     this.updateParticles(delta);
-    this.renderer.render(this.scene, this.camera);
+    if (this.composer) this.composer.render(delta);
+    else this.renderer.render(this.scene, this.camera);
   }
 
   resize() {
@@ -779,6 +879,7 @@ export class GameRenderer {
       viewportHeight: height,
     });
     this.renderer.setSize(width, height);
+    this.composer?.setSize(width, height);
   }
 
   /** Board-space X for a client pointer position. */
@@ -809,6 +910,7 @@ export class GameRenderer {
     for (const entry of this.dynamite.values()) this.scene.remove(entry.group);
     this.dynamite.clear();
     for (const item of this.disposables) item.dispose();
+    this.composer?.dispose();
     this.renderer.dispose();
     if (this.renderer.domElement.parentElement === this.mount) {
       this.mount.removeChild(this.renderer.domElement);
