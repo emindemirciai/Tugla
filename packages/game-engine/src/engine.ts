@@ -200,7 +200,10 @@ export class TuğlaEngine {
       regenTicks: 0,
       motionRange: (block.motionRange ?? (block.kind === 'MOVING' ? 0.12 : 0)) * this.width,
       motionSpeed: block.motionSpeed ?? (block.kind === 'MOVING' ? 0.9 : 0),
-      motionPhase: (block.x + block.y) * Math.PI,
+      // Derived from position unless the level says otherwise, so a row of
+      // MOVING bricks drifts apart into a shoal. A wall has to override it:
+      // segments sharing one phase travel as a single piece.
+      motionPhase: block.motionPhase ?? (block.x + block.y) * Math.PI,
     };
   }
 
@@ -550,11 +553,16 @@ export class TuğlaEngine {
       // every other kind) while leaving room for a level to slide a barrier.
       if (block.motionRange <= 0) continue;
       const t = this.snapshot.tick * this.fixedStep * block.motionSpeed + block.motionPhase;
-      block.position.x = clamp(
-        block.origin.x + Math.sin(t) * block.motionRange,
-        block.size.x / 2,
-        this.width - block.size.x / 2,
-      );
+      const x = block.origin.x + Math.sin(t) * block.motionRange;
+      // Indestructible structure is exempt from the clamp.
+      //
+      // Clamping keeps a MOVING brick on the board, but a sliding barrier is
+      // authored to overhang both edges precisely so the board stays covered as
+      // it travels. Clamping it would pin the outermost segments while the
+      // middle kept moving, and the wall would tear open around its gate.
+      block.position.x = isIndestructibleBlock(block.kind)
+        ? x
+        : clamp(x, block.size.x / 2, this.width - block.size.x / 2);
     }
   }
 

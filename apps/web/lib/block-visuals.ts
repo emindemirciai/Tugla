@@ -27,26 +27,30 @@ import * as THREE from 'three';
  *
  * The ramp values below are the mockup's own stops, converted to luminance
  * multipliers: the CSS `linear-gradient(180deg, #a5e4ff, #6fcbf5 46%, #3f9fd0)`
- * is a 1.28 → 1.0 → 0.72 ramp over that hue, and `inset 0 1px 0
- * rgba(255,255,255,.5)` is the 1.55 top edge.
+ * is a 1.14 → 1.0 → 0.68 ramp over that hue, and `inset 0 1px 0
+ * rgba(255,255,255,.5)` is the 1.3 top edge.
+ *
+ * These multiply the DIFFUSE term. They are deliberately close to 1.0: a brick
+ * in the design is a lit surface, not a light source, and a ramp that peaks far
+ * above 1 clips to white the moment any emissive is added on top of it.
  */
 
 /** Luminance ramp, matching the design's gradient stops. */
 export const BRICK_SHADING = {
   /** Bevel facing up — the lit top edge. */
-  topEdge: 1.55,
+  topEdge: 1.3,
   /** Front face at the top of the brick. */
-  faceTop: 1.28,
+  faceTop: 1.14,
   /** Front face at 46% down, the gradient's middle stop. */
   faceMid: 1.0,
   /** Front face at the bottom. */
-  faceBottom: 0.72,
+  faceBottom: 0.68,
   /** Bevel facing down — the seated shadow. */
-  bottomEdge: 0.5,
+  bottomEdge: 0.42,
   /** Left and right walls. */
-  side: 0.82,
+  side: 0.76,
   /** Rear faces, only ever seen at the board's edges. */
-  back: 0.55,
+  back: 0.5,
 } as const;
 
 /** Depth of the extruded slab, in unit-brick space. */

@@ -62,6 +62,13 @@ describe('web visual language', () => {
     // underneath is darker than the side walls.
     expect(brickShadeAt(0.5, 0, 1, 0)).toBeGreaterThan(faceTop);
     expect(brickShadeAt(-0.5, 0, -1, 0)).toBeLessThan(brickShadeAt(0, 1, 0, 0));
+
+    // And the whole ramp stays near unity. A brick is a lit surface, not a
+    // lamp: a peak far above 1 clips to white once emissive is added, which is
+    // exactly how the wall turned into washed-out pastel with no gradient.
+    for (const value of Object.values(BRICK_SHADING)) {
+      expect(value).toBeLessThanOrEqual(1.35);
+    }
   });
 
   it('carries one baked shade per brick vertex without distorting the footprint', () => {

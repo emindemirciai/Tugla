@@ -7,8 +7,102 @@ import { gameApi, type SessionStart } from '../lib/api';
 import { GameAudio } from '../lib/audio';
 import { loadSettings, resolveQuality, saveSettings, type GameSettings } from '../lib/settings';
 import { GameRenderer } from './GameRenderer';
-import { useI18n } from '../lib/i18n';
+import { useI18n, type TranslationKey } from '../lib/i18n';
 import { ThemeSwitcher } from './ThemeSwitcher';
+
+/**
+ * One running bonus, as the HUD needs it.
+ *
+ * The effects were invisible: MAGNET and LASER did nothing at all until this
+ * pass fixed them, and even the ones that always worked (sticky, slow time, the
+ * safety net) gave no indication they were on or how long was left. A player
+ * could not tell a bonus had been collected, which is most of why every pickup
+ * felt like the same thing.
+ */
+interface ActiveEffect {
+  id: string;
+  label: TranslationKey;
+  /** Ticks left, at the fixed 120 Hz simulation rate. */
+  ticks: number;
+  /** Drives the drain bar; null for effects with no fixed duration. */
+  fraction: number | null;
+  tone: 'paddle' | 'ball' | 'floor';
+}
+
+/**
+ * Reads every running effect out of a snapshot.
+ *
+ * Pure and exported so the HUD's contents can be tested without a canvas, a
+ * WebGL context or a running rally.
+ */
+export const readActiveEffects = (snapshot: EngineSnapshot): ActiveEffect[] => {
+  const paddle = snapshot.paddle;
+  const effects: ActiveEffect[] = [];
+
+  // Paddle-side effects, with the duration the engine grants each one
+  // (EFFECT_TICKS in engine.ts, at the fixed 120 Hz rate).
+  const paddleTimers: [string, TranslationKey, number, number][] = [
+    ['grow', 'game.effect.paddleGrow', paddle.growTicks, 1800],
+    ['magnet', 'game.effect.magnet', paddle.magnetTicks, 1440],
+    ['sticky', 'game.effect.sticky', paddle.stickyTicks, 1440],
+    ['laser', 'game.effect.laser', paddle.laserTicks, 960],
+  ];
+  for (const [id, label, ticks, full] of paddleTimers) {
+    if (ticks > 0) {
+      effects.push({ id, label, ticks, fraction: Math.min(1, ticks / full), tone: 'paddle' });
+    }
+  }
+
+  if (snapshot.safetyNetTicks > 0) {
+    effects.push({
+      id: 'net',
+      label: 'game.effect.safetyNet',
+      ticks: snapshot.safetyNetTicks,
+      fraction: Math.min(1, snapshot.safetyNetTicks / 600),
+      tone: 'floor',
+    });
+  }
+  // The shield is a charge, not a timer: it survives exactly one miss.
+  if (paddle.shield > 0) {
+    effects.push({
+      id: 'shield',
+      label: 'game.effect.shield',
+      ticks: 0,
+      fraction: null,
+      tone: 'floor',
+    });
+  }
+
+  // Ball effects live per ball. Shown once, with the longest remaining life, so
+  // a five-ball board does not stack five identical chips.
+  const ballEffects: [string, TranslationKey, number][] = [
+    ['SLOW_TIME', 'game.effect.slowTime', 720],
+    ['FIREBALL', 'game.effect.fireball', 1440],
+    ['PIERCING', 'game.effect.piercing', 1200],
+    ['EXPLOSIVE', 'game.effect.explosive', 1200],
+    ['CHAIN_LIGHTNING', 'game.effect.chainLightning', 1200],
+    ['GIANT_BALL', 'game.effect.giantBall', 1080],
+  ];
+  for (const [key, label, full] of ballEffects) {
+    let longest = 0;
+    for (const ball of snapshot.balls) {
+      if (!ball.active) continue;
+      longest = Math.max(longest, ball.effects.get(key as never) ?? 0);
+    }
+    if (longest > 0) {
+      effects.push({
+        id: key,
+        label,
+        ticks: longest,
+        fraction: Math.min(1, longest / full),
+        tone: 'ball',
+      });
+    }
+  }
+
+  // Soonest to expire first: the one the player has to act on is at the top.
+  return effects.sort((a, b) => a.ticks - b.ticks);
+};
 
 interface ViewState {
   score: number;
@@ -19,6 +113,7 @@ interface ViewState {
   blocksRemaining: number;
   tick: number;
   status: EngineSnapshot['status'];
+  effects: ActiveEffect[];
 }
 
 /** Ticks run at a fixed 120 Hz, so elapsed time is exact, not wall-clock. */
@@ -59,6 +154,7 @@ const initialView: ViewState = {
   blocksRemaining: 0,
   tick: 0,
   status: 'READY',
+  effects: [],
 };
 
 export function GameCanvas({
@@ -188,6 +284,7 @@ export function GameCanvas({
           blocksRemaining: snapshot.blocks.filter((block) => block.active && block.required).length,
           tick: snapshot.tick,
           status: snapshot.status,
+          effects: readActiveEffects(snapshot),
         });
       }
 
@@ -348,6 +445,29 @@ export function GameCanvas({
             <span>{t('game.hud.time')}</span>
             <strong ref={clockRef}>{formatElapsed(view.tick)}</strong>
           </div>
+
+          {view.effects.length > 0 && (
+            <div className="hud-effects">
+              <span className="hud-effects-label">{t('game.hud.effects')}</span>
+              {view.effects.map((effect) => (
+                <div key={effect.id} className={`hud-effect hud-effect-${effect.tone}`}>
+                  <span className="hud-effect-name">{t(effect.label)}</span>
+                  {effect.ticks > 0 && (
+                    <span className="hud-effect-time">
+                      {t('game.effect.seconds', { count: Math.ceil(effect.ticks / 120) })}
+                    </span>
+                  )}
+                  {effect.fraction !== null && (
+                    <span className="hud-effect-bar">
+                      {/* Inline width: it changes ten times a second, which is
+                          a value, not a style choice. */}
+                      <i style={{ width: `${Math.round(effect.fraction * 100)}%` }} />
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </aside>
 
         <div className="canvas-frame">

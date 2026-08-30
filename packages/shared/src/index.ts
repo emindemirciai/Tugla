@@ -265,6 +265,20 @@ export const levelBlockSchema = z.object({
   /** Horizontal patrol distance in normalized units for MOVING blocks. */
   motionRange: z.number().min(0).max(1).optional(),
   motionSpeed: z.number().min(0).max(4).optional(),
+  /**
+   * Starting phase of the block's oscillation, in radians.
+   *
+   * Left unset the generator derives a phase from the block's position, which is
+   * what a scattered field of moving bricks wants. A barrier wants the opposite:
+   * every segment of a sliding wall must share one phase, or the wall tears
+   * apart around its own gate. Optional so every level already in the database
+   * stays valid.
+   */
+  motionPhase: z
+    .number()
+    .min(-Math.PI * 2)
+    .max(Math.PI * 2)
+    .optional(),
 });
 
 export const levelDefinitionSchema = z.object({

@@ -207,7 +207,10 @@ export class GameRenderer {
     // arrived on screen almost flat. The design is a flat, vivid, sRGB
     // composition — a linear transfer is what reproduces it.
     this.renderer.toneMapping = THREE.LinearToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    // Pulled back below 1: with the bloom pass now in the chain, an exposure
+    // above unity pushes the brick faces past the bloom threshold and the whole
+    // wall starts to haze.
+    this.renderer.toneMappingExposure = 0.92;
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(this.renderer.domElement);
@@ -251,22 +254,24 @@ export class GameRenderer {
     const blockMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       vertexColors: true,
-      roughness: 0.46,
-      metalness: 0.04,
-      reflectivity: 0.35,
-      // Bricks are luminous in the design, not merely lit.
+      // Matte. A brick in the design is poster-flat with one soft gradient; any
+      // real gloss puts a second, competing highlight on it.
+      roughness: 0.62,
+      metalness: 0.02,
+      reflectivity: 0.2,
+      // A trace of self-light, not a lamp.
       //
-      // With emissiveIntensity at 0 a brick could only ever be as bright as the
-      // light falling on it, so the wall read as painted cardboard while the
-      // mockup reads as backlit glass. White emissive plus the shader patch
-      // below makes each brick glow in ITS OWN colour, and it is what gives the
-      // bloom pass something to bloom.
+      // This was 0.5, which — multiplied by the ramp and added on top of a
+      // fully lit diffuse surface — drove every brick face to clip at white.
+      // That is the washed-out pastel wall: no gradient survives clipping.
+      // 0.12 keeps the faint inner light the design's `0 0 9px -3px` glow
+      // implies while leaving the face well inside range.
       emissive: 0xffffff,
-      emissiveIntensity: 0.5,
+      emissiveIntensity: 0.12,
       sheen: 0,
       sheenRoughness: 0.4,
-      clearcoat: quality.level === 'LOW' ? 0 : 0.25,
-      clearcoatRoughness: 0.5,
+      clearcoat: quality.level === 'LOW' ? 0 : 0.1,
+      clearcoatRoughness: 0.6,
     });
     // Tint the emissive per brick.
     //
@@ -413,7 +418,13 @@ export class GameRenderer {
     if (!this.quality.bloom || width === 0 || height === 0) return;
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(width, height), 0.55, 0.5, 0.75));
+    composer.addPass(
+      // Threshold 0.92: only the ball, the fuse spark, the rails and the laser
+      // clear it. At 0.75 the brick faces themselves were blooming, which put a
+      // haze over the whole wall and destroyed the very gradient the vertex
+      // colours exist to draw — glow is for light sources, not for surfaces.
+      new UnrealBloomPass(new THREE.Vector2(width, height), 0.3, 0.4, 0.92),
+    );
     // OutputPass applies tone mapping and the sRGB conversion at the end of the
     // chain; without it the composer would write linear values straight out and
     // the whole board would come back washed out.
@@ -452,21 +463,25 @@ export class GameRenderer {
     const bodyGeometry = createBlockGeometry({ bevel: this.quality.level !== 'LOW' });
     const bodyMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xe5252f,
-      emissive: 0xb01620,
-      emissiveIntensity: 0.7,
-      roughness: 0.5,
+      emissive: 0x8e1018,
+      emissiveIntensity: 0.22,
+      roughness: 0.58,
       metalness: 0,
     });
-    // Flat bars, sized in unit-brick space and scaled with the group.
-    const capGeometry = new THREE.BoxGeometry(0.12, 0.9, 0.5);
+    // Cream end caps, hard against the two ends of the stick.
+    //
+    // These were 0.12 wide at x = ±0.41 with their own emissive, and the dark
+    // bands sat at ±0.2 — four pale vertical bars across a red block, which is
+    // what made the dynamite read as a striped brick rather than a stick. The
+    // caps now sit at the very ends and carry no emissive; the bands are the
+    // only other verticals, and they are dark.
+    const capGeometry = new THREE.BoxGeometry(0.1, 0.86, 0.46);
     const capMaterial = new THREE.MeshStandardMaterial({
-      color: 0xfff3e2,
-      emissive: 0x6b5a3e,
-      emissiveIntensity: 0.35,
-      roughness: 0.65,
+      color: 0xf7e4c4,
+      roughness: 0.72,
     });
-    const bandGeometry = new THREE.BoxGeometry(0.07, 0.94, 0.54);
-    const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x6d0a12, roughness: 0.85 });
+    const bandGeometry = new THREE.BoxGeometry(0.06, 0.9, 0.5);
+    const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x5c070e, roughness: 0.88 });
     // The fuse: a short arc rising off the top edge, then the spark.
     const fuseGeometry = new THREE.TorusGeometry(0.13, 0.022, 6, 10, Math.PI * 0.9);
     const fuseMaterial = new THREE.MeshStandardMaterial({ color: 0xf0d8a8, roughness: 0.7 });
@@ -498,10 +513,10 @@ export class GameRenderer {
 
       for (const side of [-1, 1]) {
         const cap = new THREE.Mesh(capGeometry, capMaterial);
-        cap.position.set(side * 0.41, 0, 0.06);
+        cap.position.set(side * 0.45, 0, 0.05);
         group.add(cap);
         const band = new THREE.Mesh(bandGeometry, bandMaterial);
-        band.position.set(side * 0.2, 0, 0.05);
+        band.position.set(side * 0.26, 0, 0.05);
         group.add(band);
       }
 
@@ -530,8 +545,15 @@ export class GameRenderer {
   }
 
   private buildLighting() {
-    this.scene.add(new THREE.HemisphereLight(0xbaa6ff, 0x171034, 1.4));
-    const key = new THREE.DirectionalLight(0xffffff, 2.6);
+    // Ambient down from 1.4, key down from 2.6.
+    //
+    // Together they were putting more than three units of light on a surface
+    // whose vertex ramp already peaks above 1, so the brick faces arrived at
+    // the tone mapper already clipped and the gradient was gone before any
+    // material setting could matter. Lower and more directional: the key does
+    // the shaping, the hemisphere only keeps the shadow side from going black.
+    this.scene.add(new THREE.HemisphereLight(0xbaa6ff, 0x171034, 0.75));
+    const key = new THREE.DirectionalLight(0xffffff, 1.75);
     key.position.set(-5, 16, 10);
     key.castShadow = this.quality.shadows;
     if (this.quality.shadows) {
@@ -579,7 +601,9 @@ export class GameRenderer {
       new THREE.MeshBasicMaterial({
         color: this.palette.board,
         transparent: true,
-        opacity: 0.55,
+        // 0.55 stacked a second layer of the board colour over the board and
+        // drove it to near-black, losing the warm tint the theme palette picks.
+        opacity: 0.3,
         depthWrite: false,
       }),
     );
@@ -620,11 +644,13 @@ export class GameRenderer {
     const railMaterial = new THREE.MeshStandardMaterial({
       color: this.palette.glow,
       emissive: this.palette.glow,
-      emissiveIntensity: 0.55,
+      // The rails are a frame, not the subject. At 0.55 with bloom on they were
+      // the loudest thing on screen and pulled the eye off the wall.
+      emissiveIntensity: 0.3,
       roughness: 0.6,
       metalness: 0,
     });
-    const railThickness = 0.14;
+    const railThickness = 0.1;
     const verticalRail = new THREE.BoxGeometry(railThickness, this.engine.height, 0.5);
     const horizontalRail = new THREE.BoxGeometry(
       this.engine.width + railThickness,

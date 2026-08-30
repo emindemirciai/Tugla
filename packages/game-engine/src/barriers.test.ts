@@ -1,7 +1,7 @@
 import {
+  isIndestructibleBlock,
   bonusKinds,
   isBallBonus,
-  isIndestructibleBlock,
   weightedBonusPool,
   type BonusKind,
 } from '@tugla/shared';
@@ -59,6 +59,56 @@ describe('indestructible barriers', () => {
       return [0, 1, 2, 3, 4, 5, 6, 7].filter((column) => !taken.includes(column));
     };
     expect(gateOf(rows[0]!)).not.toEqual(gateOf(rows[1]!));
+  });
+
+  it('slides a boss wall as one piece, overhanging both edges', () => {
+    const level = generateCampaignLevel(50);
+    const barriers = level.blocks.filter((block) => block.kind === 'DEFLECTOR');
+
+    // Every segment moves, and every segment of a row shares one phase — that
+    // is what keeps the wall rigid instead of tearing open around its gate.
+    expect(barriers.every((block) => (block.motionRange ?? 0) > 0)).toBe(true);
+    const topRow = Math.max(...barriers.map((block) => block.y));
+    const phases = new Set(
+      barriers.filter((block) => block.y === topRow).map((block) => block.motionPhase),
+    );
+    expect(phases.size).toBe(1);
+
+    // Authored past both edges, so the playfield stays walled while it travels.
+    const columns = barriers
+      .filter((block) => block.y === topRow)
+      .map((block) => COLUMN_OF(block.x));
+    expect(Math.min(...columns)).toBe(-1);
+    expect(Math.max(...columns)).toBe(8);
+  });
+
+  it('keeps a sliding wall rigid once the simulation runs', () => {
+    const engine = new TuğlaEngine(generateCampaignLevel(50), { recordReplay: false });
+    const wall = engine.snapshot.blocks.filter((block) => block.kind === 'DEFLECTOR');
+    const topRow = Math.max(...wall.map((block) => block.position.y));
+    const row = wall.filter((block) => block.position.y === topRow);
+
+    const spacingAt = () => {
+      const sorted = [...row].sort((a, b) => a.position.x - b.position.x);
+      return sorted
+        .slice(1)
+        .map((block, i) => Number((block.position.x - sorted[i]!.position.x).toFixed(4)));
+    };
+
+    const before = spacingAt();
+    engine.launch({ record: false });
+    for (let index = 0; index < 200; index += 1) engine.step();
+
+    // It has actually moved…
+    expect(row.some((block) => block.position.x !== block.origin.x)).toBe(true);
+    // …and the gaps between segments are unchanged, so the gate is intact.
+    expect(spacingAt()).toEqual(before);
+  });
+
+  it('leaves a mini boss wall static', () => {
+    const level = generateCampaignLevel(10);
+    const barriers = level.blocks.filter((block) => block.kind === 'DEFLECTOR');
+    expect(barriers.every((block) => (block.motionRange ?? 0) === 0)).toBe(true);
   });
 
   it('completes a gated level while the wall is still standing', () => {
@@ -204,10 +254,10 @@ describe('bonus dynamics', () => {
 
 describe('every level stays finishable', () => {
   it('never makes a required brick indestructible', () => {
-    // World 8's brick pool listed DEFLECTOR. That was harmless while the kind
-    // merely reflected, but once it became indestructible those bricks could
-    // never be destroyed — and since progression is sequential, fifty levels
-    // would have stopped every player permanently.
+    // World 8's brick pool listed DEFLECTOR. Harmless while the kind merely
+    // reflected — but once it stopped taking damage those bricks could never be
+    // destroyed, and with sequential progression fifty levels would have stopped
+    // every player permanently at 351.
     for (let index = 1; index <= 500; index += 1) {
       const stuck = generateCampaignLevel(index).blocks.filter(
         (block) => block.required && isIndestructibleBlock(block.kind),

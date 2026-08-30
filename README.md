@@ -347,6 +347,27 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Beyaza kırpılma ve kayan geçit
+
+Önceki tur rampanın ekrana ulaşmasını sağladı ama ters yöne savurdu: emissive 0,5, pozlama 1,05 ve
+düşük bloom eşiği birlikte tuğlaları **beyaza kırpıyordu**. Üst pahta 1,0 tavanına yalnızca **0,186**
+pay kalıyordu ve diffuse ışık bunun üstüne biniyordu. Değerler indirildi — emissive **0,12**, pozlama
+**0,92**, bloom eşiği **0,92** — ve pay **0,829**'a çıktı. Kilit ilke şu: **tuğla aydınlatılmış bir
+yüzeydir, ışık kaynağı değil.** Parlama yalnızca topta ve fitilde kalmalı.
+
+Bu dört değer birbirine bağlıdır; biri tek başına değiştirilirse diğerleri bozulur. README'deki sıra
+korunmalı, tek seferde tek değer.
+
+**Kayan geçit.** Boss duvarının kayabilmesi için segmentlerin **aynı fazı paylaşması** gerekiyordu:
+üretici her bloğa konumundan bir faz türetiyordu, yani duvarın her parçası ayrı zamanda hareket edip
+duvar geçidin etrafından yırtılıyordu. Blok şemasına opsiyonel `motionPhase` alanı eklendi
+(veritabanındaki her bölüm geçerli kalsın diye opsiyonel) ve bariyer segmentleri tek faz taşıyor.
+Doğrulandı: bölüm 50'nin çift sırasında her sıra kendi içinde tek faz taşıyor (0 ve π), yani her sıra
+rijit bir parça olarak kayıyor ve iki sıra karşı yönlere gidiyor.
+
+**HUD çipleri.** Çalışan her etki süresiyle görünüyor; okuyucu (`readActiveEffects`) saf fonksiyon
+olarak ayrıldığı için canvas, WebGL bağlamı veya çalışan bir ral olmadan test edilebiliyor.
+
 ### Gölgelemenin ekrana ulaşması
 
 Vertex-color rampası önceki turda gömülmüştü ama ekrana varmadan dört yerde siliniyordu ve tek tek

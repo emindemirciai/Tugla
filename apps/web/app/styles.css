@@ -2603,6 +2603,84 @@ textarea:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* ----- running bonuses ------------------------------------------------------
+   Until now a collected bonus produced no readout at all: the player saw a
+   capsule land and then had to infer from the ball's behaviour what they had
+   got and how long it would last. Two of the effects did not even work. Each
+   chip names the effect, counts its seconds down and drains a bar, so the
+   whole state of the rally is legible from the panel. */
+.hud-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.hud-effects-label {
+  font-size: 0.56rem;
+  letter-spacing: var(--tracking-label);
+  opacity: 0.62;
+  white-space: nowrap;
+}
+.hud-effect {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1px 6px;
+  align-items: baseline;
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-left: 2px solid var(--effect-tone, #ffb27a);
+}
+.hud-effect-name {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--effect-tone, #ffb27a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-effect-time {
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--stage-ink);
+}
+/* The bar spans both columns, under the name and the countdown. */
+.hud-effect-bar {
+  grid-column: 1 / -1;
+  height: 2px;
+  margin-top: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+.hud-effect-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--effect-tone, #ffb27a);
+}
+/* Tone by what the effect acts on, so the panel groups at a glance rather than
+   being seven differently coloured chips. */
+.hud-effect-paddle {
+  --effect-tone: #ffb27a;
+}
+.hud-effect-ball {
+  --effect-tone: #8fd9ff;
+}
+.hud-effect-floor {
+  --effect-tone: #8ff0cd;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-effect-bar i {
+    transition: none;
+  }
+}
+
 @media (max-width: 900px) {
   /* Under the board as one strip; every stat keeps its own column so labels can
      never collide with the numbers. */
@@ -2622,6 +2700,21 @@ textarea:focus {
   }
   .hud-stat strong {
     font-size: 0.98rem;
+  }
+  /* The panel is an auto-fit grid at this width; the effect list is a row of
+     its own under the stats rather than one more 58px column. */
+  .hud-effects {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    padding-top: 8px;
+  }
+  .hud-effect {
+    grid-template-columns: auto auto;
+    text-align: left;
   }
   .game-stage {
     grid-template-columns: 1fr;

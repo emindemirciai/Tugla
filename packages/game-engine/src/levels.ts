@@ -74,10 +74,30 @@ export interface BarrierPlan {
   gapWidth: number;
   /** World bosses get a second row with the gate on the far side. */
   double: boolean;
+  /**
+   * Whether the wall slides, carrying its gate with it.
+   *
+   * A static gate is an aiming problem the player solves once. A moving one has
+   * to be re-solved every rally, which is the difference between a boss room
+   * and a slower level — so it is reserved for the fights.
+   */
+  slide: boolean;
 }
 
 /** Columns across the board. Bricks and barriers share the pitch. */
 const COLUMNS = 8;
+
+/** Column pitch in normalized units. */
+const COLUMN_PITCH = 0.12;
+
+/**
+ * How far a sliding wall travels each way, in normalized units.
+ *
+ * Half a column. The wall is authored one segment wider than the board on each
+ * side, so at any point in the travel the playfield is still fully walled and
+ * only the gate has moved.
+ */
+const BARRIER_TRAVEL = COLUMN_PITCH / 2;
 
 /**
  * Decides whether a level is gated, and how.
@@ -110,29 +130,43 @@ export const barrierPlanFor = (
     gapColumn,
     gapWidth,
     double: type === 'WORLD_BOSS',
+    // Mini bosses hold still: the gate is already a new idea there, and moving
+    // it in the same level the player first meets it is two lessons at once.
+    slide: type === 'WORLD_BOSS' || (!boss && gauntlet),
   };
 };
 
 /** Builds the barrier rows for a plan. */
 const barrierBlocks = (index: number, plan: BarrierPlan): LevelDefinition['blocks'] => {
   const blocks: LevelDefinition['blocks'] = [];
-  const rows: { y: number; gapColumn: number; tag: string }[] = [
-    { y: plan.y, gapColumn: plan.gapColumn, tag: 'a' },
+  const rows: { y: number; gapColumn: number; tag: string; phase: number }[] = [
+    { y: plan.y, gapColumn: plan.gapColumn, tag: 'a', phase: 0 },
   ];
   if (plan.double) {
     // Gate on the far side, so the two openings are never stacked: the ball has
-    // to cross the corridor between the rows to get up.
+    // to cross the corridor between the rows to get up. The half-turn phase
+    // offset makes the rows slide in opposition, which keeps the corridor
+    // opening and closing rather than translating rigidly.
     const mirrored = COLUMNS - plan.gapWidth - plan.gapColumn;
-    rows.push({ y: plan.y - 0.075, gapColumn: Math.max(0, mirrored), tag: 'b' });
+    rows.push({
+      y: plan.y - 0.075,
+      gapColumn: Math.max(0, mirrored),
+      tag: 'b',
+      phase: Math.PI,
+    });
   }
 
   for (const row of rows) {
-    for (let column = 0; column < COLUMNS; column += 1) {
+    // A sliding wall overhangs one segment past each edge, so the board stays
+    // fully walled at every point in the travel and only the gate moves.
+    const first = plan.slide ? -1 : 0;
+    const last = plan.slide ? COLUMNS : COLUMNS - 1;
+    for (let column = first; column <= last; column += 1) {
       if (column >= row.gapColumn && column < row.gapColumn + plan.gapWidth) continue;
       blocks.push({
         id: `l${index}-bar${row.tag}c${column}`,
         kind: 'DEFLECTOR',
-        x: 0.08 + column * 0.12,
+        x: 0.08 + column * COLUMN_PITCH,
         y: row.y,
         // Slightly wider than a brick so the row is a seamless wall: at the
         // brick width of 0.102 the 0.018 seams are narrower than the ball, but
@@ -146,6 +180,16 @@ const barrierBlocks = (index: number, plan: BarrierPlan): LevelDefinition['block
         bonus: null,
         // The wall is scenery, not a target: it must not hold the level open.
         required: false,
+        ...(plan.slide
+          ? {
+              motionRange: BARRIER_TRAVEL,
+              motionSpeed: 0.55,
+              // Every segment of a row shares one phase, so the wall travels as
+              // a single piece. Without this the engine derives the phase from
+              // each block's position and the wall tears apart around its gate.
+              motionPhase: row.phase,
+            }
+          : {}),
       });
     }
   }
@@ -289,6 +333,10 @@ const LAYOUTS: Layout[] = [
  * finish, and because progression is sequential that would stop every player
  * there forever. Barriers are placed deliberately by `barrierPlanFor` with
  * `required: false`; the brick generator must never reach for one.
+ *
+ * World 8's pool listed DEFLECTOR once. It was harmless while the kind merely
+ * reflected — and became fifty unwinnable levels the moment it stopped taking
+ * damage. This guard is why that cannot happen silently again.
  */
 const assertDestructible = (kind: BlockKind): BlockKind => {
   if (isIndestructibleBlock(kind)) {
@@ -312,7 +360,7 @@ const kindForCell = ({
   random: () => number;
 }): BlockKind => {
   // Filtered, not just excluded: a pool that lists an indestructible kind is a
-  // configuration mistake, and it must not be able to reach a brick.
+  // configuration mistake and must not be able to reach a brick.
   const specials = pool.filter((kind) => kind !== 'NORMAL' && !isIndestructibleBlock(kind));
   if (!specials.length) return 'NORMAL';
   if (accent)
