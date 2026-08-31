@@ -347,6 +347,23 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Ölçülen tuğla yüzeyi
+
+Beş tur boyunca göz kararıyla eşleşmeyen gradyan, altıncı turda piksel ölçümüyle çözüldü ve sebep
+dörttü: malzeme **ışıksız** olmak zorunda (three.js `vColor`'ı yalnızca diffuse terime çarpar, specular
+lob üstüne tonlanmamış beyaz ekleyip rampayı ezer), rampa **linear uzayda** yazılmalı (tasarım sRGB'de,
+gamma oranları sıkıştırıyor), instance rengi gradyanın **orta** durağını tutmalı (üst durağı tuttuğunda
+duvar tozlu görünüyordu), ve rampa **kanal bazlı** olmalı (tasarımın gradyanı yukarı doğru doygunluğunu
+azaltıyor; skaler çarpan bunu yapamaz).
+
+`tools/brick-check.html` bu ölçümü yapan araçtır: sayfayı aç, `window.__measure`'a bak, değiştir,
+tekrar bak. Tuğla görünümüne dokunmadan önce ölçmek şart — bu problemde göz beş tur yanıldı.
+
+**Anlam renkleri ile duvar arasındaki mesafe.** Yeni palet `SHIELDED`'ı duvarın açık cyan tonuna
+**41,8** birim yaklaştırmıştı; testin kendi tabanı 45. Oyuncunun kalkanı sıradan tuğlayla karıştırması
+mekaniği boşa çıkarır, bu yüzden renk daha derin bir maviye alındı (`#1f6feb`): duvara **61**, en yakın
+diğer anlam rengine **112** birim. Kalkan hâlâ mavi okunuyor, ama duvarın parçası gibi değil.
+
 ### Beyaza kırpılma ve kayan geçit
 
 Önceki tur rampanın ekrana ulaşmasını sağladı ama ters yöne savurdu: emissive 0,5, pozlama 1,05 ve

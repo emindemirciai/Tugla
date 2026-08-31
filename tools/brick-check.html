@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tuğla yüzeyi — three.js / CSS karşılaştırma</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f7f9ff;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: #10203a;
+      }
+      .wrap {
+        display: flex;
+        gap: 24px;
+        padding: 24px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      h2 {
+        margin: 0;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+      }
+      .stage {
+        width: 420px;
+        height: 300px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #2a1733;
+      }
+      .css-wall {
+        width: 420px;
+        height: 300px;
+        border-radius: 18px;
+        background: #2a1733;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        gap: 14px;
+        padding: 26px;
+        box-sizing: border-box;
+      }
+      .b {
+        border-radius: 5px;
+        box-shadow:
+          inset 0 1.5px 0 rgba(255, 255, 255, 0.5),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+          0 0 10px -3px var(--g);
+      }
+      .a1 {
+        --g: rgba(111, 203, 245, 0.9);
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 46%),
+          linear-gradient(180deg, #a5e4ff, #6fcbf5 46%, #3f9fd0);
+      }
+      .b1 {
+        --g: rgba(156, 139, 255, 0.9);
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 46%),
+          linear-gradient(180deg, #c3b8ff, #9c8bff 46%, #6d5cd8);
+      }
+      .a2 {
+        --g: rgba(82, 189, 245, 0.9);
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 46%),
+          linear-gradient(180deg, #8ed9f7, #52bdf5 46%, #3388c0);
+      }
+      .a3 {
+        --g: rgba(61, 159, 212, 0.85);
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 46%),
+          linear-gradient(180deg, #6fbfe0, #3d9fd4 46%, #2673a0);
+      }
+      .readout {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.72rem;
+        line-height: 1.7;
+        background: #fff;
+        border: 1px solid #dde6f7;
+        border-radius: 12px;
+        padding: 14px 16px;
+        width: 400px;
+      }
+      .readout b {
+        color: #2f6bff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="col">
+        <h2 style="color: #12b886">THREE.JS — OYUN KODU</h2>
+        <div class="stage" id="stage"></div>
+      </div>
+      <div class="col">
+        <h2 style="color: #2f6bff">CSS — TASARIM HEDEFİ</h2>
+        <div class="css-wall">
+          <span class="b a1"></span><span class="b b1"></span><span class="b a1"></span
+          ><span class="b a1"></span> <span class="b a2"></span><span class="b a2"></span
+          ><span class="b b1"></span><span class="b a2"></span> <span class="b a3"></span
+          ><span class="b a3"></span><span class="b a3"></span><span class="b b1"></span>
+        </div>
+      </div>
+      <div class="col">
+        <h2>ÖLÇÜM</h2>
+        <div class="readout" id="readout">ölçülüyor…</div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      { "imports": { "three": "https://esm.sh/three@0.177.0" } }
+    </script>
+    <script type="module">
+      import * as THREE from 'three';
+
+      // ---- apps/web/lib/block-visuals.ts (birebir) ----
+      const BRICK_SHADING = {
+        topEdge: [1.9, 1.75, 1.6],
+        faceTop: [2.37, 1.39, 1.1],
+        faceMid: [1, 1, 1],
+        faceBottom: [0.31, 0.55, 0.69],
+        bottomEdge: [0.18, 0.3, 0.42],
+        side: [0.3, 0.45, 0.58],
+        back: [0.18, 0.28, 0.36],
+      };
+      const DEPTH = 0.42,
+        RADIUS_FRACTION = 0.19;
+      const brickShadeAt = (y, nx, ny, nz) => {
+        if (ny > 0.35) return BRICK_SHADING.topEdge;
+        if (ny < -0.35) return BRICK_SHADING.bottomEdge;
+        if (Math.abs(nx) > 0.35) return BRICK_SHADING.side;
+        if (nz < -0.35) return BRICK_SHADING.back;
+        const t = Math.min(1, Math.max(0, 0.5 - y));
+        const [from, to, span, offset] =
+          t <= 0.46
+            ? [BRICK_SHADING.faceTop, BRICK_SHADING.faceMid, 0.46, 0]
+            : [BRICK_SHADING.faceMid, BRICK_SHADING.faceBottom, 0.54, 0.46];
+        const k = (t - offset) / span;
+        return [0, 1, 2].map((i) => from[i] + (to[i] - from[i]) * k);
+      };
+      const createBlockGeometry = ({ bevel = true, aspect = 1.653 } = {}) => {
+        const radiusY = RADIUS_FRACTION,
+          radiusX = RADIUS_FRACTION / aspect;
+        const halfX = 0.5 - radiusX,
+          halfY = 0.5 - radiusY;
+        const EDGE_STEPS = 9;
+        const s = new THREE.Shape();
+        const edge = (fromY, toY, x) => {
+          for (let step = 1; step <= EDGE_STEPS; step++)
+            s.lineTo(x, fromY + ((toY - fromY) * step) / EDGE_STEPS);
+        };
+        s.moveTo(-halfX, -0.5);
+        s.lineTo(halfX, -0.5);
+        s.quadraticCurveTo(0.5, -0.5, 0.5, -halfY);
+        edge(-halfY, halfY, 0.5);
+        s.quadraticCurveTo(0.5, 0.5, halfX, 0.5);
+        s.lineTo(-halfX, 0.5);
+        s.quadraticCurveTo(-0.5, 0.5, -0.5, halfY);
+        edge(halfY, -halfY, -0.5);
+        s.quadraticCurveTo(-0.5, -0.5, -halfX, -0.5);
+        const g = new THREE.ExtrudeGeometry(s, {
+          depth: DEPTH,
+          bevelEnabled: bevel,
+          bevelThickness: 0.03,
+          bevelSize: 0.02,
+          bevelSegments: 1,
+          curveSegments: 4,
+        });
+        g.translate(0, 0, -DEPTH / 2 - 0.05);
+        g.computeVertexNormals();
+        const pos = g.getAttribute('position'),
+          nor = g.getAttribute('normal');
+        const shade = new Float32Array(pos.count * 3);
+        for (let i = 0; i < pos.count; i++) {
+          const v = brickShadeAt(pos.getY(i), nor.getX(i), nor.getY(i), nor.getZ(i));
+          shade[i * 3] = v[0];
+          shade[i * 3 + 1] = v[1];
+          shade[i * 3 + 2] = v[2];
+        }
+        g.setAttribute('color', new THREE.BufferAttribute(shade, 3));
+        return g;
+      };
+
+      // ---- GameRenderer.ts (birebir) ----
+      const BRICK_FAMILIES = [
+        [0x6fcbf5, 0x52bdf5, 0x3d9fd4],
+        [0x9c8bff, 0x7a68f0, 0x6252d0],
+      ];
+      const depthStep = (row) => {
+        const b = ((row % 9) + 9) % 9;
+        return b < 3 ? 0 : b < 6 ? 1 : 2;
+      };
+
+      const W = 420,
+        H = 300;
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x2a1733);
+      scene.fog = new THREE.FogExp2(0x171034, 0.008);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(2);
+      renderer.setSize(W, H);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.LinearToneMapping;
+      renderer.toneMappingExposure = 1;
+      document.getElementById('stage').appendChild(renderer.domElement);
+
+      scene.add(new THREE.HemisphereLight(0xbaa6ff, 0x171034, 1));
+      const key = new THREE.DirectionalLight(0xffffff, 2.2);
+      key.position.set(-5, 16, 10);
+      scene.add(key);
+
+      const geometry = createBlockGeometry();
+      const material = new THREE.MeshBasicMaterial({ vertexColors: true });
+
+      const COLS = 4,
+        ROWS = 3,
+        BW = 0.918,
+        BH = 0.556,
+        PITCH_X = 1.08,
+        PITCH_Y = 0.66;
+      const mesh = new THREE.InstancedMesh(geometry, material, COLS * ROWS);
+      mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(COLS * ROWS * 3), 3);
+      const m = new THREE.Matrix4(),
+        p = new THREE.Vector3(),
+        q = new THREE.Quaternion(),
+        sc = new THREE.Vector3(),
+        col = new THREE.Color();
+      let i = 0;
+      for (let row = 0; row < ROWS; row++) {
+        for (let column = 0; column < COLS; column++) {
+          p.set((column - (COLS - 1) / 2) * PITCH_X, ((ROWS - 1) / 2 - row) * PITCH_Y, 0);
+          sc.set(BW, BH, 1);
+          m.compose(p, q, sc);
+          mesh.setMatrixAt(i, m);
+          const family = (column * 3 + row) % 10 < 7 ? 0 : 1;
+          col.setHex(BRICK_FAMILIES[family][depthStep(row * 3)]);
+          mesh.setColorAt(i, col);
+          i++;
+        }
+      }
+      mesh.instanceColor.needsUpdate = true;
+      scene.add(mesh);
+
+      // Oyundaki kamera geometrisi: FOV 35, hafifçe yukarı bakıyor.
+      const camera = new THREE.PerspectiveCamera(35, W / H, 0.1, 100);
+      camera.position.set(0, 0, 7.4);
+      camera.lookAt(0, 0, 0);
+
+      renderer.render(scene, camera);
+
+      // ---- ölçüm: gerçek piksel değerleri ----
+      // Örnekleme noktaları elle değil kameradan projekte ediliyor; elle hesap bir
+      // önceki denemede bir satır kaymıştı ve arka planı ölçüyordum.
+      const gl = renderer.getContext();
+      const px = new Uint8Array(4);
+      const DPR = 2;
+      const readWorld = (wx, wy) => {
+        const v = new THREE.Vector3(wx, wy, 0.16).project(camera);
+        const sx = Math.round(((v.x + 1) / 2) * W * DPR);
+        const sy = Math.round(((v.y + 1) / 2) * H * DPR); // WebGL alt-sol orijinli
+        gl.readPixels(sx, sy, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        return [px[0], px[1], px[2]];
+      };
+      const lum = ([r, g, b]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+      // Sol üstteki tuğla: merkez x, gövdenin üst / orta / alt üçte biri.
+      // (Tam kenarı değil — orada bevel ve antialias var.)
+      const BX = (0 - (COLS - 1) / 2) * PITCH_X;
+      const BY = ((ROWS - 1) / 2 - 0) * PITCH_Y;
+      const top = readWorld(BX, BY + BH * 0.34);
+      const mid = readWorld(BX, BY);
+      const bot = readWorld(BX, BY - BH * 0.34);
+      // Işık kenarı: gövdenin en üst pikseli, kırpılması BEKLENEN yer.
+      const edge = readWorld(BX, BY + BH * 0.49);
+
+      const fmt = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+      const clipped = (c) => c[0] > 250 && c[1] > 250 && c[2] > 250;
+      const verdict = (ok, yes, no) =>
+        `<b style="color:${ok ? '#12b886' : '#e5484d'}">${ok ? yes : no}</b>`;
+
+      const hasGradient = lum(top) > lum(bot) + 0.08;
+      const faceOk = !clipped(top) && !clipped(mid) && !clipped(bot);
+      const notMuddy = lum(mid) > 0.35;
+
+      window.__measure = {
+        top,
+        mid,
+        bot,
+        edge,
+        lumTop: +lum(top).toFixed(3),
+        lumMid: +lum(mid).toFixed(3),
+        lumBot: +lum(bot).toFixed(3),
+        hasGradient,
+        faceOk,
+        notMuddy,
+        // Hedef: CSS tone-a1 durakları (#a5e4ff / #6fcbf5 / #3f9fd0)
+        target: { top: [165, 228, 255], mid: [111, 203, 245], bot: [63, 159, 208] },
+        deltaTop: top.map((c, i) => c - [165, 228, 255][i]),
+        deltaMid: mid.map((c, i) => c - [111, 203, 245][i]),
+        deltaBot: bot.map((c, i) => c - [63, 159, 208][i]),
+      };
+
+      document.getElementById('readout').innerHTML = `
+<div>Işık kenarı <b>${fmt(edge)}</b> · L ${lum(edge).toFixed(2)}</div>
+<div>Tuğla üstü &nbsp;<b>${fmt(top)}</b> · L ${lum(top).toFixed(2)}</div>
+<div>Tuğla ortası <b>${fmt(mid)}</b> · L ${lum(mid).toFixed(2)}</div>
+<div>Tuğla altı &nbsp;<b>${fmt(bot)}</b> · L ${lum(bot).toFixed(2)}</div>
+<hr style="border:none;border-top:1px solid #dde6f7;margin:10px 0">
+<div>Gradyan: ${verdict(hasGradient, 'VAR', 'YOK')}</div>
+<div>Yüz kırpılması: ${verdict(faceOk, 'yok', 'VAR — fazla parlak')}</div>
+<div>Çamurlu: ${verdict(notMuddy, 'hayır', 'EVET — fazla sönük')}</div>
+`;
+    </script>
+  </body>
+</html>

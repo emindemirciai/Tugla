@@ -23,20 +23,25 @@ export const BLOCK_COLORS: Record<string, number> = {
   TOUGH: 0x7b78a8,
   ARMORED: 0x9aa3bd,
   EXPLOSIVE: 0xe5252f,
-  ICE: 0x7fd8ef,
+  ICE: 0xe4f8ff,
   FIRE: 0xff7a45,
   ELECTRIC: 0xffd166,
   MOVING: 0x4fd6a8,
   REGENERATING: 0x7ce8b0,
-  SHIELDED: 0x6b9dff,
-  PORTAL: 0xc07bff,
+  // Deeper than the wall's cyan on purpose: at 0x6b9dff it measured 41.8 from
+  // the light family tone, under the 45 floor the visuals test enforces, and a
+  // shield the player mistakes for an ordinary brick is a wasted mechanic. This
+  // sits 61 from the wall and 112 from the nearest other meaning colour.
+  SHIELDED: 0x1f6feb,
+  PORTAL: 0xd14dff,
   SPLITTER: 0xff8ad0,
   BONUS: 0xffd166,
-  // Barrier structure: cold brushed steel, deliberately the least saturated
-  // thing on the board. A gate the ball can never break must not look like a
-  // brick that is merely hard — it reads as architecture, and the eye skips it
-  // when looking for targets.
-  DEFLECTOR: 0xb6bed4,
+  // Barrier structure: cold, dark steel — deliberately the least saturated
+  // thing on the board, and deliberately close to ABSORBER, because the two of
+  // them are the same category of object (see indestructibleBlockKinds). A gate
+  // the ball can never break must not look like a brick that is merely hard,
+  // and it must not look like ARMORED, which IS breakable.
+  DEFLECTOR: 0x5a6478,
   ABSORBER: 0x6b7390,
   BOSS_CORE: 0xff6b9a,
 };
@@ -95,12 +100,27 @@ const PADDLE_COLORS = [
  * rather than a flat sheet — deeper rows sit darker, exactly as they would
  * under the key light. The same board always paints the same way, because the
  * family and the step are derived from the brick's authored position.
+ *
+ * ## Why these exact hues
+ *
+ * The dominant family used to be warm — #ffb389 / #f0855a / #dc7450 — at 70% of
+ * the wall. Orange at that saturation is the one hue that turns to MUD as soon
+ * as it is under-lit, and that is precisely what the board looked like: brown
+ * bricks with a few steel-blue ones, nothing like the design. The design's wall
+ * is cool: cyan as the body, violet as the accent.
+ *
+ * These are the MIDDLE stop of each row band's gradient, not its top stop. The
+ * distinction is the whole ball game: the vertex ramp in block-visuals.ts is
+ * authored relative to the middle stop, so holding #a5e4ff here (band 0's TOP
+ * stop) made the renderer darken an already-pale blue and the wall came out
+ * dusty. Measured against a real render, the middle stop lands the face within
+ * one or two units of the design's own pixels.
  */
 export const BRICK_FAMILIES = [
-  // Warm family, three depths.
-  [0xffb389, 0xf0855a, 0xdc7450],
-  // Cool counter tone, three depths.
-  [0xa5e4ff, 0x52bdf5, 0x3d9fd4],
+  // Cyan body — the wall's dominant material. Bands: light, mid, deep.
+  [0x6fcbf5, 0x52bdf5, 0x3d9fd4],
+  // Violet accent.
+  [0x9c8bff, 0x7a68f0, 0x6252d0],
 ] as const;
 
 /** Row band → depth step. Top rows lighter, deeper rows darker. */
@@ -207,10 +227,13 @@ export class GameRenderer {
     // arrived on screen almost flat. The design is a flat, vivid, sRGB
     // composition — a linear transfer is what reproduces it.
     this.renderer.toneMapping = THREE.LinearToneMapping;
-    // Pulled back below 1: with the bloom pass now in the chain, an exposure
-    // above unity pushes the brick faces past the bloom threshold and the whole
-    // wall starts to haze.
-    this.renderer.toneMappingExposure = 0.92;
+    // Unity.
+    //
+    // Tuned together with the two lights and the emissive trace below so the
+    // top of a brick face lands at ~0.95 — bright, and just under clipping.
+    // Anything else here and that budget has to be re-derived; see the table in
+    // README before changing it.
+    this.renderer.toneMappingExposure = 1;
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(this.renderer.domElement);
@@ -251,42 +274,29 @@ export class GameRenderer {
     // lighting alone cannot produce a gradient across a face that points at the
     // camera, so the ramp is baked into the geometry and multiplies with each
     // brick's instance colour.
-    const blockMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      vertexColors: true,
-      // Matte. A brick in the design is poster-flat with one soft gradient; any
-      // real gloss puts a second, competing highlight on it.
-      roughness: 0.62,
-      metalness: 0.02,
-      reflectivity: 0.2,
-      // A trace of self-light, not a lamp.
-      //
-      // This was 0.5, which — multiplied by the ramp and added on top of a
-      // fully lit diffuse surface — drove every brick face to clip at white.
-      // That is the washed-out pastel wall: no gradient survives clipping.
-      // 0.12 keeps the faint inner light the design's `0 0 9px -3px` glow
-      // implies while leaving the face well inside range.
-      emissive: 0xffffff,
-      emissiveIntensity: 0.12,
-      sheen: 0,
-      sheenRoughness: 0.4,
-      clearcoat: quality.level === 'LOW' ? 0 : 0.1,
-      clearcoatRoughness: 0.6,
-    });
-    // Tint the emissive per brick.
+    // Unlit, because the shading is already baked.
     //
-    // three.js multiplies the vertex-colour attribute and the instance colour
-    // together into `vColor`, but applies it to the DIFFUSE term only — emissive
-    // stays whatever the material says, so without this every brick would glow
-    // the same white and the wall would wash out to one colour. Multiplying the
-    // emissive by vColor carries both the brick's hue and the baked ramp into
-    // the glow, so the lit top edge is the brightest part of the brick.
-    blockMaterial.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <emissivemap_fragment>',
-        '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= vColor.rgb;',
-      );
-    };
+    // This was a MeshPhysicalMaterial for four iterations, and it could never
+    // match the design. The reason is that three.js multiplies vColor into the
+    // DIFFUSE term only — the specular lobe is added on top, untinted and
+    // unramped. On a face pointing at the camera that is a near-constant sheet
+    // of white light, which lifts the dark end of the gradient and compresses
+    // the whole ramp: measured on a real render, a ramp authored at 1.16 → 0.76
+    // arrived as 0.739 → 0.652, about a third of its intended spread, with the
+    // hue washed toward grey. No combination of light, emissive and exposure
+    // fixes that, because the specular term does not scale with any of them in
+    // the same way the diffuse does. Four turns of tuning were four turns of
+    // fighting it.
+    //
+    // The design is a flat, poster-like composition, so the honest
+    // implementation is baked lighting: the ramp in block-visuals.ts IS the
+    // shading, and an unlit material reproduces it exactly — output is
+    // instanceColor × vertexRamp, nothing added. The brick still reads as a 3D
+    // slab because the ramp encodes the lit top bevel, the darker side walls and
+    // the seated shadow underneath. It is also now completely predictable: no
+    // light budget to re-derive, and changing a scene light cannot silently
+    // flatten the wall again.
+    const blockMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
     this.blockMesh = new THREE.InstancedMesh(
       blockGeometry,
       blockMaterial,
@@ -362,7 +372,7 @@ export class GameRenderer {
     const paddleMaterial = new THREE.MeshPhysicalMaterial({
       color: cosmeticColour(cosmetics, 'paddle') ?? paddleTone.color,
       emissive: paddleTone.emissive,
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 0.6,
       metalness: 0.65,
       roughness: 0.18,
     });
@@ -419,11 +429,14 @@ export class GameRenderer {
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));
     composer.addPass(
-      // Threshold 0.92: only the ball, the fuse spark, the rails and the laser
-      // clear it. At 0.75 the brick faces themselves were blooming, which put a
-      // haze over the whole wall and destroyed the very gradient the vertex
-      // colours exist to draw — glow is for light sources, not for surfaces.
-      new UnrealBloomPass(new THREE.Vector2(width, height), 0.3, 0.4, 0.92),
+      // Threshold 0.82 in LINEAR light, which is what the pass sees inside the
+      // composer. It sits between a brick's face (linear luminance ~0.74) and
+      // its lit top bevel (~0.90), so only the bevel, the ball, the fuse spark
+      // and the laser get a halo. That bevel glow is the design's
+      // `0 0 9px -3px <hue>` box-shadow. At 0.75 the FACES bloomed too, which
+      // hazed the whole wall and destroyed the very gradient the vertex colours
+      // exist to draw.
+      new UnrealBloomPass(new THREE.Vector2(width, height), 0.4, 0.4, 0.82),
     );
     // OutputPass applies tone mapping and the sRGB conversion at the end of the
     // chain; without it the composer would write linear values straight out and
@@ -461,30 +474,22 @@ export class GameRenderer {
     // vertical bands and a fuse. Reusing the brick geometry is also what makes
     // it sit in the wall instead of on top of it.
     const bodyGeometry = createBlockGeometry({ bevel: this.quality.level !== 'LOW' });
-    const bodyMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xe5252f,
-      emissive: 0x8e1018,
-      emissiveIntensity: 0.22,
-      roughness: 0.58,
-      metalness: 0,
-    });
+    // Unlit, exactly like the bricks, so the stick sits in the wall rather than
+    // on top of it: same geometry, same baked ramp, same flat response.
+    const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0xe5252f, vertexColors: true });
     // Cream end caps, hard against the two ends of the stick.
     //
     // These were 0.12 wide at x = ±0.41 with their own emissive, and the dark
     // bands sat at ±0.2 — four pale vertical bars across a red block, which is
     // what made the dynamite read as a striped brick rather than a stick. The
-    // caps now sit at the very ends and carry no emissive; the bands are the
-    // only other verticals, and they are dark.
+    // caps now sit at the very ends and are flat-shaded to match the body.
     const capGeometry = new THREE.BoxGeometry(0.1, 0.86, 0.46);
-    const capMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf7e4c4,
-      roughness: 0.72,
-    });
+    const capMaterial = new THREE.MeshBasicMaterial({ color: 0xf2dcb8 });
     const bandGeometry = new THREE.BoxGeometry(0.06, 0.9, 0.5);
-    const bandMaterial = new THREE.MeshStandardMaterial({ color: 0x5c070e, roughness: 0.88 });
+    const bandMaterial = new THREE.MeshBasicMaterial({ color: 0x5c070e });
     // The fuse: a short arc rising off the top edge, then the spark.
     const fuseGeometry = new THREE.TorusGeometry(0.13, 0.022, 6, 10, Math.PI * 0.9);
-    const fuseMaterial = new THREE.MeshStandardMaterial({ color: 0xf0d8a8, roughness: 0.7 });
+    const fuseMaterial = new THREE.MeshBasicMaterial({ color: 0xd8bd8c });
     const sparkGeometry = new THREE.SphereGeometry(0.075, 10, 8);
     // Basic, not standard: the spark is a light source in the fiction, so it
     // must not be shaded by the scene — and being the brightest thing on the
@@ -545,15 +550,12 @@ export class GameRenderer {
   }
 
   private buildLighting() {
-    // Ambient down from 1.4, key down from 2.6.
-    //
-    // Together they were putting more than three units of light on a surface
-    // whose vertex ramp already peaks above 1, so the brick faces arrived at
-    // the tone mapper already clipped and the gradient was gone before any
-    // material setting could matter. Lower and more directional: the key does
-    // the shaping, the hemisphere only keeps the shadow side from going black.
-    this.scene.add(new THREE.HemisphereLight(0xbaa6ff, 0x171034, 0.75));
-    const key = new THREE.DirectionalLight(0xffffff, 1.75);
+    // The bricks are unlit (see blockMaterial), so these serve the paddle, the
+    // board, the rails and the falling bonuses. Back to ordinary values: they
+    // were pushed to 4.74 / 1.2 while the bricks still depended on them, which
+    // blew out every other surface on the board.
+    this.scene.add(new THREE.HemisphereLight(0xbaa6ff, 0x171034, 1));
+    const key = new THREE.DirectionalLight(0xffffff, 2.2);
     key.position.set(-5, 16, 10);
     key.castShadow = this.quality.shadows;
     if (this.quality.shadows) {
