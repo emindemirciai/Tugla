@@ -254,8 +254,17 @@ export const updateProfileSchema = z.object({
 export const levelBlockSchema = z.object({
   id: z.string().min(1).max(64),
   kind: z.enum(blockKinds),
-  x: z.number().min(0).max(1),
-  y: z.number().min(0).max(1),
+  /**
+   * Board-space position, 0..1 across the play area.
+   *
+   * A small overhang is allowed on purpose. The sliding boss wall carries one
+   * segment past each edge (x = -0.04 and 1.04) so that as the wall travels the
+   * side never opens a gap the ball can slip through; those segments are
+   * indestructible barriers, exempt from position clamping. Held to ±0.05 so a
+   * genuine authoring mistake — a brick placed off the board — is still caught.
+   */
+  x: z.number().min(-0.05).max(1.05),
+  y: z.number().min(-0.05).max(1.05),
   width: z.number().positive().max(1),
   height: z.number().positive().max(1),
   hitPoints: z.number().int().positive().max(1000000),

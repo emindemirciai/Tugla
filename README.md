@@ -347,6 +347,20 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Üretim ile doğrulama aynı şeyi söylemeli
+
+Kayan boss duvarı her kenarın **dışına** birer segment koyar (`x = -0.04` ve `1.04`); duvar
+kaydığında yan taraf topun sızabileceği bir boşluk açmasın diye. Blok şeması ise `x`'i `0..1`
+aralığına kilitliyordu, dolayısıyla **42 bölüm doğrulamadan geçemiyordu**. API bir oturum başlatmadan
+önce bölüm tanımını bu şemayla ayrıştırdığı için o bölümler ne tohumlanabiliyor ne oynanabiliyordu.
+
+Şema artık **±0,05** taşmaya izin veriyor: bariyerin bilinçli çıkıntısı geçiyor, tahtanın dışına
+konmuş gerçek bir tuğla hâlâ reddediliyor. İki test bunu sabitliyor — 500 bölümün tamamı şemadan
+geçmeli, ve `x = 1.4` olan bir tuğla reddedilmeli.
+
+Ders: üreteç ile doğrulayıcı ayrı dosyalarda yaşıyorsa, birinde yapılan bir değişiklik diğerini
+sessizce yalanlayabilir. Artık ikisini karşılaştıran bir test var.
+
 ### Ölçülen tuğla yüzeyi
 
 Beş tur boyunca göz kararıyla eşleşmeyen gradyan, altıncı turda piksel ölçümüyle çözüldü ve sebep

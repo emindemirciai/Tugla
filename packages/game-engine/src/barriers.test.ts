@@ -1,5 +1,6 @@
 import {
   isIndestructibleBlock,
+  levelDefinitionSchema,
   bonusKinds,
   isBallBonus,
   weightedBonusPool,
@@ -271,5 +272,30 @@ describe('every level stays finishable', () => {
     const barriers = level.blocks.filter((block) => block.kind === 'DEFLECTOR');
     expect(barriers.length).toBeGreaterThan(0);
     expect(barriers.every((block) => block.required === false)).toBe(true);
+  });
+});
+
+describe('generated levels satisfy the schema the server validates with', () => {
+  it('parses every campaign level', () => {
+    // The sliding wall puts a segment past each edge so the side never opens a
+    // gap. The schema rejected x = -0.04, which made 42 levels fail validation —
+    // the API parses a level definition before starting a session, so those
+    // levels could not be seeded or played. Generation and validation must agree.
+    for (let index = 1; index <= 500; index += 1) {
+      const result = levelDefinitionSchema.safeParse(generateCampaignLevel(index));
+      expect(
+        result.success,
+        `level ${index}: ${JSON.stringify(result.error?.issues[0] ?? {})}`,
+      ).toBe(true);
+    }
+  });
+
+  it('still rejects a brick placed off the board', () => {
+    const level = generateCampaignLevel(1);
+    const broken = {
+      ...level,
+      blocks: [{ ...level.blocks[0]!, x: 1.4 }, ...level.blocks.slice(1)],
+    };
+    expect(levelDefinitionSchema.safeParse(broken).success).toBe(false);
   });
 });
