@@ -53,7 +53,14 @@ x-app-environment: &id003
 services:
   web:
     build:
-      context: ../..
+      # Repo root, expressed relative to the PROJECT DIRECTORY.
+      #
+      # Compose v2 resolves relative paths against --project-directory, not
+      # against the compose file's own folder. Dokploy runs this file with
+      # --project-directory <checkout>/code, so "../.." climbed two levels above
+      # the repo and Docker looked for the Dockerfile in
+      # /etc/dokploy/compose/infrastructure — which does not exist.
+      context: .
       dockerfile: infrastructure/docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN}/api
@@ -103,7 +110,14 @@ services:
       - /app/apps/web/.next/cache:size=64m
   admin:
     build:
-      context: ../..
+      # Repo root, expressed relative to the PROJECT DIRECTORY.
+      #
+      # Compose v2 resolves relative paths against --project-directory, not
+      # against the compose file's own folder. Dokploy runs this file with
+      # --project-directory <checkout>/code, so "../.." climbed two levels above
+      # the repo and Docker looked for the Dockerfile in
+      # /etc/dokploy/compose/infrastructure — which does not exist.
+      context: .
       dockerfile: infrastructure/docker/Dockerfile.admin
       args:
         NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN}/api
@@ -134,7 +148,14 @@ services:
       - /app/apps/admin/.next/cache:size=64m
   api:
     build:
-      context: ../..
+      # Repo root, expressed relative to the PROJECT DIRECTORY.
+      #
+      # Compose v2 resolves relative paths against --project-directory, not
+      # against the compose file's own folder. Dokploy runs this file with
+      # --project-directory <checkout>/code, so "../.." climbed two levels above
+      # the repo and Docker looked for the Dockerfile in
+      # /etc/dokploy/compose/infrastructure — which does not exist.
+      context: .
       dockerfile: infrastructure/docker/Dockerfile.api
     environment: *id003
     restart: unless-stopped
@@ -167,7 +188,14 @@ services:
       retries: 5
   migrate:
     build:
-      context: ../..
+      # Repo root, expressed relative to the PROJECT DIRECTORY.
+      #
+      # Compose v2 resolves relative paths against --project-directory, not
+      # against the compose file's own folder. Dokploy runs this file with
+      # --project-directory <checkout>/code, so "../.." climbed two levels above
+      # the repo and Docker looked for the Dockerfile in
+      # /etc/dokploy/compose/infrastructure — which does not exist.
+      context: .
       dockerfile: infrastructure/docker/Dockerfile.api
     command:
       - pnpm
@@ -185,7 +213,14 @@ services:
     profiles:
       - tools
     build:
-      context: ../..
+      # Repo root, expressed relative to the PROJECT DIRECTORY.
+      #
+      # Compose v2 resolves relative paths against --project-directory, not
+      # against the compose file's own folder. Dokploy runs this file with
+      # --project-directory <checkout>/code, so "../.." climbed two levels above
+      # the repo and Docker looked for the Dockerfile in
+      # /etc/dokploy/compose/infrastructure — which does not exist.
+      context: .
       dockerfile: infrastructure/docker/Dockerfile.api
     working_dir: /repo
     command:
@@ -278,7 +313,14 @@ services:
       - private
   analytics:
     build:
-      context: ../..
+      # Repo root, expressed relative to the PROJECT DIRECTORY.
+      #
+      # Compose v2 resolves relative paths against --project-directory, not
+      # against the compose file's own folder. Dokploy runs this file with
+      # --project-directory <checkout>/code, so "../.." climbed two levels above
+      # the repo and Docker looked for the Dockerfile in
+      # /etc/dokploy/compose/infrastructure — which does not exist.
+      context: .
       dockerfile: infrastructure/docker/Dockerfile.analytics
       args:
         ANALYZE_REPO: ${ANALYZE_REPO:-https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git}

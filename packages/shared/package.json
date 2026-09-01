@@ -1,6 +1,6 @@
 {
   "name": "@tugla/shared",
-  "version": "6.3.1",
+  "version": "6.3.2",
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

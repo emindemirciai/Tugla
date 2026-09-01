@@ -178,6 +178,53 @@ const checkComposeBuildArgs = () => {
   }
 };
 
+/**
+ * Build contexts must resolve from the project directory.
+ *
+ * Compose v2 resolves relative paths against `--project-directory`, not against
+ * the compose file's own folder. Dokploy runs the file with the repo root as the
+ * project directory, so a `context: ../..` climbed two levels ABOVE the repo and
+ * Docker went looking for the Dockerfile in `/etc/dokploy/compose/infrastructure`
+ * — a path that does not exist. The deploy failed before a single image built,
+ * with an error that named a directory nobody had ever written down.
+ *
+ * Resolving the same way here turns that into a red check instead.
+ */
+const checkComposeContexts = () => {
+  const composePath = join(root, 'infrastructure/dokploy/compose.production.yml');
+  if (!existsSync(composePath)) return;
+
+  const lines = readFileSync(composePath, 'utf8').split('\n');
+  let context = null;
+  let checked = 0;
+
+  for (const line of lines) {
+    const ctx = /^\s*context:\s*(\S+)/.exec(line);
+    if (ctx) {
+      context = ctx[1];
+      continue;
+    }
+    const dockerfile = /^\s*dockerfile:\s*(\S+)/.exec(line);
+    if (!dockerfile || !context) continue;
+
+    // The project directory IS the repo root when Dokploy invokes compose.
+    const resolved = resolve(root, context, dockerfile[1]);
+    checked += 1;
+    if (!existsSync(resolved)) {
+      failures.push(
+        `compose: context "${context}" + dockerfile "${dockerfile[1]}" resolves to ${resolved}, which does not exist from the project directory`,
+      );
+    }
+    context = null;
+  }
+
+  if (!checked) {
+    failures.push('compose build contexts could not be read; this check verified nothing');
+  }
+};
+
+checkComposeContexts();
+
 checkComposeBuildArgs();
 
 if (failures.length) {

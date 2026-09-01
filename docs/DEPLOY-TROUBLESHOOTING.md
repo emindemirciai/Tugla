@@ -1,5 +1,37 @@
 # Dağıtım sorun giderme / Deployment troubleshooting
 
+## `lstat /etc/dokploy/compose/infrastructure: no such file or directory`
+
+Dağıtım tek bir imaj derlemeden, şu satırla düşer:
+
+```
+resolve : lstat /etc/dokploy/compose/infrastructure: no such file or directory
+Error: ❌ Docker command failed
+```
+
+**Sebep.** Dokploy compose'u şöyle çağırır:
+
+```
+docker compose --project-directory /etc/dokploy/compose/<app>/code \
+  -f infrastructure/dokploy/compose.production.yml up -d --build
+```
+
+Compose v2, dosyadaki göreli yolları **compose dosyasının bulunduğu klasöre göre
+değil, `--project-directory`'ye göre** çözer. Proje dizini zaten depo kökü
+olduğu için `context: ../..` kökün **iki seviye üstüne** çıkar:
+
+```
+/etc/dokploy/compose/<app>/code  +  ../..  →  /etc/dokploy/compose
++ infrastructure/docker/Dockerfile.web     →  /etc/dokploy/compose/infrastructure/...
+```
+
+Hata mesajındaki dizin tam olarak budur; kimsenin yazmadığı bir yol olduğu için
+mesaj da kafa karıştırıcıdır.
+
+**Çözüm.** Her `build.context` değeri `.` olmalıdır — proje dizini zaten depo
+köküdür. `pnpm check:docker` artık bunu dağıtımın çözdüğü şekilde çözerek
+denetler; `../..` geri konulduğunda kontrol kırmızıya döner.
+
 ## `dependency failed to start: container ... api-1 is unhealthy`
 
 İmajlar derlendi, konteyner başladı ama sağlık kontrolünü geçemedi. Sağlık ucu artık anlamlı:

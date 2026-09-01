@@ -347,6 +347,17 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Compose derleme bağlamı
+
+Dokploy compose'u `--project-directory <checkout>/code` ile çağırır ve compose v2 göreli yolları
+compose dosyasının klasörüne göre değil **proje dizinine** göre çözer. `context: ../..` bu yüzden depo
+kökünün iki seviye üstüne çıkıyor ve Docker `Dockerfile`'ı `/etc/dokploy/compose/infrastructure`
+altında arıyordu — hiç var olmayan bir yol. Dağıtım tek bir imaj derlemeden düşüyordu.
+
+Her `build.context` artık `.`; proje dizini zaten depo kökü. `pnpm check:docker` bağlamları
+dağıtımın çözdüğü şekilde çözüyor, yani yalnızca yerelde çalışan bir yol bir daha üretime ulaşamaz —
+eski değer geri konularak doğrulandı, kontrol kırmızıya dönüyor.
+
 ### Üretim ile doğrulama aynı şeyi söylemeli
 
 Kayan boss duvarı her kenarın **dışına** birer segment koyar (`x = -0.04` ve `1.04`); duvar
