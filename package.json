@@ -1,6 +1,6 @@
 {
   "name": "tugla",
-  "version": "6.4.2",
+  "version": "6.4.3",
   "private": true,
   "packageManager": "pnpm@11.10.0",
   "engines": {

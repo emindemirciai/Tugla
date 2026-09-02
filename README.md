@@ -359,6 +359,16 @@ imaj derlemesinin sonunda ölüyordu.
 Next'in derinliklerinde değil, eksik değişkenin adıyla birlikte çıkıyor. Boş değerle denenerek
 doğrulandı.
 
+### Eksik değişken dağıtımı sessizce bozmaz
+
+`ROOT_DOMAIN`, `POSTGRES_*`, `JWT_*`, `SESSION_ENCRYPTION_KEY` ve `MINIO_*` artık compose tarafından
+zorunlu tutulur: biri eksikse dağıtım **imaj derlemeye başlamadan**, eksik değişkenin adı ve ne
+yapılması gerektiğiyle birlikte durur. Önceden imajlar derleniyor, dört dakika geçiyor ve sonra ya
+Next.js `Invalid URL` ile çöküyor ya da konteynerler sessizce ayağa kalkmıyordu.
+
+Gereken en küçük değişken kümesi, değer üretme komutu ve parolalarda kaçınılması gereken karakterler
+[`docs/DOKPLOY-ENV.md`](docs/DOKPLOY-ENV.md) içinde.
+
 ### Compose derleme bağlamı dosyanın yerine bağlıdır
 
 Compose göreli yolları **proje dizinine** göre çözer: `--project-directory` verilmişse odur,
