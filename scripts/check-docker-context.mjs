@@ -9,7 +9,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 
 const root = resolve(import.meta.dirname, '..');
@@ -134,9 +134,7 @@ for (const app of ['apps/web', 'apps/admin']) {
  * after a rename touched compose but not the Dockerfile.
  */
 const checkComposeBuildArgs = () => {
-  // Resolved from the compose file's own directory, which is the repo root —
-  // and must stay there; see the header comment in the compose file itself.
-  const composePath = join(root, 'compose.production.yml');
+  const composePath = join(root, 'infrastructure/dokploy/compose.production.yml');
   if (!existsSync(composePath)) return;
 
   const lines = readFileSync(composePath, 'utf8').split('\n');
@@ -190,14 +188,13 @@ const checkComposeBuildArgs = () => {
  * switched form died before building an image, naming a directory nobody had
  * written down.
  *
- * Keeping the compose file at the repo root makes both forms agree, and this
- * check enforces the part that can still drift: every context + dockerfile pair
- * must resolve to a file that exists.
+ * Dokploy's current command passes no `--project-directory`, so the project
+ * directory is the compose file's own folder. This check resolves the contexts
+ * exactly that way, which is what the deploy does — so a context that only works
+ * from somewhere else fails here first.
  */
 const checkComposeContexts = () => {
-  // Resolved from the compose file's own directory, which is the repo root —
-  // and must stay there; see the header comment in the compose file itself.
-  const composePath = join(root, 'compose.production.yml');
+  const composePath = join(root, 'infrastructure/dokploy/compose.production.yml');
   if (!existsSync(composePath)) return;
 
   const lines = readFileSync(composePath, 'utf8').split('\n');
@@ -214,7 +211,7 @@ const checkComposeContexts = () => {
     if (!dockerfile || !context) continue;
 
     // The project directory IS the repo root when Dokploy invokes compose.
-    const resolved = resolve(root, context, dockerfile[1]);
+    const resolved = resolve(dirname(composePath), context, dockerfile[1]);
     checked += 1;
     if (!existsSync(resolved)) {
       failures.push(

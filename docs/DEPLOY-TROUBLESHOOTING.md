@@ -1,26 +1,32 @@
 # Dağıtım sorun giderme / Deployment troubleshooting
 
-## `lstat .../infrastructure/dokploy/infrastructure: no such file or directory`
+## `lstat …/infrastructure/dokploy/infrastructure: no such file or directory`
 
-Dağıtım hiç başlamadan düşer. Bu, compose dosyasının **yerinden** kaynaklanan
-ikinci ve son hâlidir.
+## `lstat /etc/dokploy/compose/infrastructure: no such file or directory`
 
-**Sebep.** Compose göreli yolları **proje dizinine** göre çözer: `--project-directory`
-verilmişse odur, verilmemişse compose dosyasının bulunduğu klasördür. Dokploy her
-iki biçimi de kullandı:
+## `Compose file not found`
 
-| Dokploy komutu                             | Proje dizini               | Doğru `context` |
-| ------------------------------------------ | -------------------------- | --------------- |
-| `--project-directory <checkout>/code -f …` | depo kökü                  | `.`             |
-| `--env-file … -f …` (proje dizini yok)     | compose dosyasının klasörü | `../..`         |
+Üçü de aynı kökten gelir: **derleme bağlamı compose dosyasının yerine ve Dokploy'un
+çağrı biçimine bağlıdır.**
 
-Dosya `infrastructure/dokploy/` altındayken bu ikisi **zıt** değerler istiyordu;
-hangisi yazılırsa yazılsın Dokploy biçim değiştirdiğinde dağıtım ölüyordu.
+Compose göreli yolları **proje dizinine** göre çözer: `--project-directory`
+verilmişse odur, verilmemişse compose dosyasının bulunduğu klasördür.
 
-**Kalıcı çözüm.** Compose dosyası depo köküne taşındı. Her iki biçim de aynı
-proje dizinini verir, `context: .` ikisinde de doğrudur.
+| Dokploy komutu                                   | Proje dizini     | Doğru `context` |
+| ------------------------------------------------ | ---------------- | --------------- |
+| `--project-directory <checkout>/code -f <dosya>` | depo kökü        | `.`             |
+| `--env-file … -f <dosya>` (proje dizini yok)     | dosyanın klasörü | `../..`         |
 
-**Dokploy ayarı:** Compose Path = `compose.production.yml`
+Dokploy **şu anda ikinci biçimi** kullanıyor ve `infrastructure/dokploy/compose.production.yml`
+yolunu gösteriyor; bu yüzden depodaki değer `../..`'dir.
+
+- `lstat /etc/dokploy/compose/infrastructure` → birinci biçimde `../..` kullanılmış.
+- `lstat …/dokploy/infrastructure` → ikinci biçimde `.` kullanılmış.
+- `Compose file not found` → dosya, Dokploy'un Compose Path ayarının gösterdiği
+  yerde değil. Dosyayı taşıdıysanız ayarı da değiştirin.
+
+`pnpm check:docker` bağlamları **dağıtımın çözdüğü gibi** çözer, yani yanlış
+değer depoya giremez.
 
 ## `Failed to collect configuration for /_not-found` · `Invalid URL`
 
@@ -67,7 +73,7 @@ Error: ❌ Docker command failed
 
 ```
 docker compose --project-directory /etc/dokploy/compose/<app>/code \
-  -f compose.production.yml up -d --build
+  -f infrastructure/dokploy/compose.production.yml up -d --build
 ```
 
 Compose v2, dosyadaki göreli yolları **compose dosyasının bulunduğu klasöre göre

@@ -13,7 +13,7 @@ The domain is never hardcoded: everything follows `ROOT_DOMAIN` and the URL vari
 
 ## 2. Create the Dokploy compose application
 
-Use `compose.production.yml`. Assign public domains to `web`
+Use `infrastructure/dokploy/compose.production.yml`. Assign public domains to `web`
 (`tugla.fun`), `api` (`api.tugla.fun`), `admin` (`admin.tugla.fun`) and, if you want site traffic
 statistics, `analytics` (`analiz.tugla.fun`). PostgreSQL, Redis and MinIO stay on the internal
 network.

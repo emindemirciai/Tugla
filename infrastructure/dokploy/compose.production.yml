@@ -1,18 +1,18 @@
 # Production stack for Dokploy.
 #
-# THIS FILE MUST STAY AT THE REPOSITORY ROOT.
+# THE BUILD CONTEXT IS TIED TO THIS FILE'S LOCATION. Read before moving either.
 #
-# Compose resolves every relative path against the PROJECT DIRECTORY, which is
-# `--project-directory` when Dokploy passes it and otherwise the folder holding
-# this file. Dokploy has used both forms:
+# Compose resolves relative paths against the PROJECT DIRECTORY: whatever
+# `--project-directory` says, or — when it is not passed — the folder holding
+# this file. Dokploy has used both forms, and they need OPPOSITE values:
 #
-#   docker compose --project-directory <checkout>/code -f <this file> ...
-#   docker compose --env-file ... -f <this file> ...            (no project dir)
+#   docker compose --project-directory <checkout>/code -f <this file>   → context: .
+#   docker compose --env-file ... -f <this file>   (no project dir)     → context: ../..
 #
-# While this file sat in infrastructure/dokploy/ the two forms needed OPPOSITE
-# context values — `.` for the first, `../..` for the second — and each deploy
-# that switched form died before building a single image. At the repo root both
-# forms give the same project directory, so `context: .` is correct either way.
+# Dokploy currently uses the second form and points at this path, so the context
+# is `../..`. If a deploy ever fails with `lstat .../infrastructure: no such file
+# or directory`, Dokploy has switched forms: change the context to `.` (and see
+# docs/DEPLOY-TROUBLESHOOTING.md, which has the arithmetic).
 #
 # Tuğla.fun — production compose for Dokploy.
 #
@@ -76,7 +76,7 @@ services:
       # --project-directory <checkout>/code, so "../.." climbed two levels above
       # the repo and Docker looked for the Dockerfile in
       # /etc/dokploy/compose/infrastructure — which does not exist.
-      context: .
+      context: ../..
       dockerfile: infrastructure/docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}/api
@@ -133,7 +133,7 @@ services:
       # --project-directory <checkout>/code, so "../.." climbed two levels above
       # the repo and Docker looked for the Dockerfile in
       # /etc/dokploy/compose/infrastructure — which does not exist.
-      context: .
+      context: ../..
       dockerfile: infrastructure/docker/Dockerfile.admin
       args:
         NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}/api
@@ -171,7 +171,7 @@ services:
       # --project-directory <checkout>/code, so "../.." climbed two levels above
       # the repo and Docker looked for the Dockerfile in
       # /etc/dokploy/compose/infrastructure — which does not exist.
-      context: .
+      context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
     environment: *id003
     restart: unless-stopped
@@ -211,7 +211,7 @@ services:
       # --project-directory <checkout>/code, so "../.." climbed two levels above
       # the repo and Docker looked for the Dockerfile in
       # /etc/dokploy/compose/infrastructure — which does not exist.
-      context: .
+      context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
     command:
       - pnpm
@@ -236,7 +236,7 @@ services:
       # --project-directory <checkout>/code, so "../.." climbed two levels above
       # the repo and Docker looked for the Dockerfile in
       # /etc/dokploy/compose/infrastructure — which does not exist.
-      context: .
+      context: ../..
       dockerfile: infrastructure/docker/Dockerfile.api
     working_dir: /repo
     command:
@@ -336,7 +336,7 @@ services:
       # --project-directory <checkout>/code, so "../.." climbed two levels above
       # the repo and Docker looked for the Dockerfile in
       # /etc/dokploy/compose/infrastructure — which does not exist.
-      context: .
+      context: ../..
       dockerfile: infrastructure/docker/Dockerfile.analytics
       args:
         ANALYZE_REPO: ${ANALYZE_REPO:-https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git}
