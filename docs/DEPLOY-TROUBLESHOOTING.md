@@ -1,5 +1,27 @@
 # Dağıtım sorun giderme / Deployment troubleshooting
 
+## `lstat .../infrastructure/dokploy/infrastructure: no such file or directory`
+
+Dağıtım hiç başlamadan düşer. Bu, compose dosyasının **yerinden** kaynaklanan
+ikinci ve son hâlidir.
+
+**Sebep.** Compose göreli yolları **proje dizinine** göre çözer: `--project-directory`
+verilmişse odur, verilmemişse compose dosyasının bulunduğu klasördür. Dokploy her
+iki biçimi de kullandı:
+
+| Dokploy komutu                             | Proje dizini               | Doğru `context` |
+| ------------------------------------------ | -------------------------- | --------------- |
+| `--project-directory <checkout>/code -f …` | depo kökü                  | `.`             |
+| `--env-file … -f …` (proje dizini yok)     | compose dosyasının klasörü | `../..`         |
+
+Dosya `infrastructure/dokploy/` altındayken bu ikisi **zıt** değerler istiyordu;
+hangisi yazılırsa yazılsın Dokploy biçim değiştirdiğinde dağıtım ölüyordu.
+
+**Kalıcı çözüm.** Compose dosyası depo köküne taşındı. Her iki biçim de aynı
+proje dizinini verir, `context: .` ikisinde de doğrudur.
+
+**Dokploy ayarı:** Compose Path = `compose.production.yml`
+
 ## `Failed to collect configuration for /_not-found` · `Invalid URL`
 
 Dört dakikalık imaj derlemesinin sonunda:
@@ -45,7 +67,7 @@ Error: ❌ Docker command failed
 
 ```
 docker compose --project-directory /etc/dokploy/compose/<app>/code \
-  -f infrastructure/dokploy/compose.production.yml up -d --build
+  -f compose.production.yml up -d --build
 ```
 
 Compose v2, dosyadaki göreli yolları **compose dosyasının bulunduğu klasöre göre

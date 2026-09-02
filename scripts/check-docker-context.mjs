@@ -134,7 +134,9 @@ for (const app of ['apps/web', 'apps/admin']) {
  * after a rename touched compose but not the Dockerfile.
  */
 const checkComposeBuildArgs = () => {
-  const composePath = join(root, 'infrastructure/dokploy/compose.production.yml');
+  // Resolved from the compose file's own directory, which is the repo root —
+  // and must stay there; see the header comment in the compose file itself.
+  const composePath = join(root, 'compose.production.yml');
   if (!existsSync(composePath)) return;
 
   const lines = readFileSync(composePath, 'utf8').split('\n');
@@ -181,17 +183,21 @@ const checkComposeBuildArgs = () => {
 /**
  * Build contexts must resolve from the project directory.
  *
- * Compose v2 resolves relative paths against `--project-directory`, not against
- * the compose file's own folder. Dokploy runs the file with the repo root as the
- * project directory, so a `context: ../..` climbed two levels ABOVE the repo and
- * Docker went looking for the Dockerfile in `/etc/dokploy/compose/infrastructure`
- * — a path that does not exist. The deploy failed before a single image built,
- * with an error that named a directory nobody had ever written down.
+ * Compose resolves relative paths against the project directory: whatever
+ * `--project-directory` says, or the compose file's own folder when it is not
+ * given. Dokploy has used both forms, and while the file lived in
+ * infrastructure/dokploy/ they needed OPPOSITE context values — each deploy that
+ * switched form died before building an image, naming a directory nobody had
+ * written down.
  *
- * Resolving the same way here turns that into a red check instead.
+ * Keeping the compose file at the repo root makes both forms agree, and this
+ * check enforces the part that can still drift: every context + dockerfile pair
+ * must resolve to a file that exists.
  */
 const checkComposeContexts = () => {
-  const composePath = join(root, 'infrastructure/dokploy/compose.production.yml');
+  // Resolved from the compose file's own directory, which is the repo root —
+  // and must stay there; see the header comment in the compose file itself.
+  const composePath = join(root, 'compose.production.yml');
   if (!existsSync(composePath)) return;
 
   const lines = readFileSync(composePath, 'utf8').split('\n');

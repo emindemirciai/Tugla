@@ -1,3 +1,19 @@
+# Production stack for Dokploy.
+#
+# THIS FILE MUST STAY AT THE REPOSITORY ROOT.
+#
+# Compose resolves every relative path against the PROJECT DIRECTORY, which is
+# `--project-directory` when Dokploy passes it and otherwise the folder holding
+# this file. Dokploy has used both forms:
+#
+#   docker compose --project-directory <checkout>/code -f <this file> ...
+#   docker compose --env-file ... -f <this file> ...            (no project dir)
+#
+# While this file sat in infrastructure/dokploy/ the two forms needed OPPOSITE
+# context values — `.` for the first, `../..` for the second — and each deploy
+# that switched form died before building a single image. At the repo root both
+# forms give the same project directory, so `context: .` is correct either way.
+#
 # Tuğla.fun — production compose for Dokploy.
 #
 # Application containers drop every Linux capability and forbid privilege

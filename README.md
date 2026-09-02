@@ -359,6 +359,16 @@ imaj derlemesinin sonunda ölüyordu.
 Next'in derinliklerinde değil, eksik değişkenin adıyla birlikte çıkıyor. Boş değerle denenerek
 doğrulandı.
 
+### Compose dosyası depo kökünde durur
+
+Compose göreli yolları **proje dizinine** göre çözer: `--project-directory` verilmişse odur,
+verilmemişse compose dosyasının klasörü. Dokploy her iki biçimi de kullandı ve dosya
+`infrastructure/dokploy/` altındayken bu ikisi **zıt** `context` değerleri istiyordu — hangisi
+yazılırsa yazılsın biçim değiştiğinde dağıtım tek bir imaj derlemeden ölüyordu.
+
+Dosya artık depo kökünde: `compose.production.yml`. İki biçim de aynı proje dizinini verir, yani
+`context: .` her durumda doğrudur. Dokploy'da **Compose Path = `compose.production.yml`** olmalıdır.
+
 ### Compose derleme bağlamı
 
 Dokploy compose'u `--project-directory <checkout>/code` ile çağırır ve compose v2 göreli yolları
@@ -706,7 +716,7 @@ push sonrası `deploy.yml` Dokploy webhook'unu tetikler.
 ### Dokploy ile dağıtım (Hostinger KVM)
 
 1. Sunucuya Dokploy kur, bu depoyu **private** olarak bağla.
-2. "Docker Compose" uygulaması oluştur → dosya: `infrastructure/dokploy/compose.production.yml`.
+2. "Docker Compose" uygulaması oluştur → dosya: `compose.production.yml`.
 3. `.env.example`'daki tüm değişkenleri Dokploy environment ekranına gir (sırlar dahil).
 4. İlk dağıtım: `migrate` servisi `prisma migrate deploy` çalıştırır; ardından `api`, `web`, `admin`
    sağlık kontrolleriyle ayağa kalkar. Alan adları Dokploy/Traefik ekranından bağlanır; kod tarafında
@@ -1337,7 +1347,7 @@ user's stored `locale` (TR/EN).
 
 ### Deploying with Dokploy
 
-Create a Docker-Compose app pointing at `infrastructure/dokploy/compose.production.yml`, paste the
+Create a Docker-Compose app pointing at `compose.production.yml`, paste the
 variables from `.env.example`, deploy (the `migrate` service runs `prisma migrate deploy` first), then
 attach domains in Traefik — nothing in the code hard-codes a domain. Add the
 `DOKPLOY_PRODUCTION_WEBHOOK` repo secret for push-to-deploy.

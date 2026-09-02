@@ -1,6 +1,6 @@
 {
   "name": "@tugla/api",
-  "version": "6.4.0",
+  "version": "6.4.1",
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
