@@ -1,5 +1,37 @@
 # Dağıtım sorun giderme / Deployment troubleshooting
 
+## `Failed to collect configuration for /_not-found` · `Invalid URL`
+
+Dört dakikalık imaj derlemesinin sonunda:
+
+```
+[Error: Failed to collect configuration for /_not-found]
+  cause: TypeError: Invalid URL ... input: 'https:'
+```
+
+**Sebep.** Compose site adresini `https://${ROOT_DOMAIN}` olarak kurar. Dokploy
+ortamında `ROOT_DOMAIN` tanımlı değilse compose bunu boş dizeye çevirir ve geriye
+`https://` kalır — bu bir URL değildir. Next.js sayfa verisi toplarken çöker ve
+mesajda ne değişkenin adı ne dosya geçer.
+
+Log'un başındaki `The "ROOT_DOMAIN" variable is not set. Defaulting to a blank
+string.` uyarıları bunun habercisidir; onlarca satır olduğu için gözden kaçar.
+
+**Çözüm.** Dokploy → **Environment** içine ekleyin:
+
+```env
+ROOT_DOMAIN=tugla.fun
+```
+
+Aynı yerde `POSTGRES_*`, `JWT_*`, `SESSION_ENCRYPTION_KEY`, `INTERNAL_API_KEY` ve
+`MINIO_*` de tanımlı olmalıdır; log başındaki uyarı listesi hangilerinin eksik
+olduğunu tek tek söyler.
+
+**Artık iki katman koruyor.** Compose `ROOT_DOMAIN` yoksa dağıtımı sebebini
+yazarak reddeder; `assert-build-env.mjs` de derleme öncesi adresin şema **ve**
+host taşıdığını doğrular, yani hata Next'in içinde değil, değişkenin adıyla
+birlikte çıkar.
+
 ## `lstat /etc/dokploy/compose/infrastructure: no such file or directory`
 
 Dağıtım tek bir imaj derlemeden, şu satırla düşer:

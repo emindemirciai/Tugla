@@ -347,6 +347,18 @@ hâle gelirdi. Katalog metadata'sı panelden serbest JSON olarak yazıldığı i
 sayılır: `#rrggbb` biçiminde olmayan her değer yok sayılır ve bölümün kendi rengi kalır. Sekiz test
 bunu sabitliyor.
 
+### Eksik ROOT_DOMAIN dağıtımı düşürüyordu
+
+Compose site adresini `https://${ROOT_DOMAIN}` olarak kurar. Dokploy ortamında değişken tanımlı
+olmadığı için geriye `https://` kalıyordu — bu bir URL değil. Next.js sayfa verisi toplarken
+`Invalid URL` ile çöküyor ve mesajda ne değişkenin adı ne de dosya geçiyor; dağıtım dört dakikalık
+imaj derlemesinin sonunda ölüyordu.
+
+İki katman eklendi: compose `ROOT_DOMAIN` yoksa dağıtımı **sebebini yazarak reddediyor**, ve
+`assert-build-env.mjs` derlemeden önce adresin şema **ve** host taşıdığını doğruluyor. Böylece hata
+Next'in derinliklerinde değil, eksik değişkenin adıyla birlikte çıkıyor. Boş değerle denenerek
+doğrulandı.
+
 ### Compose derleme bağlamı
 
 Dokploy compose'u `--project-directory <checkout>/code` ile çağırır ve compose v2 göreli yolları

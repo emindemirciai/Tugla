@@ -28,7 +28,7 @@ export const BLOCK_COLORS: Record<string, number> = {
   ELECTRIC: 0xffd166,
   MOVING: 0x4fd6a8,
   REGENERATING: 0x7ce8b0,
-  // Deeper than the wall's cyan on purpose: at 0x6b9dff it measured 41.8 from
+  // Deeper than the wall's cyan on purpose: at 0x6b9dff it measures 41.8 from
   // the light family tone, under the 45 floor the visuals test enforces, and a
   // shield the player mistakes for an ordinary brick is a wasted mechanic. This
   // sits 61 from the wall and 112 from the nearest other meaning colour.
@@ -67,16 +67,24 @@ interface Particle {
  */
 const THEME_PALETTES: Record<string, { block: number; board: number; grid: number; glow: number }> =
   {
-    'neon-grid': { block: 0x52bdf5, board: 0x1d1540, grid: 0x3a2f6b, glow: 0x8b6cff },
-    'crystal-core': { block: 0x8b7bff, board: 0x201a4d, grid: 0x453a86, glow: 0xb9a8ff },
-    'solar-forge': { block: 0xff9a6b, board: 0x2a1733, grid: 0x5c3350, glow: 0xffb27a },
-    'frozen-circuit': { block: 0x7fd8ef, board: 0x122a44, grid: 0x2b5474, glow: 0xa8f0ff },
-    'dark-matter': { block: 0xc07bff, board: 0x1a1130, grid: 0x3d2a63, glow: 0xd6b6ff },
-    'quantum-lab': { block: 0x4fd6a8, board: 0x122e37, grid: 0x2b5f63, glow: 0x7ce8b0 },
-    'magma-vein': { block: 0xff7a8f, board: 0x2d1230, grid: 0x63274f, glow: 0xffb27a },
-    'aurora-field': { block: 0x6ad2ff, board: 0x14243f, grid: 0x2f4a75, glow: 0x9dffe0 },
-    'void-garden': { block: 0xffd166, board: 0x241a3d, grid: 0x4b3a73, glow: 0xffe6a3 },
-    singularity: { block: 0xff8ad0, board: 0x201436, grid: 0x4a2a6b, glow: 0xffa8e0 },
+    // Boards lifted out of near-black.
+    //
+    // Every one of these was 0x12–0x2a dark, and with the vignette and the fog on
+    // top the playfield read as a cave: the bricks were the only lit thing on
+    // screen, so the game looked dreary however well the bricks themselves were
+    // shaded. A brick-breaker board should be a lit stage, not a void. Same
+    // hues, roughly doubled in value — each world keeps its identity and the
+    // bricks still sit clearly in front of it.
+    'neon-grid': { block: 0x52bdf5, board: 0x2f2470, grid: 0x3a2f6b, glow: 0x8b6cff },
+    'crystal-core': { block: 0x8b7bff, board: 0x342b7a, grid: 0x453a86, glow: 0xb9a8ff },
+    'solar-forge': { block: 0xff9a6b, board: 0x46284f, grid: 0x5c3350, glow: 0xffb27a },
+    'frozen-circuit': { block: 0x7fd8ef, board: 0x1e4468, grid: 0x2b5474, glow: 0xa8f0ff },
+    'dark-matter': { block: 0xc07bff, board: 0x2c1e52, grid: 0x3d2a63, glow: 0xd6b6ff },
+    'quantum-lab': { block: 0x4fd6a8, board: 0x1d4a56, grid: 0x2b5f63, glow: 0x7ce8b0 },
+    'magma-vein': { block: 0xff7a8f, board: 0x4a1f4c, grid: 0x63274f, glow: 0xffb27a },
+    'aurora-field': { block: 0x6ad2ff, board: 0x223a62, grid: 0x2f4a75, glow: 0x9dffe0 },
+    'void-garden': { block: 0xffd166, board: 0x3a2c60, grid: 0x4b3a73, glow: 0xffe6a3 },
+    singularity: { block: 0xff8ad0, board: 0x352158, grid: 0x4a2a6b, glow: 0xffa8e0 },
   };
 
 const DEFAULT_PALETTE = THEME_PALETTES['neon-grid']!;
@@ -246,7 +254,13 @@ export class GameRenderer {
     // screen. That, more than any material setting, is why the wall looked
     // dull and desaturated next to the design. Kept, but as a whisper: enough
     // to give the board depth at its edges, not enough to grey out the bricks.
-    this.scene.fog = new THREE.FogExp2(0x171034, 0.008);
+    // Fog follows the board colour.
+    //
+    // It was hard-coded to 0x171034 — far darker than any board — so what little
+    // fog remains was still dragging distant bricks toward near-black instead of
+    // toward the board behind them. Fog should be the colour of the air, and
+    // here the air is whatever the world's board is.
+    this.scene.fog = new THREE.FogExp2(palette.board, 0.008);
     this.camera = new THREE.PerspectiveCamera();
     fitGameCamera(this.camera, {
       boardWidth: engine.width,
@@ -596,19 +610,12 @@ export class GameRenderer {
     this.scene.add(board);
     this.disposables.push(geometry, material);
 
-    // No grid overlay: the ruled lines read as screen artefacts on a phone and
-    // added nothing to depth perception. The board keeps a soft vignette instead.
-    const vignette = new THREE.Mesh(
-      new THREE.PlaneGeometry(this.engine.width + 6, this.engine.height + 6),
-      new THREE.MeshBasicMaterial({
-        color: this.palette.board,
-        transparent: true,
-        // 0.55 stacked a second layer of the board colour over the board and
-        // drove it to near-black, losing the warm tint the theme palette picks.
-        opacity: 0.3,
-        depthWrite: false,
-      }),
-    );
+    // No grid overlay and no vignette.
+    //
+    // The vignette plane sat at z = -0.6 while the board sits at -0.45, so the
+    // board occluded it completely: it darkened nothing, cost a transparent
+    // full-board draw every frame, and its comment claimed a purpose it had
+    // never served. Depth at the edges comes from the fog and the rails.
     const netGeometry = new THREE.PlaneGeometry(this.engine.width, 0.12);
     const netMaterial = new THREE.MeshBasicMaterial({
       color: 0x7ce8b0,
@@ -667,27 +674,37 @@ export class GameRenderer {
     top.position.set(this.engine.width / 2, this.engine.height, 0);
     for (const rail of [left, right, top]) this.scene.add(rail);
     this.disposables.push(verticalRail, horizontalRail, railMaterial);
-
-    vignette.position.set(this.engine.width / 2, this.engine.height / 2, -0.6);
-    this.scene.add(vignette);
-    this.disposables.push(vignette.geometry, vignette.material as THREE.Material);
   }
 
   private applyBlockColors() {
     this.engine.snapshot.blocks.forEach((block, index) => {
-      if (block.kind === 'NORMAL') {
+      // The wall palette applies to every brick WITHOUT a fixed meaning, not
+      // only to kind === 'NORMAL'.
+      //
+      // This is why the board still looked unchanged after the shading work. In
+      // a deep campaign level most bricks are not NORMAL, and every kind missing
+      // from BLOCK_COLORS fell through to `palette.block` — which for
+      // solar-forge is 0xff9a6b, a mid orange. The baked ramp then multiplied
+      // that: 0.31 red at the bottom of the face turned a mid orange into dark
+      // brown, and the wall came out as the muddy brown-and-slate board the
+      // screenshots showed. The ramp was working perfectly; it was being applied
+      // to the wrong base colour.
+      //
+      // BLOCK_COLORS still wins wherever it has an entry, so armored grey,
+      // dynamite red and the rest keep their meanings.
+      const meaning = block.kind === 'NORMAL' ? undefined : BLOCK_COLORS[block.kind];
+      if (meaning === undefined) {
         // Family and depth from the brick's own position: the wall is colourful
-        // but stable, and the row band gives it a lit relief.
-        // origin is the block's authored position and never moves, so a moving
-        // block keeps its colour instead of flickering through the palette.
+        // but stable, and the row band gives it a lit relief. origin is the
+        // authored position and never moves, so a moving block keeps its colour
+        // instead of flickering through the palette.
         const column = Math.round(block.origin.x);
         const row = Math.round(block.origin.y);
-        // Deterministic 70/30 split — the counter tone is an accent, not half
-        // the wall, so the board still reads as one material.
+        // Deterministic 70/30 split — the accent is an accent, not half the wall.
         const family = (column * 3 + row) % 10 < 7 ? 0 : 1;
         this.tempColor.setHex(BRICK_FAMILIES[family]![depthStep(row)]!);
       } else {
-        this.tempColor.setHex(BLOCK_COLORS[block.kind] ?? this.palette.block);
+        this.tempColor.setHex(meaning);
       }
       this.blockMesh.setColorAt(index, this.tempColor);
     });

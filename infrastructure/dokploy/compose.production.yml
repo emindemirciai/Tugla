@@ -18,10 +18,10 @@ x-app-environment: &id003
   SEED_ON_DEPLOY: ${SEED_ON_DEPLOY:-true}
   APP_NAME: ${APP_NAME:-Tuğla.fun}
   APP_SLUG: ${APP_SLUG:-tugla}
-  ROOT_DOMAIN: ${ROOT_DOMAIN}
-  WEB_URL: https://${ROOT_DOMAIN}
-  ADMIN_URL: https://admin.${ROOT_DOMAIN}
-  API_URL: https://api.${ROOT_DOMAIN}
+  ROOT_DOMAIN: ${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}
+  WEB_URL: https://${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}
+  ADMIN_URL: https://admin.${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}
+  API_URL: https://api.${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}
   DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@tugla-postgres:5432/${POSTGRES_DB}?schema=public
   REDIS_URL: redis://redis:6379
   JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
@@ -63,14 +63,14 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
       args:
-        NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN}/api
+        NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}/api
         NEXT_PUBLIC_APP_NAME: ${APP_NAME:-Tuğla}
         APP_NAME: ${APP_NAME:-Tuğla.fun}
         APP_TAGLINE: ${APP_TAGLINE:-Modern tuğla kırma oyunu}
-        WEB_URL: https://${ROOT_DOMAIN}
+        WEB_URL: https://${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}
         DEFAULT_LOCALE: ${DEFAULT_LOCALE:-tr}
         NEXT_PUBLIC_ANALYZE_URL: ${NEXT_PUBLIC_ANALYZE_URL:-${NEXT_PUBLIC_ANALYTICS_URL:-}}
-        NEXT_PUBLIC_ANALYZE_SITE: ${NEXT_PUBLIC_ANALYZE_SITE:-${ROOT_DOMAIN}}
+        NEXT_PUBLIC_ANALYZE_SITE: ${NEXT_PUBLIC_ANALYZE_SITE:-${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}}
         NEXT_PUBLIC_SITE_OWNER: ${SITE_OWNER:-}
         NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION:-}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
@@ -78,7 +78,7 @@ services:
       NODE_ENV: production
       APP_NAME: ${APP_NAME:-Tuğla.fun}
       APP_TAGLINE: ${APP_TAGLINE:-Modern tuğla kırma oyunu}
-      WEB_URL: https://${ROOT_DOMAIN}
+      WEB_URL: https://${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}
       DEFAULT_LOCALE: ${DEFAULT_LOCALE:-tr}
       SEO_INDEXABLE: ${SEO_INDEXABLE:-true}
       AI_CRAWLERS_ALLOWED: ${AI_CRAWLERS_ALLOWED:-true}
@@ -120,7 +120,7 @@ services:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.admin
       args:
-        NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN}/api
+        NEXT_PUBLIC_API_URL: https://api.${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}/api
     environment:
       NODE_ENV: production
       APP_NAME: ${APP_NAME:-Tuğla.fun}
@@ -326,7 +326,7 @@ services:
         ANALYZE_REPO: ${ANALYZE_REPO:-https://github.com/emindemirciai/Analyze.Your.Site-Siteni-Analiz-Et-.git}
         ANALYZE_REF: ${ANALYZE_REF:-main}
     environment:
-      ANALYZE_ALLOWED_ORIGIN: ${WEB_URL:-https://${ROOT_DOMAIN}}
+      ANALYZE_ALLOWED_ORIGIN: ${WEB_URL:-https://${ROOT_DOMAIN:?ROOT_DOMAIN is required — set it in the Dokploy environment, e.g. tugla.fun}}
       ANALYZE_DATA_DIR: /data
       ANALYZE_MAX_EVENTS: ${ANALYZE_MAX_EVENTS:-20000}
     volumes:
