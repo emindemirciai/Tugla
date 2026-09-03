@@ -405,22 +405,22 @@ geçmeli, ve `x = 1.4` olan bir tuğla reddedilmeli.
 Ders: üreteç ile doğrulayıcı ayrı dosyalarda yaşıyorsa, birinde yapılan bir değişiklik diğerini
 sessizce yalanlayabilir. Artık ikisini karşılaştıran bir test var.
 
-### Ölçülen tuğla yüzeyi
+### Tuğla yüzeyi: renk değil malzeme
 
-Beş tur boyunca göz kararıyla eşleşmeyen gradyan, altıncı turda piksel ölçümüyle çözüldü ve sebep
-dörttü: malzeme **ışıksız** olmak zorunda (three.js `vColor`'ı yalnızca diffuse terime çarpar, specular
-lob üstüne tonlanmamış beyaz ekleyip rampayı ezer), rampa **linear uzayda** yazılmalı (tasarım sRGB'de,
-gamma oranları sıkıştırıyor), instance rengi gradyanın **orta** durağını tutmalı (üst durağı tuttuğunda
-duvar tozlu görünüyordu), ve rampa **kanal bazlı** olmalı (tasarımın gradyanı yukarı doğru doygunluğunu
-azaltıyor; skaler çarpan bunu yapamaz).
+Tasarım sayfasının başlığı altı turdur oradaydı — _"renkle değil malzemeyle ayrışıyor"_ — ama oyunda
+yalnızca renk yarısı vardı. `TOUGH`'un çatlağı ve perçinleri, `ARMORED`'ın kaburgası, `SHIELDED`'ın
+halkası, `FIRE`'ın kor çekirdeği: hiçbiri yoktu, çünkü tek bir `InstancedMesh` her tuğlaya yalnızca
+tek düz renk verebilir. Işık ve rampa ayarları doğru olsa bile sonuç yine düz bir levha olacaktı; fark
+bir ayar farkı değil, mimari farkıydı.
 
-`tools/brick-check.html` bu ölçümü yapan araçtır: sayfayı aç, `window.__measure`'a bak, değiştir,
-tekrar bak. Tuğla görünümüne dokunmadan önce ölçmek şart — bu problemde göz beş tur yanıldı.
+Yüz artık canvas'ta CSS'in aynı değerleriyle çizilip doku olarak veriliyor. Bloklar yüz anahtarına
+göre gruplanıyor ve her grup kendi dokusuyla ayrı bir mesh alıyor — tek draw call yerine tahtada 8-10
+tane. Malzeme ışıksız olduğu için ayarlanacak ışık bütçesi, linear↔sRGB dönüşümü ve güreşilecek
+specular terim kalmadı; ölçüm aracı da bu yüzden kaldırıldı, artık ölçülecek sapma yok.
 
-**Anlam renkleri ile duvar arasındaki mesafe.** Yeni palet `SHIELDED`'ı duvarın açık cyan tonuna
-**41,8** birim yaklaştırmıştı; testin kendi tabanı 45. Oyuncunun kalkanı sıradan tuğlayla karıştırması
-mekaniği boşa çıkarır, bu yüzden renk daha derin bir maviye alındı (`#1f6feb`): duvara **61**, en yakın
-diğer anlam rengine **112** birim. Kalkan hâlâ mavi okunuyor, ama duvarın parçası gibi değil.
+Doku üretilemezse (SSR, birim testler, 2B canvas olmayan ortam) tahta düz renge düşer. Bu, "değişiklik
+hiç uygulanmamış" ile birebir aynı görünür, o yüzden geri düşüş artık konsola **bir kez** uyarı
+yazıyor: detaylar yoksa önce oraya bakın.
 
 ### Beyaza kırpılma ve kayan geçit
 

@@ -5,6 +5,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { createBlockGeometry } from '../lib/block-visuals';
+import { createBrickFaceTexture, faceKeyFor, faceSpecFor, KIND_FACES } from '../lib/brick-textures';
 import { fitGameCamera, projectPointerToBoardX } from '../lib/game-camera';
 import type { ResolvedQuality } from '../lib/settings';
 
@@ -30,8 +31,7 @@ export const BLOCK_COLORS: Record<string, number> = {
   REGENERATING: 0x7ce8b0,
   // Deeper than the wall's cyan on purpose: at 0x6b9dff it measures 41.8 from
   // the light family tone, under the 45 floor the visuals test enforces, and a
-  // shield the player mistakes for an ordinary brick is a wasted mechanic. This
-  // sits 61 from the wall and 112 from the nearest other meaning colour.
+  // shield the player mistakes for an ordinary brick is a wasted mechanic.
   SHIELDED: 0x1f6feb,
   PORTAL: 0xd14dff,
   SPLITTER: 0xff8ad0,
@@ -124,6 +124,15 @@ const PADDLE_COLORS = [
  * dusty. Measured against a real render, the middle stop lands the face within
  * one or two units of the design's own pixels.
  */
+/**
+ * Ordinary-brick hues, kept only as a fallback.
+ *
+ * The wall's real appearance now comes from the canvas face textures in
+ * brick-textures.ts (WALL_FACES), which carry the design's gradient stops AND
+ * the per-kind surface detail. These hexes are the middle stop of each of those
+ * six gradients, used to tint the flat material when there is no 2D canvas to
+ * paint a texture on — server rendering and unit tests.
+ */
 export const BRICK_FAMILIES = [
   // Cyan body — the wall's dominant material. Bands: light, mid, deep.
   [0x6fcbf5, 0x52bdf5, 0x3d9fd4],
@@ -131,7 +140,7 @@ export const BRICK_FAMILIES = [
   [0x9c8bff, 0x7a68f0, 0x6252d0],
 ] as const;
 
-/** Row band → depth step. Top rows lighter, deeper rows darker. */
+/** Row band → depth step, for the no-canvas fallback palette. */
 export const depthStep = (row: number) => {
   const band = ((row % 9) + 9) % 9;
   return band < 3 ? 0 : band < 6 ? 1 : 2;
@@ -172,6 +181,9 @@ export interface LevelStyle {
  * handful of draw calls rather than 500.
  */
 export class GameRenderer {
+  /** Warn once per page, not once per face group. */
+  private static warnedAboutTextures = false;
+
   private readonly scene = new THREE.Scene();
   private readonly renderer: THREE.WebGLRenderer;
   /** Bloom pipeline. Null below HIGH quality, where the scene renders direct. */
@@ -181,7 +193,18 @@ export class GameRenderer {
   private safetyNet: THREE.Mesh | null = null;
   /** Paddle laser beam, shown while the LASER bonus runs. */
   private laserBeam: THREE.Mesh | null = null;
-  private readonly blockMesh: THREE.InstancedMesh;
+  /**
+   * One InstancedMesh per distinct brick face.
+   *
+   * A single instanced mesh can only carry one flat colour per brick, which is
+   * why every block in the game used to be a plain slab however well it was
+   * shaded: the design differentiates kinds by MATERIAL — rivets and a crack on
+   * TOUGH, ribbed plate on ARMORED, a lit ring on SHIELDED, an ember core in
+   * FIRE — and none of that can live in a per-instance colour. Grouping by face
+   * lets each group carry its own texture. A campaign board shows eight to ten
+   * groups, so this trades one draw call for about ten.
+   */
+  private readonly blockGroups = new Map<string, { mesh: THREE.InstancedMesh; blocks: number[] }>();
   private readonly ballMesh: THREE.InstancedMesh;
   private readonly bonusMesh: THREE.InstancedMesh;
   private readonly paddle: THREE.Mesh;
@@ -198,7 +221,6 @@ export class GameRenderer {
   private readonly tempPosition = new THREE.Vector3();
   private readonly tempScale = new THREE.Vector3();
   private readonly tempQuaternion = new THREE.Quaternion();
-  private readonly tempColor = new THREE.Color();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -271,61 +293,7 @@ export class GameRenderer {
 
     this.buildLighting();
     this.buildBoard();
-
-    // The brick geometry carries the design's luminance ramp in its vertex
-    // colours — see block-visuals.ts for why that is the only place a per-brick
-    // gradient can live in an instanced mesh.
-    const blockGeometry = createBlockGeometry({ bevel: quality.level !== 'LOW' });
-    // One light direction for the whole wall.
-    //
-    // clearcoat: 1 plus sheen: 0.6 gave every brick its own specular blob, so
-    // 35 bricks meant 35 competing highlights and no readable light direction —
-    // the surface looked like wet plastic. Rougher, barely reflective, with a
-    // trace of clearcoat: now the key light at (-5, 16, 10) reads as a single
-    // gradient down each brick, and the wall has one top-left light source.
-    //
-    // vertexColors is what finally made the 3D bricks match the design. Scene
-    // lighting alone cannot produce a gradient across a face that points at the
-    // camera, so the ramp is baked into the geometry and multiplies with each
-    // brick's instance colour.
-    // Unlit, because the shading is already baked.
-    //
-    // This was a MeshPhysicalMaterial for four iterations, and it could never
-    // match the design. The reason is that three.js multiplies vColor into the
-    // DIFFUSE term only — the specular lobe is added on top, untinted and
-    // unramped. On a face pointing at the camera that is a near-constant sheet
-    // of white light, which lifts the dark end of the gradient and compresses
-    // the whole ramp: measured on a real render, a ramp authored at 1.16 → 0.76
-    // arrived as 0.739 → 0.652, about a third of its intended spread, with the
-    // hue washed toward grey. No combination of light, emissive and exposure
-    // fixes that, because the specular term does not scale with any of them in
-    // the same way the diffuse does. Four turns of tuning were four turns of
-    // fighting it.
-    //
-    // The design is a flat, poster-like composition, so the honest
-    // implementation is baked lighting: the ramp in block-visuals.ts IS the
-    // shading, and an unlit material reproduces it exactly — output is
-    // instanceColor × vertexRamp, nothing added. The brick still reads as a 3D
-    // slab because the ramp encodes the lit top bevel, the darker side walls and
-    // the seated shadow underneath. It is also now completely predictable: no
-    // light budget to re-derive, and changing a scene light cannot silently
-    // flatten the wall again.
-    const blockMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
-    this.blockMesh = new THREE.InstancedMesh(
-      blockGeometry,
-      blockMaterial,
-      Math.max(1, engine.snapshot.blocks.length),
-    );
-    this.blockMesh.castShadow = quality.shadows;
-    this.blockMesh.receiveShadow = quality.shadows;
-    this.blockMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    this.blockMesh.instanceColor = new THREE.InstancedBufferAttribute(
-      new Float32Array(Math.max(1, engine.snapshot.blocks.length) * 3),
-      3,
-    );
-    this.scene.add(this.blockMesh);
-    this.disposables.push(blockGeometry, blockMaterial);
-
+    this.buildBlockGroups(quality);
     this.buildDynamite();
 
     const ballGeometry = new THREE.SphereGeometry(
@@ -421,8 +389,74 @@ export class GameRenderer {
     this.scene.add(this.particlePoints);
     this.disposables.push(this.particleGeometry, particleMaterial);
 
-    this.applyBlockColors();
     this.buildComposer(viewportWidth, viewportHeight);
+  }
+
+  /**
+   * Builds one InstancedMesh per distinct brick face.
+   *
+   * Blocks are grouped by their face key — the kind for anything with a fixed
+   * meaning, otherwise the wall variant its authored position selects. Each
+   * group gets a canvas texture painted with the design's own gradient stops and
+   * surface detail (see brick-textures.ts), on an unlit material so the output
+   * IS that texture: no light to tune, no specular term to fight, no linear-to-
+   * sRGB conversion to get wrong.
+   *
+   * A block's kind never changes at runtime, so the grouping is fixed for the
+   * life of the level and `render` only has to write matrices.
+   */
+  private buildBlockGroups(quality: ResolvedQuality) {
+    const geometry = createBlockGeometry({ bevel: quality.level !== 'LOW' });
+    this.disposables.push(geometry);
+
+    const keyed = new Map<string, number[]>();
+    this.engine.snapshot.blocks.forEach((block, index) => {
+      const key = faceKeyFor(block.kind, Math.round(block.origin.x), Math.round(block.origin.y));
+      const bucket = keyed.get(key);
+      if (bucket) bucket.push(index);
+      else keyed.set(key, [index]);
+    });
+
+    for (const [key, blocks] of keyed) {
+      const texture = createBrickFaceTexture(faceSpecFor(key));
+      if (texture) {
+        this.disposables.push(texture);
+      } else if (!GameRenderer.warnedAboutTextures) {
+        // Without this the board silently loses every crack, rivet and rib and
+        // looks exactly like the flat wall the texture work replaced — which is
+        // indistinguishable from "the change did nothing".
+        GameRenderer.warnedAboutTextures = true;
+        console.warn(
+          'Brick face textures could not be created (no 2D canvas); falling back to flat colours.',
+        );
+      }
+      const material = new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        map: texture,
+        // Without a canvas (SSR, unit tests) fall back to the face's middle stop
+        // so the board still renders, just without the material detail.
+        color: texture ? 0xffffff : this.fallbackColorFor(key),
+      });
+      const mesh = new THREE.InstancedMesh(geometry, material, blocks.length);
+      mesh.castShadow = quality.shadows;
+      mesh.receiveShadow = quality.shadows;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      // Blocks are spread across the whole board, so a group's bounding sphere
+      // is the board: culling it per group buys nothing and risks popping.
+      mesh.frustumCulled = false;
+      this.scene.add(mesh);
+      this.disposables.push(material);
+      this.blockGroups.set(key, { mesh, blocks });
+    }
+  }
+
+  /** Flat colour for a face, for the no-canvas fallback. */
+  private fallbackColorFor(key: string) {
+    if (key.startsWith('k:')) {
+      return BLOCK_COLORS[key.slice(2)] ?? this.palette.block;
+    }
+    const variant = Number(key.slice(2));
+    return BRICK_FAMILIES[Math.floor(variant / 3)]![variant % 3]!;
   }
 
   /**
@@ -487,20 +521,28 @@ export class GameRenderer {
     // every other block, in red, with flat cream caps at each end, two dark
     // vertical bands and a fuse. Reusing the brick geometry is also what makes
     // it sit in the wall instead of on top of it.
+    // Same slab as every other brick, wearing the EXPLOSIVE face: red body,
+    // cream end caps, two dark bands and a stencilled TNT label, all painted
+    // into the texture. It was a sideways cylinder for two rounds — a round pill
+    // in a grid of flat bricks — and then a red slab with four box meshes laid
+    // over its front, which read as pale vertical bars rather than a stick.
+    // Reusing the brick geometry is also what makes it sit IN the wall instead
+    // of on top of it.
     const bodyGeometry = createBlockGeometry({ bevel: this.quality.level !== 'LOW' });
-    // Unlit, exactly like the bricks, so the stick sits in the wall rather than
-    // on top of it: same geometry, same baked ramp, same flat response.
-    const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0xe5252f, vertexColors: true });
-    // Cream end caps, hard against the two ends of the stick.
-    //
-    // These were 0.12 wide at x = ±0.41 with their own emissive, and the dark
-    // bands sat at ±0.2 — four pale vertical bars across a red block, which is
-    // what made the dynamite read as a striped brick rather than a stick. The
-    // caps now sit at the very ends and are flat-shaded to match the body.
-    const capGeometry = new THREE.BoxGeometry(0.1, 0.86, 0.46);
-    const capMaterial = new THREE.MeshBasicMaterial({ color: 0xf2dcb8 });
-    const bandGeometry = new THREE.BoxGeometry(0.06, 0.9, 0.5);
-    const bandMaterial = new THREE.MeshBasicMaterial({ color: 0x5c070e });
+    // Unlit like the bricks, so the stick answers to light exactly as the wall
+    // around it does. Cream end caps, dark bands and the stencilled TNT label
+    // are painted into the face texture (see brick-textures.ts).
+    // They used to be four separate box meshes laid over the front of the
+    // block, which read as four pale vertical bars on a red brick rather than a
+    // stick of dynamite. In the texture they are drawn at the design's own
+    // proportions and cost nothing.
+    const bodyTexture = createBrickFaceTexture(KIND_FACES.EXPLOSIVE!);
+    if (bodyTexture) this.disposables.push(bodyTexture);
+    const bodyMaterial = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      map: bodyTexture,
+      color: bodyTexture ? 0xffffff : 0xe5252f,
+    });
     // The fuse: a short arc rising off the top edge, then the spark.
     const fuseGeometry = new THREE.TorusGeometry(0.13, 0.022, 6, 10, Math.PI * 0.9);
     const fuseMaterial = new THREE.MeshBasicMaterial({ color: 0xd8bd8c });
@@ -513,10 +555,6 @@ export class GameRenderer {
     this.disposables.push(
       bodyGeometry,
       bodyMaterial,
-      capGeometry,
-      capMaterial,
-      bandGeometry,
-      bandMaterial,
       fuseGeometry,
       fuseMaterial,
       sparkGeometry,
@@ -529,15 +567,6 @@ export class GameRenderer {
       const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
       body.castShadow = this.quality.shadows;
       group.add(body);
-
-      for (const side of [-1, 1]) {
-        const cap = new THREE.Mesh(capGeometry, capMaterial);
-        cap.position.set(side * 0.45, 0, 0.05);
-        group.add(cap);
-        const band = new THREE.Mesh(bandGeometry, bandMaterial);
-        band.position.set(side * 0.26, 0, 0.05);
-        group.add(band);
-      }
 
       const fuseArc = new THREE.Mesh(fuseGeometry, fuseMaterial);
       // Rotated so the arc leans out of the top-right corner, as in the design.
@@ -676,41 +705,6 @@ export class GameRenderer {
     this.disposables.push(verticalRail, horizontalRail, railMaterial);
   }
 
-  private applyBlockColors() {
-    this.engine.snapshot.blocks.forEach((block, index) => {
-      // The wall palette applies to every brick WITHOUT a fixed meaning, not
-      // only to kind === 'NORMAL'.
-      //
-      // This is why the board still looked unchanged after the shading work. In
-      // a deep campaign level most bricks are not NORMAL, and every kind missing
-      // from BLOCK_COLORS fell through to `palette.block` — which for
-      // solar-forge is 0xff9a6b, a mid orange. The baked ramp then multiplied
-      // that: 0.31 red at the bottom of the face turned a mid orange into dark
-      // brown, and the wall came out as the muddy brown-and-slate board the
-      // screenshots showed. The ramp was working perfectly; it was being applied
-      // to the wrong base colour.
-      //
-      // BLOCK_COLORS still wins wherever it has an entry, so armored grey,
-      // dynamite red and the rest keep their meanings.
-      const meaning = block.kind === 'NORMAL' ? undefined : BLOCK_COLORS[block.kind];
-      if (meaning === undefined) {
-        // Family and depth from the brick's own position: the wall is colourful
-        // but stable, and the row band gives it a lit relief. origin is the
-        // authored position and never moves, so a moving block keeps its colour
-        // instead of flickering through the palette.
-        const column = Math.round(block.origin.x);
-        const row = Math.round(block.origin.y);
-        // Deterministic 70/30 split — the accent is an accent, not half the wall.
-        const family = (column * 3 + row) % 10 < 7 ? 0 : 1;
-        this.tempColor.setHex(BRICK_FAMILIES[family]![depthStep(row)]!);
-      } else {
-        this.tempColor.setHex(meaning);
-      }
-      this.blockMesh.setColorAt(index, this.tempColor);
-    });
-    if (this.blockMesh.instanceColor) this.blockMesh.instanceColor.needsUpdate = true;
-  }
-
   /** Spawns fragmentation particles for destruction and impact events. */
   emitEvents(events: GameEvent[]) {
     if (this.quality.maxParticles === 0) return;
@@ -816,25 +810,29 @@ export class GameRenderer {
   render(delta: number) {
     const snapshot = this.engine.snapshot;
 
-    snapshot.blocks.forEach((block, index) => {
-      // An EXPLOSIVE block is drawn by its dynamite group instead. Both are the
-      // same slab at the same place, so leaving the instance visible would put
-      // two coincident surfaces in the depth buffer and z-fight.
-      const visible = block.active && !this.dynamite.has(index);
-      this.tempPosition.set(block.position.x, block.position.y, 0.1);
-      // Draw the real collision box.
-      //
-      // This used to be 0.92 × 0.84, so a 36.7 × 24.3 px brick was drawn at
-      // 33.8 × 20.4 — the ball visibly bounced off empty space, and because the
-      // two factors differ the vertical mortar line ended up 1.6× the
-      // horizontal one, which is why the wall looked like floating sweets
-      // instead of brickwork. The mortar line should come from the level's
-      // pitch, not from shrinking every brick.
-      this.tempScale.set(visible ? block.size.x : 0, visible ? block.size.y : 0, visible ? 1 : 0);
-      this.tempMatrix.compose(this.tempPosition, this.tempQuaternion, this.tempScale);
-      this.blockMesh.setMatrixAt(index, this.tempMatrix);
-    });
-    this.blockMesh.instanceMatrix.needsUpdate = true;
+    for (const { mesh, blocks } of this.blockGroups.values()) {
+      blocks.forEach((blockIndex, slot) => {
+        const block = snapshot.blocks[blockIndex];
+        if (!block) return;
+        // An EXPLOSIVE block is drawn by its dynamite group instead. Both are
+        // the same slab at the same place, so leaving the instance visible would
+        // put two coincident surfaces in the depth buffer and z-fight.
+        const visible = block.active && !this.dynamite.has(blockIndex);
+        this.tempPosition.set(block.position.x, block.position.y, 0.1);
+        // Draw the real collision box.
+        //
+        // This used to be 0.92 × 0.84, so a 36.7 × 24.3 px brick was drawn at
+        // 33.8 × 20.4 — the ball visibly bounced off empty space, and because
+        // the two factors differ the vertical mortar line ended up 1.6× the
+        // horizontal one, which is why the wall looked like floating sweets
+        // instead of brickwork. The mortar line comes from the level's pitch,
+        // not from shrinking every brick.
+        this.tempScale.set(visible ? block.size.x : 0, visible ? block.size.y : 0, visible ? 1 : 0);
+        this.tempMatrix.compose(this.tempPosition, this.tempQuaternion, this.tempScale);
+        mesh.setMatrixAt(slot, this.tempMatrix);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+    }
 
     // Dynamite follows its block — including MOVING ones — and its fuse
     // breathes so the threat is legible even on a still board.
@@ -952,6 +950,8 @@ export class GameRenderer {
   }
 
   dispose() {
+    for (const { mesh } of this.blockGroups.values()) this.scene.remove(mesh);
+    this.blockGroups.clear();
     for (const entry of this.dynamite.values()) this.scene.remove(entry.group);
     this.dynamite.clear();
     for (const item of this.disposables) item.dispose();
