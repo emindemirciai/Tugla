@@ -160,9 +160,16 @@ const initialView: ViewState = {
 export function GameCanvas({
   session,
   onExit,
+  onNextLevel,
 }: {
   session: SessionStart;
   onExit: (summary: CompletionSummary | null) => void;
+  /**
+   * Start the next level directly. Absent when there is no next level to go to
+   * — the last level of the campaign, or a daily run, where the button would
+   * promise something the hub cannot deliver.
+   */
+  onNextLevel?: (summary: CompletionSummary | null) => void;
 }) {
   const { t, locale } = useI18n();
   const mountRef = useRef<HTMLDivElement>(null);
@@ -579,13 +586,34 @@ export function GameCanvas({
                 </ul>
               )}
 
-              <button
-                type="button"
-                className="button button-primary"
-                onClick={() => onExit(summary)}
-              >
-                {t('game.over.backToLevels')}
-              </button>
+              {/*
+                Two ways out, and the one people want most is offered first.
+                Clearing a level and then having to find it again in a grid of
+                five hundred is the kind of friction that ends a session; the
+                next level is one tap away when it exists and is unlocked.
+              */}
+              <div className="overlay-actions">
+                {view.status === 'COMPLETED' && summary?.accepted && onNextLevel && (
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={() => onNextLevel(summary)}
+                  >
+                    {t('game.over.nextLevel')}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={
+                    view.status === 'COMPLETED' && summary?.accepted && onNextLevel
+                      ? 'button'
+                      : 'button button-primary'
+                  }
+                  onClick={() => onExit(summary)}
+                >
+                  {t('game.over.backToLevels')}
+                </button>
+              </div>
             </div>
           )}
         </div>

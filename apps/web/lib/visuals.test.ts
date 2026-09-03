@@ -51,7 +51,7 @@ describe('brick faces', () => {
     ]);
     // The BAND wraps every nine rows; the family deliberately does not. Family
     // comes from `(column * 3 + row) % 10`, which keeps the 70/30 scatter from
-    // repeating in a visible stripe every nine rows — so row 9 shares row 0's
+    // repeating as a visible stripe every nine rows — so row 9 shares row 0's
     // depth step while sitting in the other colour family.
     expect(wallFaceIndex(0, 9) % 3).toBe(wallFaceIndex(0, 0) % 3);
     expect(Math.floor(wallFaceIndex(0, 9) / 3)).not.toBe(Math.floor(wallFaceIndex(0, 0) / 3));

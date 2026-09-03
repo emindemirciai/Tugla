@@ -127,6 +127,30 @@ function PlayInner() {
     [world],
   );
 
+  /**
+   * The level after the one being played, when there is one and it is reachable.
+   *
+   * Reachable means: it exists in this world's list, and finishing the current
+   * level is what unlocks it — so the button never offers a level the server
+   * would refuse to start. A daily run has no "next", because the daily
+   * challenge deliberately does not advance the campaign.
+   */
+  const nextLevel =
+    session && session.level.type !== 'DAILY'
+      ? (levels.find(
+          (candidate) =>
+            candidate.world === session.level.world && candidate.index === session.level.index + 1,
+        ) ?? null)
+      : null;
+
+  const handleNextLevel = useCallback(
+    (summary: CompletionSummary | null) => {
+      handleExit(summary);
+      if (nextLevel) void startLevel(nextLevel.id);
+    },
+    [handleExit, nextLevel, startLevel],
+  );
+
   if (loading || (!user && typeof window !== 'undefined')) {
     return (
       <main className="play-page">
@@ -136,7 +160,13 @@ function PlayInner() {
   }
 
   if (session) {
-    return <GameCanvas session={session} onExit={handleExit} />;
+    return (
+      <GameCanvas
+        session={session}
+        onExit={handleExit}
+        onNextLevel={nextLevel ? handleNextLevel : undefined}
+      />
+    );
   }
 
   return (

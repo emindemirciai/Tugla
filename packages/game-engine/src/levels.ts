@@ -57,29 +57,50 @@ const kindPoolForWorld = (world: number): BlockKind[] => {
 const bonusPool: BonusKind[] = weightedBonusPool();
 
 /**
- * A wall the ball cannot break, with one opening.
+ * The shape of a level's indestructible barrier.
+ *
+ * All five are built from DEFLECTOR blocks, which the engine already reflects
+ * without ever damaging, so none of them adds a mechanic to the simulation.
+ * What they change is what the player has to DO:
+ *
+ * - `gate`    one horizontal wall, one slot. Aim through it.
+ * - `vault`   the same wall with its slot hard against a side rail, so the only
+ *             line in is a bank off the wall.
+ * - `airlock` two rows, slots at opposite ends: through the first, along the
+ *             corridor, out the second.
+ * - `funnel`  a chevron pointing down at a central slot. Generous to enter, but
+ *             the arms return the ball at angles the paddle has to chase.
+ * - `pillars` vertical bars with lanes between them. The ball works one lane at
+ *             a time, so the wall above comes down column by column instead of
+ *             all at once.
+ *
+ * One shape was not enough: a single horizontal wall is one aiming problem, and
+ * a player who has solved it has solved every gated level in the campaign.
+ */
+export type BarrierShape = 'gate' | 'vault' | 'airlock' | 'funnel' | 'pillars';
+
+/**
+ * A wall the ball cannot break.
  *
  * Boss rooms and the late-campaign gauntlet levels put an indestructible
  * barrier between the paddle and the bricks: the only way up is to thread the
- * ball through the gate. It changes what the player is doing — aiming for a gap
- * instead of sweeping a wall — without adding a single new mechanic to the
- * engine, because DEFLECTOR blocks already reflect without taking damage.
+ * ball through it. It changes what the player is doing — working an opening
+ * instead of sweeping a wall — without adding a single new mechanic.
  */
 export interface BarrierPlan {
-  /** Normalized y of the barrier row. */
+  shape: BarrierShape;
+  /** Normalized y of the barrier's primary row. */
   y: number;
-  /** First open column of the gate. */
+  /** First open column of the slot. Unused by `pillars`. */
   gapColumn: number;
-  /** Gate width, in columns. */
+  /** Slot width, in columns. Narrows as the campaign goes on. */
   gapWidth: number;
-  /** World bosses get a second row with the gate on the far side. */
-  double: boolean;
   /**
-   * Whether the wall slides, carrying its gate with it.
+   * Whether the wall slides, carrying its slot with it.
    *
-   * A static gate is an aiming problem the player solves once. A moving one has
+   * A static slot is an aiming problem the player solves once. A moving one has
    * to be re-solved every rally, which is the difference between a boss room
-   * and a slower level — so it is reserved for the fights.
+   * and a slower level.
    */
   slide: boolean;
 }
@@ -95,9 +116,29 @@ const COLUMN_PITCH = 0.12;
  *
  * Half a column. The wall is authored one segment wider than the board on each
  * side, so at any point in the travel the playfield is still fully walled and
- * only the gate has moved.
+ * only the slot has moved.
  */
 const BARRIER_TRAVEL = COLUMN_PITCH / 2;
+
+/** One wall segment. Slightly wider than a brick so a row has no seams. */
+const SEGMENT = { width: 0.118, height: 0.038 };
+
+/** A funnel arm lifts by one segment height per step out from the slot. */
+const FUNNEL_STEP = 0.037;
+
+/** Funnel arms stop climbing after three steps, or they reach the bricks. */
+const FUNNEL_MAX_STEPS = 3;
+
+/** A pillar: narrow enough to leave a threadable lane, tall enough to matter. */
+const PILLAR = { width: 0.088, height: 0.17 };
+
+/** Which columns carry a pillar. Bars sit on the boundaries between them. */
+const PILLAR_COLUMNS = [0, 2, 4, 6];
+
+/** Single-wall shapes, rotated through so consecutive gated levels differ. */
+const SINGLE_WALL_SHAPES: BarrierShape[] = ['gate', 'funnel', 'pillars', 'vault'];
+
+const columnX = (column: number) => 0.08 + column * COLUMN_PITCH;
 
 /**
  * Decides whether a level is gated, and how.
@@ -120,80 +161,159 @@ export const barrierPlanFor = (
   const gauntlet = index >= 120 && index % 12 === 5;
   if (!boss && !gauntlet) return null;
 
-  // A world boss gets the narrow gate; everything else gets two columns, which
-  // is about ten ball diameters and can be hit deliberately rather than by luck.
-  const gapWidth = type === 'WORLD_BOSS' ? 1 : 2;
-  const gapColumn = Math.floor(random() * (COLUMNS - gapWidth));
+  // World bosses get the two-stage room; everything else draws from the
+  // single-wall set, so two gated levels in a row are never the same puzzle.
+  const shape: BarrierShape =
+    type === 'WORLD_BOSS'
+      ? 'airlock'
+      : SINGLE_WALL_SHAPES[Math.floor(random() * SINGLE_WALL_SHAPES.length)]!;
+
+  // The slot narrows with the campaign: three columns while the idea is new,
+  // two through the middle worlds, one by the last. This is the difficulty
+  // curve — the same shape gets progressively meaner without the player having
+  // to learn anything new.
+  const world = Math.ceil(index / APP_DEFAULTS.levelsPerWorld);
+  const gapWidth = Math.max(1, 3 - Math.floor(world / 4));
+
+  const gapColumn =
+    shape === 'vault'
+      ? // Hard against one rail: the only line in is a bank off the side wall.
+        random() < 0.5
+        ? 0
+        : COLUMNS - gapWidth
+      : shape === 'funnel'
+        ? // The chevron's point, so the arms come out symmetric.
+          Math.floor((COLUMNS - gapWidth) / 2)
+        : Math.floor(random() * (COLUMNS - gapWidth + 1));
 
   return {
+    shape,
     y: boss ? 0.3 : 0.36,
     gapColumn,
     gapWidth,
-    double: type === 'WORLD_BOSS',
-    // Mini bosses hold still: the gate is already a new idea there, and moving
-    // it in the same level the player first meets it is two lessons at once.
-    slide: type === 'WORLD_BOSS' || (!boss && gauntlet),
+    // Only the straight rows slide. A chevron and a row of pillars already vary
+    // the line into the bricks, and sliding either would need a different
+    // overhang than the one spare segment a straight row uses. A vault that
+    // slid would carry its slot away from the rail and stop being a vault.
+    // Mini bosses hold still: the slot is a new idea there, and moving it in
+    // the same level the player first meets it is two lessons at once.
+    slide: (shape === 'gate' || shape === 'airlock') && (type === 'WORLD_BOSS' || gauntlet),
   };
 };
 
-/** Builds the barrier rows for a plan. */
-const barrierBlocks = (index: number, plan: BarrierPlan): LevelDefinition['blocks'] => {
-  const blocks: LevelDefinition['blocks'] = [];
-  const rows: { y: number; gapColumn: number; tag: string; phase: number }[] = [
-    { y: plan.y, gapColumn: plan.gapColumn, tag: 'a', phase: 0 },
-  ];
-  if (plan.double) {
-    // Gate on the far side, so the two openings are never stacked: the ball has
-    // to cross the corridor between the rows to get up. The half-turn phase
-    // offset makes the rows slide in opposition, which keeps the corridor
-    // opening and closing rather than translating rigidly.
-    const mirrored = COLUMNS - plan.gapWidth - plan.gapColumn;
-    rows.push({
-      y: plan.y - 0.075,
-      gapColumn: Math.max(0, mirrored),
-      tag: 'b',
-      phase: Math.PI,
-    });
-  }
+/**
+ * The highest point the barrier reaches.
+ *
+ * Bricks have to stop clear of it. A plain row's top is its own y, but a funnel
+ * climbs and a pillar is tall, so those two would otherwise have the bottom
+ * rows of the wall built straight through them.
+ */
+export const barrierCeiling = (plan: BarrierPlan): number => {
+  if (plan.shape === 'funnel') return plan.y + FUNNEL_MAX_STEPS * FUNNEL_STEP;
+  if (plan.shape === 'pillars') return plan.y + PILLAR.height / 2;
+  // An airlock's second row sits BELOW the first, nearer the paddle.
+  return plan.y;
+};
 
-  for (const row of rows) {
-    // A sliding wall overhangs one segment past each edge, so the board stays
-    // fully walled at every point in the travel and only the gate moves.
-    const first = plan.slide ? -1 : 0;
-    const last = plan.slide ? COLUMNS : COLUMNS - 1;
-    for (let column = first; column <= last; column += 1) {
-      if (column >= row.gapColumn && column < row.gapColumn + plan.gapWidth) continue;
-      blocks.push({
-        id: `l${index}-bar${row.tag}c${column}`,
-        kind: 'DEFLECTOR',
-        x: 0.08 + column * COLUMN_PITCH,
-        y: row.y,
-        // Slightly wider than a brick so the row is a seamless wall: at the
-        // brick width of 0.102 the 0.018 seams are narrower than the ball, but
-        // a discrete collision test should never have to rely on that.
-        width: 0.118,
-        height: 0.038,
-        // Never read — a DEFLECTOR reflects before any damage is applied — but
-        // the schema requires a positive value.
-        hitPoints: 1,
-        rotation: 0,
-        bonus: null,
-        // The wall is scenery, not a target: it must not hold the level open.
-        required: false,
-        ...(plan.slide
-          ? {
-              motionRange: BARRIER_TRAVEL,
-              motionSpeed: 0.55,
-              // Every segment of a row shares one phase, so the wall travels as
-              // a single piece. Without this the engine derives the phase from
-              // each block's position and the wall tears apart around its gate.
-              motionPhase: row.phase,
-            }
-          : {}),
-      });
-    }
+const segment = (
+  id: string,
+  x: number,
+  y: number,
+  plan: BarrierPlan,
+  phase: number,
+  size: { width: number; height: number } = SEGMENT,
+): LevelDefinition['blocks'][number] => ({
+  id,
+  kind: 'DEFLECTOR',
+  x,
+  y,
+  width: size.width,
+  height: size.height,
+  // Never read — a DEFLECTOR reflects before any damage is applied — but the
+  // schema requires a positive value.
+  hitPoints: 1,
+  rotation: 0,
+  bonus: null,
+  // The wall is scenery, not a target: it must not hold the level open.
+  required: false,
+  ...(plan.slide
+    ? {
+        motionRange: BARRIER_TRAVEL,
+        motionSpeed: 0.55,
+        // Every segment of a row shares one phase, so the wall travels as a
+        // single piece. Without this the engine derives the phase from each
+        // block's position and the wall tears apart around its own slot.
+        motionPhase: phase,
+      }
+    : {}),
+});
+
+/** One horizontal wall with a slot in it. */
+const wallRow = (
+  index: number,
+  plan: BarrierPlan,
+  tag: string,
+  y: number,
+  gapColumn: number,
+  phase: number,
+): LevelDefinition['blocks'] => {
+  const blocks: LevelDefinition['blocks'] = [];
+  // A sliding wall overhangs one segment past each edge, so the board stays
+  // fully walled at every point in the travel and only the slot moves.
+  const first = plan.slide ? -1 : 0;
+  const last = plan.slide ? COLUMNS : COLUMNS - 1;
+  for (let column = first; column <= last; column += 1) {
+    if (column >= gapColumn && column < gapColumn + plan.gapWidth) continue;
+    blocks.push(segment(`l${index}-bar${tag}c${column}`, columnX(column), y, plan, phase));
   }
   return blocks;
+};
+
+/** Builds the barrier for a plan. */
+const barrierBlocks = (index: number, plan: BarrierPlan): LevelDefinition['blocks'] => {
+  switch (plan.shape) {
+    case 'airlock': {
+      // Slot on the far side for the second row, so the two openings are never
+      // stacked: the ball has to cross the corridor between the rows to get up.
+      // The half-turn phase offset makes the rows slide in opposition, which
+      // keeps the corridor opening and closing rather than translating rigidly.
+      const mirrored = Math.max(0, COLUMNS - plan.gapWidth - plan.gapColumn);
+      return [
+        ...wallRow(index, plan, 'a', plan.y, plan.gapColumn, 0),
+        ...wallRow(index, plan, 'b', plan.y - 0.075, mirrored, Math.PI),
+      ];
+    }
+    case 'funnel': {
+      const blocks: LevelDefinition['blocks'] = [];
+      const gapEnd = plan.gapColumn + plan.gapWidth - 1;
+      for (let column = 0; column < COLUMNS; column += 1) {
+        if (column >= plan.gapColumn && column <= gapEnd) continue;
+        // Each step out from the slot lifts the segment, so the row becomes a
+        // chevron with its point at the opening.
+        const out = column < plan.gapColumn ? plan.gapColumn - column : column - gapEnd;
+        const lift = Math.min(out - 1, FUNNEL_MAX_STEPS) * FUNNEL_STEP;
+        blocks.push(segment(`l${index}-barfc${column}`, columnX(column), plan.y + lift, plan, 0));
+      }
+      return blocks;
+    }
+    case 'pillars':
+      // Bars on the boundaries between columns, so each lane lines up with a
+      // pair of bricks above it.
+      return PILLAR_COLUMNS.map((column) =>
+        segment(
+          `l${index}-barpc${column}`,
+          columnX(column) + COLUMN_PITCH / 2,
+          plan.y,
+          plan,
+          0,
+          PILLAR,
+        ),
+      );
+    case 'gate':
+    case 'vault':
+    default:
+      return wallRow(index, plan, 'a', plan.y, plan.gapColumn, 0);
+  }
 };
 
 const hitPointsFor = (kind: BlockKind, index: number) => {
@@ -393,8 +513,11 @@ export const generateCampaignLevel = (index: number): LevelDefinition => {
   const layout = LAYOUTS[(index + world * 3) % LAYOUTS.length]!;
   const barrier = barrierPlanFor(index, type, random);
   // Bricks must stop clear of the barrier, or the wall and the lowest brick row
-  // would occupy the same space.
-  const floorY = barrier ? barrier.y + 0.045 : 0.24;
+  // would occupy the same space. The clearance is measured from the barrier's
+  // CEILING rather than its row, because a funnel climbs and a pillar is tall:
+  // using `barrier.y` would have the bottom brick rows built straight through
+  // the arms of a chevron.
+  const floorY = barrier ? barrierCeiling(barrier) + 0.045 : 0.24;
 
   if (type !== 'NORMAL') {
     blocks.push({

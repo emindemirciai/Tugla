@@ -3390,3 +3390,16 @@ textarea:focus {
   font-size: 0.78rem;
   color: var(--ink-3);
 }
+
+/* End-of-level actions: side by side on a phone, primary first. */
+.overlay-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+.overlay-actions .button {
+  flex: 1 1 150px;
+  max-width: 220px;
+}

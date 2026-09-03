@@ -405,6 +405,28 @@ geçmeli, ve `x = 1.4` olan bir tuğla reddedilmeli.
 Ders: üreteç ile doğrulayıcı ayrı dosyalarda yaşıyorsa, birinde yapılan bir değişiklik diğerini
 sessizce yalanlayabilir. Artık ikisini karşılaştıran bir test var.
 
+### Bölüm bitince ne olacağı
+
+Bölümü geçtikten sonra tek çıkış yolu vardı: bölüm listesine dön ve az önce bitirdiğin bölümü beş
+yüzlük bir ızgarada yeniden bul. Bitiş panelinde artık **Sonraki bölüm** düğmesi var ve önce o
+duruyor; liste düğmesi ikincil.
+
+Düğme yalnızca gerçekten gidilecek bir yer varsa görünür: bölüm kabul edilmişse, sonraki bölüm bu
+dünyanın listesinde varsa ve onu açan şey zaten bu bölümün tamamlanmasıysa. Günün bölümünde
+görünmez — günün bölümü kampanyada ilerlemez, dolayısıyla "sonraki" diye bir şey yoktur ve düğme
+sunucunun reddedeceği bir şey vaat etmemelidir.
+
+### Bariyer siluetleri
+
+Kırılmaz duvar tek şekildeydi: yatay duvar artı delik. Artık beş şekil var — `gate`, `vault`,
+`airlock`, `funnel`, `pillars` — ve her biri farklı bir soru soruyor. Zorluk yuva genişliğinden
+geliyor: dünya 1-3'te üç kolon, 4-7'de iki, 8-10'da bir. Aynı şekil, oyuncu yeni bir kural öğrenmeden
+giderek zorlaşıyor.
+
+Hepsi `DEFLECTOR` bloklarından kurulu, yani simülasyona tek bir mekanik eklenmedi. Açıklık payı artık
+bariyerin satırından değil **tavanından** ölçülüyor; funnel yükseldiği ve pillar uzun olduğu için eski
+hesap alt tuğla sıralarını ters V'nin kollarının içinden geçiriyordu.
+
 ### Tuğla yüzeyi: renk değil malzeme
 
 Tasarım sayfasının başlığı altı turdur oradaydı — _"renkle değil malzemeyle ayrışıyor"_ — ama oyunda
